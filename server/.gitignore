@@ -1,0 +1,6 @@
+*.js~
+node_modules
+.index*
+..gitignore.un~
+.gitignore~
+.idea
