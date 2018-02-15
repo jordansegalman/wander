@@ -14,8 +14,8 @@ const email = "email";
 const host = "localhost";
 
 // For actual implementation, we need to set username & password differently
-const db_username = "wander";
-const db_password = "wander";
+const db_username = "root";
+const db_password = "root";
 const db_name = "wander";
 const db_table = "accounts";
 
@@ -38,7 +38,7 @@ app.post('/registerAccount', json_parser, function(request, response) {
   if (!request.body) return response.sendStatus(500);
 
   var post_variables = Object.keys(request.body);
-  // POST request for registerAccount must have 3 parameters (username, password, and email)
+  // POST request for login must have 2 parameters (username and password)
   if (Object.keys(request.body).length != 3 || post_variables[0] !== username || post_variables[1] !== password || post_variables[2] !== email) {
     return response.status(400).send("Invalid POST request\n");
   }
@@ -70,7 +70,7 @@ app.post('/deleteAccount', json_parser, function(request, response) {
 
   var post_variables = Object.keys(request.body);
   if (Object.keys(request.body).length != 3 || post_variables[0] !== username || post_variables[1] !== password || post_variables[2] !== email) {
-    return response.status(400).send("Invalid POST request");
+    return response.status(400).send("Invalid POST request\n");
   }
 
   var u = request.body.username;
@@ -102,7 +102,7 @@ function register(u, p, e, response) {
   connection.query(sql, [db_table, post], function (err, result) {
     if (err) throw err;
     console.log("User account registered.");
-    return response.send("Successfully registered an account.\n");
+    response.send("Successfully registered an account!\n");
   });
 }
 
@@ -115,8 +115,7 @@ function login(u, p, response) {
     if (Object.keys(result).length != 1) {
       return response.status(400).send("Invalid username or password. Try again.\n");
     } else {
-      console.log("User logged in.");
-      return response.status(200).send("Successfully logged in.\n");
+      return response.status(200).send("Logged In\n");
     }
   });
 }
@@ -127,12 +126,12 @@ function deleteAccount(u, p, e, response) {
   connection.query(sql, post, function(err, result) {
     if (err) throw err;
     if (result.affectedRows == 1) {
-      return response.status(200).send("Successfully deleted account.");
+      return response.status(200).send("Successfully deleted account.\n");
     } else if (result.affectedRows > 1) {
       // For testing purposes only
-      return reponse.status(400).send("Error deleted multiple accounts.");
+      return reponse.status(400).send("Error deleted multiple accounts.\n");
     } else if (result.affectedRows == 0) {
-      return response.status(400).send("Failed to delete account.");
+      return response.status(400).send("Failed to delete account.\n");
     }
   });
 }
