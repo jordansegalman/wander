@@ -14,8 +14,8 @@ const email = "email";
 const host = "localhost";
 
 // For actual implementation, we need to set username & password differently
-const db_username = "root";
-const db_password = "root";
+const db_username = "wander";
+const db_password = "wander";
 const db_name = "wander";
 const db_table = "accounts";
 
@@ -32,13 +32,13 @@ app.get('/', function(request, response) {
   response.send("GET request\n");
 });
 
-// Called when a POST request is mdoe to /registerAccount
+// Called when a POST request is made to /registerAccount
 app.post('/registerAccount', json_parser, function(request, response) {
   // If the object request.body is null, respond with status 500 'Internal Server Error'
   if (!request.body) return response.sendStatus(500);
 
   var post_variables = Object.keys(request.body);
-  // POST request for login must have 2 parameters (username and password)
+  // POST request for login must have 3 parameters (username, password, and email)
   if (Object.keys(request.body).length != 3 || post_variables[0] !== username || post_variables[1] !== password || post_variables[2] !== email) {
     return response.status(400).send("Invalid POST request\n");
   }
@@ -46,10 +46,10 @@ app.post('/registerAccount', json_parser, function(request, response) {
   var p = request.body.password;
   var e = request.body.email;
 
-  checkDatabase(u, p, e, response);
+  register(u, p, e, response);
 });
 
-// Called when a POST request is mdoe to /login
+// Called when a POST request is made to /login
 app.post('/login', json_parser, function(request, response) {
   // If the object request.body is null, respond with status 500 'Internal Server Error'
   if (!request.body) return response.sendStatus(500);
@@ -65,14 +65,16 @@ app.post('/login', json_parser, function(request, response) {
   login(u, p, response);
 });
 
+// Called when a POST request is made to /deleteAccount
 app.post('/deleteAccount', json_parser, function(request, response) {
+  // If the object request.body is null, respond with status 500 'Internal Server Error'
   if (!request.body) return response.sendStatus(500);
 
   var post_variables = Object.keys(request.body);
+  // POST request for login must have 3 parameters (username, password, and email)
   if (Object.keys(request.body).length != 3 || post_variables[0] !== username || post_variables[1] !== password || post_variables[2] !== email) {
     return response.status(400).send("Invalid POST request\n");
   }
-
   var u = request.body.username;
   var p = request.body.password;
   var e = request.body.email;
@@ -80,29 +82,23 @@ app.post('/deleteAccount', json_parser, function(request, response) {
   deleteAccount(u, p, e, response);
 });
 
-// Helper function that checks if username exists in database
-function checkDatabase(u, p, e, response) {
-  var sql = "SELECT ?? FROM ?? WHERE ??=?";
-  var post = [username, db_table, username, u];
+// Helper function that registers a user if username and email does not already exist
+function register(u, p, e, response) {
+  var sql = "SELECT ?? FROM ?? WHERE ??=? OR ??=?";
+  var post = [username, db_table, username, u, email, e];
   connection.query(sql, post, function (err, result) {
     if (err) throw err;
-
     if (Object.keys(result).length != 0) {
-      return response.status(400).send("Username already exists! Try again.\n");
+      return response.status(400).send("Username or email already exists! Try again.\n");
     } else {
-      register(u,p,e, response);
+      var sql = "INSERT INTO ?? SET ?";
+      var post = {username: u, password: p, email: e};
+      connection.query(sql, [db_table, post], function (err, result) {
+        if (err) throw err;
+        console.log("User account registered.");
+        return response.send("Successfully registered an account.\n");
+      });
     }
-  });
-}
-
-// Helper function that registers a user if username does not already exist
-function register(u, p, e, response) {
-  var sql = "INSERT INTO ?? SET ?";
-  var post = {username: u, password: p, email: e};
-  connection.query(sql, [db_table, post], function (err, result) {
-    if (err) throw err;
-    console.log("User account registered.");
-    response.send("Successfully registered an account!\n");
   });
 }
 
@@ -115,11 +111,12 @@ function login(u, p, response) {
     if (Object.keys(result).length != 1) {
       return response.status(400).send("Invalid username or password. Try again.\n");
     } else {
-      return response.status(200).send("Logged In\n");
+      return response.status(200).send("Successfully logged in.\n");
     }
   });
 }
 
+// Helper function that deletes and account
 function deleteAccount(u, p, e, response) {
   var sql = "DELETE FROM ?? WHERE ??=? AND ??=? AND ??=?";
   var post = [db_table, username, u, password, p, email, e];
@@ -138,7 +135,7 @@ function deleteAccount(u, p, e, response) {
 
 app.listen(port, (err) => {
   if (err) {
-    return console.log('Error!', err);
+    return console.log('Listen error!', err);
   }
   console.log(`Server listening on port ${port}`);
 });
