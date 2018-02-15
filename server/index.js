@@ -14,8 +14,8 @@ const email = "email";
 const host = "localhost";
 
 // For actual implementation, we need to set username & password differently
-const db_username = "root";
-const db_password = "root";
+const db_username = "wander";
+const db_password = "wander";
 const db_name = "wander";
 const db_table = "accounts";
 
@@ -29,7 +29,7 @@ var connection = mysql.createConnection({
 });
 
 app.get('/', function(request, response) {
-  response.send("GET request");
+  response.send("GET request\n");
 });
 
 // Called when a POST request is mdoe to /registerAccount
@@ -38,9 +38,9 @@ app.post('/registerAccount', json_parser, function(request, response) {
   if (!request.body) return response.sendStatus(500);
 
   var post_variables = Object.keys(request.body);
-  // POST request for login must have 2 parameters (username and password)
+  // POST request for registerAccount must have 3 parameters (username, password, and email)
   if (Object.keys(request.body).length != 3 || post_variables[0] !== username || post_variables[1] !== password || post_variables[2] !== email) {
-    return response.status(400).send("Invalid POST request");
+    return response.status(400).send("Invalid POST request\n");
   }
   var u = request.body.username;
   var p = request.body.password;
@@ -57,7 +57,7 @@ app.post('/login', json_parser, function(request, response) {
   var post_variables = Object.keys(request.body);
   // POST request for login must have 2 parameters (username and password)
   if (Object.keys(request.body).length != 2 || post_variables[0] !== username || post_variables[1] !== password) {
-    return response.status(400).send("Invalid POST request");
+    return response.status(400).send("Invalid POST request\n");
   }
   var u = request.body.username;
   var p = request.body.password;
@@ -73,7 +73,7 @@ function checkDatabase(u, p, e, response) {
     if (err) throw err;
 
     if (Object.keys(result).length != 0) {
-      return response.status(400).send("Username already exists! Try again.");
+      return response.status(400).send("Username already exists! Try again.\n");
     } else {
       register(u,p,e, response);
     }
@@ -87,7 +87,7 @@ function register(u, p, e, response) {
   connection.query(sql, [db_table, post], function (err, result) {
     if (err) throw err;
     console.log("User account registered.");
-    response.send("Successfully registered an account!");
+    return response.send("Successfully registered an account.\n");
   });
 }
 
@@ -98,9 +98,10 @@ function login(u, p, response) {
   connection.query(sql, post, function (err, result) {
     if (err) throw err;
     if (Object.keys(result).length != 1) {
-      return response.status(400).send("Invalid username or password. Try again.");
+      return response.status(400).send("Invalid username or password. Try again.\n");
     } else {
-      return response.status(200).send("Logged In");
+      console.log("User logged in.");
+      return response.status(200).send("Successfully logged in.\n");
     }
   });
 }
