@@ -65,6 +65,21 @@ app.post('/login', json_parser, function(request, response) {
   login(u, p, response);
 });
 
+app.post('/deleteAccount', json_parser, function(request, response) {
+  if (!request.body) return response.sendStatus(500);
+
+  var post_variables = Object.keys(request.body);
+  if (Object.keys(request.body).length != 3 || post_variables[0] !== username || post_variables[1] !== password || post_variables[2] !== email) {
+    return response.status(400).send("Invalid POST request");
+  }
+
+  var u = request.body.username;
+  var p = request.body.password;
+  var e = request.body.email;
+
+  deleteAccount(u, p, e, response);
+});
+
 // Helper function that checks if username exists in database
 function checkDatabase(u, p, e, response) {
   var sql = "SELECT ?? FROM ?? WHERE ??=?";
@@ -101,6 +116,22 @@ function login(u, p, response) {
       return response.status(400).send("Invalid username or password. Try again.");
     } else {
       return response.status(200).send("Logged In");
+    }
+  });
+}
+
+function deleteAccount(u, p, e, response) {
+  var sql = "DELETE FROM ?? WHERE ??=? AND ??=? AND ??=?";
+  var post = [db_table, username, u, password, p, email, e];
+  connection.query(sql, post, function(err, result) {
+    if (err) throw err;
+    if (result.affectedRows == 1) {
+      return response.status(200).send("Successfully deleted account.");
+    } else if (result.affectedRows > 1) {
+      // For testing purposes only
+      return reponse.status(400).send("Error deleted multiple accounts.");
+    } else if (result.affectedRows == 0) {
+      return response.status(400).send("Failed to delete account.");
     }
   });
 }
