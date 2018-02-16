@@ -91,7 +91,7 @@ app.post('/changeUsername', json_parser, function(request, response) {
   if (!request.body) return response.sendStatus(500);
 
   var post_variables = Object.keys(request.body);
-  // POST request must have 3 parameters (username, password, and email)
+  // POST request must have 4 parameters (username, password, email, and newUsername)
   if (Object.keys(request.body).length != 4 || post_variables[0] !== username || post_variables[1] !== password || post_variables[2] !== email || post_variables[3] !== newUsername) {
     return response.status(400).send("Invalid POST request\n");
   }
@@ -109,7 +109,7 @@ app.post('/changePassword', json_parser, function(request, response) {
   if (!request.body) return response.sendStatus(500);
 
   var post_variables = Object.keys(request.body);
-  // POST request must have 3 parameters (username, password, and email)
+  // POST request must have 4 parameters (username, password, email, and newPassword)
   if (Object.keys(request.body).length != 4 || post_variables[0] !== username || post_variables[1] !== password || post_variables[2] !== email || post_variables[3] !== newPassword) {
     return response.status(400).send("Invalid POST request\n");
   }
@@ -127,7 +127,7 @@ app.post('/changeEmail', json_parser, function(request, response) {
   if (!request.body) return response.sendStatus(500);
 
   var post_variables = Object.keys(request.body);
-  // POST request must have 3 parameters (username, password, and email)
+  // POST request must have 4 parameters (username, password, email, and newEmail)
   if (Object.keys(request.body).length != 4 || post_variables[0] !== username || post_variables[1] !== password || post_variables[2] !== email || post_variables[3] !== newEmail) {
     return response.status(400).send("Invalid POST request\n");
   }
@@ -137,6 +137,22 @@ app.post('/changeEmail', json_parser, function(request, response) {
   var n = request.body.newEmail;
 
   changeEmail(u, p, e, n, response);
+});
+
+// Called when a POST request is made to /forgotPassword
+app.post('/forgotPassword', json_parser, function(request, response) {
+  // If the object request.body is null, respond with status 500 'Internal Server Error'
+  if (!request.body) return response.sendStatus(500);
+
+  var post_variables = Object.keys(request.body);
+  // POST request must have 2 parameters (username and email)
+  if (Object.keys(request.body).length != 2 || post_variables[0] !== username || post_variables[1] !== email) {
+    return response.status(400).send("Invalid POST request\n");
+  }
+  var u = request.body.username;
+  var e = request.body.email;
+
+  forgotPassword(u, e, response);
 });
 
 // Helper function that registers a user if username and email does not already exist
@@ -242,6 +258,22 @@ function changeEmail(u, p, e, n, response) {
       return reponse.status(400).send("Error changed multiple account emails.\n");
     } else if (result.affectedRows == 0) {
       return response.status(400).send("Failed to change email.\n");
+    }
+  });
+}
+
+// Helper function for forgotten password
+function forgotPassword(u, e, response) {
+  var sql = "SELECT ?? FROM ?? WHERE ??=? AND ??=?";
+  var post = [username, db_table, username, u, email, e];
+  connection.query(sql, post, function (err, result) {
+    if (err) throw err;
+    if (Object.keys(result).length != 1) {
+      return response.status(400).send("Error invalid account.\n");
+    } else {
+      // SEND PASSWORD RESET EMAIL
+      console.log("Password reset email sent.");
+      return response.status(200).send("Password reset email sent.\n");
     }
   });
 }
