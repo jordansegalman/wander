@@ -1,11 +1,24 @@
 var express = require('express');
 var body_parser = require('body-parser');
 var mysql = require('mysql');
+var fs = require('fs');
+var http = require('http');
+var https = require('https');
+var forceSSL = require('express-force-ssl');
 
 var app = express();
 var json_parser = body_parser.json();
+var key = fs.readFileSync('ca/server.key');
+var cert = fs.readFileSync('ca/server.crt');
+var ca = fs.readFileSync('ca/ca.crt');
+var sslCredentials = {
+  key: key,
+  cert: cert,
+  ca: ca
+};
 
-const port = 3000;
+const httpPort = 8080;
+const httpsPort = 8443;
 
 // Constants used for verifying JSON subsmission by users
 const username = "username";
@@ -16,14 +29,31 @@ const newPassword = "newPassword";
 const newEmail = "newEmail";
 const host = "localhost";
 
-// For actual implementation, we need to set username & password differently
+// Need to change username and password for production
 const db_username = "wander";
 const db_password = "wander";
 const db_name = "wander";
 const db_table = "accounts";
 
+// Create http and https servers and listen on specified ports
+app.use(forceSSL);
+var httpServer = http.createServer(app);
+var httpsServer = https.createServer(sslCredentials, app);
+httpServer.listen(httpPort, (err) => {
+  if (err) {
+    return console.log('HTTP server listen error!', err);
+  }
+  console.log(`HTTP server listening on port ${httpPort}`);
+});
+httpsServer.listen(httpsPort, (err) => {
+  if (err) {
+    return console.log('HTTPS server listen error!', err);
+  }
+  console.log(`HTTPS server listening on port ${httpsPort}`);
+});
+
 // Creates a connection to the MySQL database
-var connection = mysql.createConnection({
+var dbConnection = mysql.createConnection({
   //multipleStatements: true,
   host: host,
   user: db_username,
@@ -159,14 +189,14 @@ app.post('/forgotPassword', json_parser, function(request, response) {
 function register(u, p, e, response) {
   var sql = "SELECT ?? FROM ?? WHERE ??=? OR ??=?";
   var post = [username, db_table, username, u, email, e];
-  connection.query(sql, post, function (err, result) {
+  dbConnection.query(sql, post, function (err, result) {
     if (err) throw err;
     if (Object.keys(result).length != 0) {
       return response.status(400).send("Username or email already exists! Try again.\n");
     } else {
       var sql = "INSERT INTO ?? SET ?";
       var post = {username: u, password: p, email: e};
-      connection.query(sql, [db_table, post], function (err, result) {
+      dbConnection.query(sql, [db_table, post], function (err, result) {
         if (err) throw err;
         console.log("User account registered.");
         return response.send("Successfully registered an account.\n");
@@ -179,7 +209,7 @@ function register(u, p, e, response) {
 function login(u, p, response) {
   var sql = "SELECT ?? FROM ?? WHERE ??=? AND ??=?";
   var post = [username, db_table, username, u, password, p];
-  connection.query(sql, post, function (err, result) {
+  dbConnection.query(sql, post, function (err, result) {
     if (err) throw err;
     if (Object.keys(result).length != 1) {
       return response.status(400).send("Invalid username or password. Try again.\n");
@@ -194,7 +224,7 @@ function login(u, p, response) {
 function deleteAccount(u, p, e, response) {
   var sql = "DELETE FROM ?? WHERE ??=? AND ??=? AND ??=?";
   var post = [db_table, username, u, password, p, email, e];
-  connection.query(sql, post, function(err, result) {
+  dbConnection.query(sql, post, function(err, result) {
     if (err) throw err;
     if (result.affectedRows == 1) {
       console.log("User account deleted.");
@@ -212,7 +242,7 @@ function deleteAccount(u, p, e, response) {
 function changeUsername(u, p, e, n, response) {
   var sql = "UPDATE ?? SET ??=? WHERE ??=? AND ??=? AND ??=?";
   var post = [db_table, username, n, username, u, password, p, email, e];
-  connection.query(sql, post, function(err, result) {
+  dbConnection.query(sql, post, function(err, result) {
     if (err) throw err;
     if (result.affectedRows == 1) {
       console.log("Account username changed.");
@@ -230,7 +260,7 @@ function changeUsername(u, p, e, n, response) {
 function changePassword(u, p, e, n, response) {
   var sql = "UPDATE ?? SET ??=? WHERE ??=? AND ??=? AND ??=?";
   var post = [db_table, password, n, username, u, password, p, email, e];
-  connection.query(sql, post, function(err, result) {
+  dbConnection.query(sql, post, function(err, result) {
     if (err) throw err;
     if (result.affectedRows == 1) {
       console.log("Account password changed.");
@@ -248,7 +278,7 @@ function changePassword(u, p, e, n, response) {
 function changeEmail(u, p, e, n, response) {
   var sql = "UPDATE ?? SET ??=? WHERE ??=? AND ??=? AND ??=?";
   var post = [db_table, email, n, username, u, password, p, email, e];
-  connection.query(sql, post, function(err, result) {
+  dbConnection.query(sql, post, function(err, result) {
     if (err) throw err;
     if (result.affectedRows == 1) {
       console.log("Account email changed.");
@@ -266,7 +296,7 @@ function changeEmail(u, p, e, n, response) {
 function forgotPassword(u, e, response) {
   var sql = "SELECT ?? FROM ?? WHERE ??=? AND ??=?";
   var post = [username, db_table, username, u, email, e];
-  connection.query(sql, post, function (err, result) {
+  dbConnection.query(sql, post, function (err, result) {
     if (err) throw err;
     if (Object.keys(result).length != 1) {
       return response.status(400).send("Error invalid account.\n");
@@ -277,10 +307,3 @@ function forgotPassword(u, e, response) {
     }
   });
 }
-
-app.listen(port, (err) => {
-  if (err) {
-    return console.log('Listen error!', err);
-  }
-  console.log(`Server listening on port ${port}`);
-});
