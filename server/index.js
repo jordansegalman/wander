@@ -5,6 +5,7 @@ var fs = require('fs');
 var http = require('http');
 var https = require('https');
 var forceSSL = require('express-force-ssl');
+var bcrypt = require('bcrypt');
 
 var app = express();
 var json_parser = body_parser.json();
@@ -17,6 +18,7 @@ var sslCredentials = {
   ca: ca
 };
 
+// Constants used for http and https servers
 const httpPort = 8080;
 const httpsPort = 8443;
 
@@ -34,6 +36,9 @@ const db_username = "wander";
 const db_password = "wander";
 const db_name = "wander";
 const db_table = "accounts";
+
+// Constants used for password hashing
+const saltRounds = 16;
 
 // Create http and https servers and listen on specified ports
 app.use(forceSSL);
@@ -194,12 +199,14 @@ function register(u, p, e, response) {
     if (Object.keys(result).length != 0) {
       return response.status(400).send("Username or email already exists! Try again.\n");
     } else {
-      var sql = "INSERT INTO ?? SET ?";
-      var post = {username: u, password: p, email: e};
-      dbConnection.query(sql, [db_table, post], function (err, result) {
-        if (err) throw err;
-        console.log("User account registered.");
-        return response.send("Successfully registered an account.\n");
+      bcrypt.hash(p, saltRounds, function(err, hash) {
+        var sql = "INSERT INTO ?? SET ?";
+        var post = {username: u, password: hash, email: e};
+        dbConnection.query(sql, [db_table, post], function (err, result) {
+          if (err) throw err;
+          console.log("User account registered.");
+          return response.send("Successfully registered an account.\n");
+        });
       });
     }
   });
@@ -207,87 +214,173 @@ function register(u, p, e, response) {
 
 // Helper function that verifies user has an account and logs them in
 function login(u, p, response) {
-  var sql = "SELECT ?? FROM ?? WHERE ??=? AND ??=?";
-  var post = [username, db_table, username, u, password, p];
+  var sql = "SELECT ?? FROM ?? WHERE ??=?"
+  var post = [password, db_table, username, u];
   dbConnection.query(sql, post, function (err, result) {
     if (err) throw err;
     if (Object.keys(result).length != 1) {
       return response.status(400).send("Invalid username or password. Try again.\n");
     } else {
-      console.log("User logged in.");
-      return response.status(200).send("Successfully logged in.\n");
+      bcrypt.compare(p, result[0].password, function(err, res) {
+        if (res !== true) {
+          return response.status(400).send("Invalid username or password. Try again.\n");
+        } else {
+          console.log("User logged in.");
+          return response.status(200).send("Successfully logged in.\n");
+        }
+      });
     }
   });
 }
 
 // Helper function that deletes an account
 function deleteAccount(u, p, e, response) {
-  var sql = "DELETE FROM ?? WHERE ??=? AND ??=? AND ??=?";
-  var post = [db_table, username, u, password, p, email, e];
-  dbConnection.query(sql, post, function(err, result) {
+  var sql = "SELECT ?? FROM ?? WHERE ??=? AND ??=?"
+  var post = [password, db_table, username, u, email, e];
+  dbConnection.query(sql, post, function (err, result) {
     if (err) throw err;
-    if (result.affectedRows == 1) {
-      console.log("User account deleted.");
-      return response.status(200).send("Successfully deleted account.\n");
-    } else if (result.affectedRows > 1) {
-      // For testing purposes only
-      return reponse.status(400).send("Error deleted multiple accounts.\n");
-    } else if (result.affectedRows == 0) {
-      return response.status(400).send("Failed to delete account.\n");
+    if (Object.keys(result).length != 1) {
+      return response.status(400).send("Invalid username or email.\n");
+    } else {
+      bcrypt.compare(p, result[0].password, function(err, res) {
+        if (res !== true) {
+          return response.status(400).send("Invalid password. Try again.\n");
+        } else {
+          var sql = "DELETE FROM ?? WHERE ??=? AND ??=?";
+          var post = [db_table, username, u, email, e];
+          dbConnection.query(sql, post, function(err, result) {
+            if (err) throw err;
+            if (result.affectedRows == 1) {
+              console.log("User account deleted.");
+              return response.status(200).send("Successfully deleted account.\n");
+            } else if (result.affectedRows > 1) {
+              // For testing purposes only
+              return reponse.status(400).send("Error deleted multiple accounts.\n");
+            } else if (result.affectedRows == 0) {
+              return response.status(400).send("Failed to delete account.\n");
+            }
+          });
+        }
+      });
     }
   });
 }
 
 // Helper function that changes the username of an account
 function changeUsername(u, p, e, n, response) {
-  var sql = "UPDATE ?? SET ??=? WHERE ??=? AND ??=? AND ??=?";
-  var post = [db_table, username, n, username, u, password, p, email, e];
-  dbConnection.query(sql, post, function(err, result) {
+  var sql = "SELECT ?? FROM ?? WHERE ??=?";
+  var post = [username, db_table, username, n];
+  dbConnection.query(sql, post, function (err, result) {
     if (err) throw err;
-    if (result.affectedRows == 1) {
-      console.log("Account username changed.");
-      return response.status(200).send("Successfully changed username.\n");
-    } else if (result.affectedRows > 1) {
-      // For testing purposes only
-      return reponse.status(400).send("Error changed multiple account usernames.\n");
-    } else if (result.affectedRows == 0) {
-      return response.status(400).send("Failed to change username.\n");
+    if (Object.keys(result).length != 0) {
+      return response.status(400).send("Username already exists! Try again.\n");
+    } else {
+      var sql = "SELECT ?? FROM ?? WHERE ??=? AND ??=?"
+      var post = [password, db_table, username, u, email, e];
+      dbConnection.query(sql, post, function (err, result) {
+        if (err) throw err;
+        if (Object.keys(result).length != 1) {
+          return response.status(400).send("Invalid username or email.\n");
+        } else {
+          bcrypt.compare(p, result[0].password, function(err, res) {
+            if (res !== true) {
+              return response.status(400).send("Invalid password. Try again.\n");
+            } else {
+              var sql = "UPDATE ?? SET ??=? WHERE ??=? AND ??=?";
+              var post = [db_table, username, n, username, u, email, e];
+              dbConnection.query(sql, post, function(err, result) {
+                if (err) throw err;
+                if (result.affectedRows == 1) {
+                  console.log("Account username changed.");
+                  return response.status(200).send("Successfully changed username.\n");
+                } else if (result.affectedRows > 1) {
+                  // For testing purposes only
+                  return reponse.status(400).send("Error changed multiple account usernames.\n");
+                } else if (result.affectedRows == 0) {
+                  return response.status(400).send("Failed to change username.\n");
+                }
+              });
+            }
+          });
+        }
+      });
     }
   });
 }
 
 // Helper function that changes the password of an account
 function changePassword(u, p, e, n, response) {
-  var sql = "UPDATE ?? SET ??=? WHERE ??=? AND ??=? AND ??=?";
-  var post = [db_table, password, n, username, u, password, p, email, e];
-  dbConnection.query(sql, post, function(err, result) {
+  var sql = "SELECT ?? FROM ?? WHERE ??=? AND ??=?"
+  var post = [password, db_table, username, u, email, e];
+  dbConnection.query(sql, post, function (err, result) {
     if (err) throw err;
-    if (result.affectedRows == 1) {
-      console.log("Account password changed.");
-      return response.status(200).send("Successfully changed password.\n");
-    } else if (result.affectedRows > 1) {
-      // For testing purposes only
-      return reponse.status(400).send("Error changed multiple account passwords.\n");
-    } else if (result.affectedRows == 0) {
-      return response.status(400).send("Failed to change password.\n");
+    if (Object.keys(result).length != 1) {
+      return response.status(400).send("Invalid username or email.\n");
+    } else {
+      bcrypt.compare(p, result[0].password, function(err, res) {
+        if (res !== true) {
+          return response.status(400).send("Invalid password. Try again.\n");
+        } else {
+          bcrypt.hash(n, saltRounds, function(err, hash) {
+            var sql = "UPDATE ?? SET ??=? WHERE ??=? AND ??=?";
+            var post = [db_table, password, hash, username, u, email, e];
+            dbConnection.query(sql, post, function(err, result) {
+              if (err) throw err;
+              if (result.affectedRows == 1) {
+                console.log("Account password changed.");
+                return response.status(200).send("Successfully changed password.\n");
+              } else if (result.affectedRows > 1) {
+                // For testing purposes only
+                return reponse.status(400).send("Error changed multiple account passwords.\n");
+              } else if (result.affectedRows == 0) {
+                return response.status(400).send("Failed to change password.\n");
+              }
+            });
+          });
+        }
+      });
     }
   });
 }
 
 // Helper function that changes the email of an account
 function changeEmail(u, p, e, n, response) {
-  var sql = "UPDATE ?? SET ??=? WHERE ??=? AND ??=? AND ??=?";
-  var post = [db_table, email, n, username, u, password, p, email, e];
-  dbConnection.query(sql, post, function(err, result) {
+  var sql = "SELECT ?? FROM ?? WHERE ??=?";
+  var post = [email, db_table, email, n];
+  dbConnection.query(sql, post, function (err, result) {
     if (err) throw err;
-    if (result.affectedRows == 1) {
-      console.log("Account email changed.");
-      return response.status(200).send("Successfully changed email.\n");
-    } else if (result.affectedRows > 1) {
-      // For testing purposes only
-      return reponse.status(400).send("Error changed multiple account emails.\n");
-    } else if (result.affectedRows == 0) {
-      return response.status(400).send("Failed to change email.\n");
+    if (Object.keys(result).length != 0) {
+      return response.status(400).send("Email already exists! Try again.\n");
+    } else {
+      var sql = "SELECT ?? FROM ?? WHERE ??=? AND ??=?"
+      var post = [password, db_table, username, u, email, e];
+      dbConnection.query(sql, post, function (err, result) {
+        if (err) throw err;
+        if (Object.keys(result).length != 1) {
+          return response.status(400).send("Invalid username or email.\n");
+        } else {
+          bcrypt.compare(p, result[0].password, function(err, res) {
+            if (res !== true) {
+              return response.status(400).send("Invalid password. Try again.\n");
+            } else {
+              var sql = "UPDATE ?? SET ??=? WHERE ??=? AND ??=?";
+              var post = [db_table, email, n, username, u, email, e];
+              dbConnection.query(sql, post, function(err, result) {
+                if (err) throw err;
+                if (result.affectedRows == 1) {
+                  console.log("Account email changed.");
+                  return response.status(200).send("Successfully changed email.\n");
+                } else if (result.affectedRows > 1) {
+                  // For testing purposes only
+                  return reponse.status(400).send("Error changed multiple account emails.\n");
+                } else if (result.affectedRows == 0) {
+                  return response.status(400).send("Failed to change email.\n");
+                }
+              });
+            }
+          });
+        }
+      });
     }
   });
 }
@@ -299,7 +392,7 @@ function forgotPassword(u, e, response) {
   dbConnection.query(sql, post, function (err, result) {
     if (err) throw err;
     if (Object.keys(result).length != 1) {
-      return response.status(400).send("Error invalid account.\n");
+      return response.status(400).send("Invalid username or email.\n");
     } else {
       // SEND PASSWORD RESET EMAIL
       console.log("Password reset email sent.");
