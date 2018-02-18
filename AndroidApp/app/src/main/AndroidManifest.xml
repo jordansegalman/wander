@@ -16,6 +16,12 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <activity android:name=".Registration" />
+        <activity android:name=".FacebookLogin" />
+        <activity android:name=".GoogleLogin" />
+        <activity android:name=".AppHome" />
+        <activity android:name=".Profile" />
+        <activity android:name=".ProfileEdit"></activity>
     </application>
 
 </manifest>

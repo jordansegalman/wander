@@ -1,8 +1,11 @@
 package com.example.kyle.wander;
 
+import android.content.Intent;
+import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.KeyEvent;
+import android.view.View;
 import android.view.inputmethod.EditorInfo;
 import android.widget.EditText;
 import android.widget.TextView;
@@ -21,6 +24,8 @@ public class Login extends AppCompatActivity {
         usernameText = (EditText) findViewById(R.id.username);
         passwordText = (EditText) findViewById(R.id.password);
 
+
+
         passwordText.setOnEditorActionListener(new EditText.OnEditorActionListener() {
             @Override
             public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
@@ -28,10 +33,15 @@ public class Login extends AppCompatActivity {
                 if (actionId == EditorInfo.IME_ACTION_DONE) {
                     username = usernameText.getText().toString();
                     password = passwordText.getText().toString();
-                    //TODO: username & password validation. User input for username is stored in 'username'
-                    // and Password is in 'password'
 
-                    handled = true;
+                    //TODO: username & password validation
+                    if(username.equals("username") && password.equals("password")) {
+                        startActivity(new Intent(Login.this, AppHome.class));
+                    } else{
+                        Snackbar.make(findViewById(R.id.myCoordinatorLayout),
+                                "Invalid username or Password", Snackbar.LENGTH_INDEFINITE).show();
+                    }
+
                 }
                 return handled;
             }
@@ -40,5 +50,17 @@ public class Login extends AppCompatActivity {
 
 
 
+    }
+
+    public void facebookButton(View view){
+        startActivity(new Intent(Login.this, FacebookLogin.class));
+    }
+
+    public void googleButton(View view){
+        startActivity(new Intent(Login.this, GoogleLogin.class));
+    }
+
+    public void registerButton(View view){
+        startActivity(new Intent(Login.this, Registration.class));
     }
 }
