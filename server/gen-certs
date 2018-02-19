@@ -1,0 +1,21 @@
+#!/bin/bash
+
+if [ ! -d ca ]; then
+	mkdir ca
+else
+	rm -rf ca/*
+fi
+
+# ca
+
+openssl genrsa -out ca/ca.key 4096
+
+openssl req -new -x509 -days 365 -sha512 -key ca/ca.key -out ca/ca.crt
+
+# server
+
+openssl genrsa -out ca/server.key 4096
+
+openssl req -new -sha512 -key ca/server.key -out ca/server.csr
+
+openssl x509 -req -days 365 -sha512 -in ca/server.csr -CA ca/ca.crt -CAkey ca/ca.key -CAcreateserial -out ca/server.crt
