@@ -36,6 +36,7 @@ const db_username = "wander";
 const db_password = "wander";
 const db_name = "wander";
 const db_table = "accounts";
+const loc_table = "locations";
 
 // Constants used for password hashing
 const saltRounds = 16;
@@ -189,6 +190,22 @@ app.post('/forgotPassword', json_parser, function(request, response) {
 
   forgotPassword(u, e, response);
 });
+
+//Called when a POST request is made to /updateGPS
+app.post('/updateGPS', json_parser, function(request, response){
+if(!request.body) return response.sendStatus(500);
+
+var post_variables = Object.keys(request.body);
+if(Object.keys(request.body).length != 4 || post_variables[0] !== username || post_variables[1] !== latitude || post_variables[2] !== longitude || post_variables[3] !== time){
+	return response.status(400).send("Invalid GPS update\n");
+}
+var u = request.body.username;
+var lat = request.body.latitude;
+var lon = request.body.longitude;
+var date = request.body.time;
+
+updateGPS(u, lat, lon, date);
+}
 
 // Helper function that registers a user if username and email does not already exist
 function register(u, p, e, response) {
@@ -399,4 +416,20 @@ function forgotPassword(u, e, response) {
       return response.status(200).send("Password reset email sent.\n");
     }
   });
+}
+
+//Currently updateGPS only updates the usrname sql, it needs to push to the locations db too
+// Helper function for GPS update
+function updateGPS(u, lat, lon, date){
+var sql = "UPDATE ?? SET ??=?, ??=?, ??=? WHERE ??=?";
+//this will only work if there are only unique usernames in the system.
+var post = [db_table, latitude, lat, longitude, lon, time, date, username, u];
+dbConnection.query(sql, post, function(err, result){
+if(err) throw err;
+}); 
+var sql = "INSERT INTO ?? SET ?";
+var post= {username: u, latitude: lat, longitude: lon, time:date};
+dbConnection.query(sql, [loc_table, post], function(err, result){
+if (err) throw err;
+});
 }
