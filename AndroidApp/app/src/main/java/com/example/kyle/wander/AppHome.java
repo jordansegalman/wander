@@ -54,6 +54,10 @@ public class AppHome extends AppCompatActivity {
                 if(position == 1){
                     startActivity(new Intent(AppHome.this, Profile.class));
                 }
+
+                if(position == 4){
+                    startActivity(new Intent(AppHome.this, Settings.class));
+                }
             }
         });
     }
