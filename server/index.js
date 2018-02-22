@@ -18,6 +18,7 @@ const newUsername = "newUsername";
 const newPassword = "newPassword";
 const newEmail = "newEmail";
 const host = "localhost";
+const session_id = "session_id";
 const passwordResetToken = "passwordResetToken";
 const passwordResetExpires = "passwordResetExpires";
 
@@ -89,6 +90,23 @@ app.post('/login', json_parser, function(request, response) {
   var p = request.body.password;
 
   login(u, p, response);
+});
+
+
+// Called when a POST request is made to /login
+app.post('/logout', json_parser, function(request, response) {
+  // If the object request.body is null, respond with status 500 'Internal Server Error'
+  if (!request.body) return response.sendStatus(500);
+
+  var post_variables = Object.keys(request.body);
+  // POST request must have 3 parameters (username, password, session_id)
+  if (Object.keys(request.body).length != 2) {
+    return response.status(400).send("Invalid POST request\n");
+  }
+  var u = request.body.username;
+  var s = request.body.session_id;
+
+  logout(u, s, response);
 });
 
 // Called when a POST request is made to /deleteAccount
@@ -202,8 +220,8 @@ function register(u, p, e, response) {
 
 // Helper function that verifies user has an account and logs them in
 function login(u, p, response) {
-  var sql = "SELECT ?? FROM ?? WHERE ??=?"
-  var post = [password, db_table, username, u];
+  var sql = "SELECT ??, ?? FROM ?? WHERE ??=?"
+  var post = [password, session_id, db_table, username, u];
   dbConnection.query(sql, post, function (err, result) {
     if (err) throw err;
     if (Object.keys(result).length != 1) {
@@ -214,12 +232,54 @@ function login(u, p, response) {
           return response.status(400).send("Invalid username or password. Try again.\n");
         } else {
           console.log("User logged in.");
-          return response.status(200).send(JSON.stringify({"response":"Successfully logged in."}));
+          if (result[0].session_id === null) {
+            // generates a session id
+            crypto.randomBytes(16, (err, buf) => {
+              var session = buf.toString('hex');
+              if (err) throw err;
+              sql = "UPDATE ?? SET ??=? WHERE ??=?";
+              post = [db_table, session_id, session, username, u];
+              dbConnection.query(sql, post, function(err, result) {
+                if (err) throw err;
+                return response.status(200).send(JSON.stringify({"response":"Successfully logged in.", "session_id":session}));
+              });
+            });
+          } else {
+            // If there is an existing session ID, don't let user log in twice.
+            return response.status(400).send("User already logged in.\n");
+          }
+          
         }
       });
     }
   });
 }
+
+
+// Helper function that verifies user is logged in and can now log out
+function logout(u, s, response) {
+  var sql = "SELECT ?? FROM ?? WHERE ??=?"
+  var post = [session_id, db_table, username, u];
+  dbConnection.query(sql, post, function (err, result) {
+    if (err) throw err;
+    if (Object.keys(result).length != 1) {
+      return response.status(400).send("Error with logout.\n");
+    } else {
+      // Need to compare session id with local session id
+      // If they match log out. For now, just clear the entry in the database
+      sql = "UPDATE ?? SET ??=?";
+      post = [db_table, session_id, null];
+      dbConnection.query(sql, post, function(err, result){
+        if (err) throw err;
+        return response.status(400).send(JSON.stringify({"response":"Successfully logged out."}));
+      });
+      console.log("User logged out.");
+    }
+  });
+}
+
+
+
 
 // Helper function that deletes an account
 function deleteAccount(u, p, e, response) {
