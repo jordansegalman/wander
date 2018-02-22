@@ -36,7 +36,7 @@ public class Login extends AppCompatActivity {
 
                     //TODO: username & password validation
                     if(username.equals("username") && password.equals("password")) {
-                        startActivity(new Intent(Login.this, AppHome.class));
+                        startActivity(new Intent(Login.this, MyLocation.class));
                     } else{
                         Snackbar.make(findViewById(R.id.myCoordinatorLayout),
                                 "Invalid username or Password", Snackbar.LENGTH_INDEFINITE).show();
@@ -47,8 +47,8 @@ public class Login extends AppCompatActivity {
             }
         });
 
-
-
+    Intent i = new Intent(this, GpsCollection.class);
+    startService(i);
 
     }
 
