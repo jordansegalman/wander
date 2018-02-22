@@ -56,8 +56,8 @@ sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 // Constants used for password reset
 const crypto = require('crypto');
 
-app.get('/', function(request, response) {
-  response.sendFile(path.join(__dirname+'/index.html'));
+app.get('/linkedInProfile', function(request, response) {
+  response.sendFile(path.join(__dirname+'/website/index.html'));
   //response.send("GET request\n");
 });
 
