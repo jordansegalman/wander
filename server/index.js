@@ -181,6 +181,16 @@ app.post('/changeEmail', json_parser, function(request, response) {
 });
 
 // Called when a POST request is made to /forgotPassword
+app.post('/resetPassword', function(request, response) {
+  // If the object request.body is null, respond with status 500 'Internal Server Error'
+  //if (!request.body) return response.sendStatus(500);
+
+  var token = request.query.token;
+
+  resetPassword(token, response);
+});
+
+// Called when a POST request is made to /forgotPassword
 app.post('/forgotPassword', json_parser, function(request, response) {
   // If the object request.body is null, respond with status 500 'Internal Server Error'
   if (!request.body) return response.sendStatus(500);
@@ -320,7 +330,7 @@ function changeUsername(u, p, e, n, response) {
   var post = [username, db_table, username, n];
   dbConnection.query(sql, post, function (err, result) {
     if (err) throw err;
-    if (Object.keys(result).length != 0) {
+    if (Object.keys(result).length =! 0) {
       return response.status(400).send("Username already exists! Try again.\n");
     } else {
       var sql = "SELECT ?? FROM ?? WHERE ??=? AND ??=?"
@@ -433,13 +443,35 @@ function changeEmail(u, p, e, n, response) {
   });
 }
 
+function resetPassword(token, response) {
+  var sql = "SELECT ??, ?? FROM ?? WHERE ??=?";
+  // although nearly impossible, what if two users get same password reset token?
+  // should we use email to verify as well?
+  var post = [email, passwordResetExpires, db_table, passwordResetToken, token];
+  dbConnection.query(sql, post, function(err, result) {
+    if (err) throw err;
+    if (Object.keys(result).length < 1) {
+      return response.stats(400).send("Reset attempt has failed.\n");
+    } else {
+      if (Date.now() < result[0].passwordResetToken) {
+        return response.status(400).send("Password reset link has expired.\n");
+      } else {
+        // send back the email as well to have them confirm they are updating the password for right account
+        // don't update passwordResetToken and passwordResetExpires here
+        console.log("Permission granted to reset password.");
+        return response.status(200).send(JSON.stringify({"response":"Permission granted to change password", "email":result[0].email}))
+      }
+    }
+  });
+}
+
 // Helper function for forgotten password
 function forgotPassword(u, e, response) {
   var sql = "SELECT * FROM ?? WHERE ??=? AND ??=?";
   var post = [db_table, username, u, email, e];
   dbConnection.query(sql, post, function (err, result) {
     if (err) throw err;
-    if (Object.keys(result).length <= 0) {
+    if (Object.keys(result).length < 1) {
       return response.status(400).send("Invalid username or email.\n");
     } else {
       crypto.randomBytes(32, (err, buf) => {
@@ -464,8 +496,8 @@ function forgotPassword(u, e, response) {
                   to: e,
                   from: 'support@vvander.me',
                   subject: 'Wander Password Reset',
-                  text: token,
-                  html: '<strong>' + token + '</strong>',
+                  text: 'Please follow the link to reset your email: vvander.me/resetPassword?token=' + token,
+                  html: 'Please follow the link to reset your email: <strong> vvander.me/resetPassword?token='  + token + '</strong>',
                 };
                 sgMail.send(msg);
                 console.log("Password reset email sent.");
