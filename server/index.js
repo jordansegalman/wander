@@ -1,11 +1,16 @@
 var express = require('express');
-var body_parser = require('body-parser');
+var bodyParser = require('body-parser');
 var mysql = require('mysql');
 var http = require('http');
 var bcrypt = require('bcrypt');
+var path = require('path');
 
 var app = express();
-var json_parser = body_parser.json();
+var json_parser = bodyParser.json();
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({
+  extended: true
+}));
 
 // Constants used for http server
 const port = 3000;
@@ -54,9 +59,7 @@ sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 // Constants used for password reset
 const crypto = require('crypto');
 
-app.get('/', function(request, response) {
-  response.send("GET request\n");
-});
+app.use(express.static(__dirname + '/website'));
 
 // Called when a POST request is made to /registerAccount
 app.post('/registerAccount', json_parser, function(request, response) {
@@ -176,6 +179,34 @@ app.post('/forgotPassword', json_parser, function(request, response) {
   var e = request.body.email;
 
   forgotPassword(u, e, response);
+});
+
+// Called when a GET request is made to /resetPassword
+app.get('/resetPassword', function(request, response) {
+  if (Object.keys(request.query).length != 1 || !request.query.token) {
+    return response.redirect('/');
+  }
+  response.sendFile(__dirname + '/website/resetPassword.html');
+});
+
+// Called when a POST request is made to /resetPassword
+app.post('/resetPassword', function(request, response) {
+  // If the object request.body is null, respond with status 500 'Internal Server Error'
+  if (!request.body) return response.sendStatus(500);
+
+  var post_variables = Object.keys(request.body);
+  // POST request must have 2 parameters (newPassword and confirmPassword)
+  if (Object.keys(request.body).length != 2) {
+    return response.status(400).send("Invalid POST request\n");
+  }
+  if (Object.keys(request.query).length != 1 || !request.query.token) {
+    return response.status(400).send("Invalid POST request\n");
+  }
+  var token = request.query.token;
+  var newPassword = request.body.inputNewPassword;
+  var confirmPassword = request.body.inputConfirmPassword;
+
+  resetPassword(token, newPassword, confirmPassword, response);
 });
 
 // Helper function that registers a user if username and email does not already exist
@@ -379,7 +410,7 @@ function forgotPassword(u, e, response) {
   var post = [db_table, username, u, email, e];
   dbConnection.query(sql, post, function (err, result) {
     if (err) throw err;
-    if (Object.keys(result).length <= 0) {
+    if (Object.keys(result).length != 1) {
       return response.status(400).send("Invalid username or email.\n");
     } else {
       crypto.randomBytes(32, (err, buf) => {
@@ -389,7 +420,7 @@ function forgotPassword(u, e, response) {
         post = [db_table, passwordResetToken, token, username, u, email, e];
         dbConnection.query(sql, post, function(err, result) {
           if (err) throw err;
-          if (Object.keys(result).length <= 0) {
+          if (result.affectedRows != 1) {
             return response.status(400).send("Invalid username or email.\n");
           } else {
             var expires = Date.now() + 3600000;
@@ -397,15 +428,15 @@ function forgotPassword(u, e, response) {
             post = [db_table, passwordResetExpires, expires, username, u, email, e];
             dbConnection.query(sql, post, function(err, result) {
               if (err) throw err;
-              if (Object.keys(result).length <= 0) {
+              if (result.affectedRows != 1) {
                 return response.status(400).send("Invalid username or email.\n");
               } else {
                 const msg = {
                   to: e,
                   from: 'support@vvander.me',
                   subject: 'Wander Password Reset',
-                  text: token,
-                  html: '<strong>' + token + '</strong>',
+                  text: 'https://vvander.me/resetPassword?token=' + token,
+                  html: '<strong>https://vvander.me/resetPassword?token=' + token + '</strong>',
                 };
                 sgMail.send(msg);
                 console.log("Password reset email sent.");
@@ -415,6 +446,66 @@ function forgotPassword(u, e, response) {
           }
         });
       });
+    }
+  });
+}
+
+// Helper function that resets an account password
+function resetPassword(token, newPassword, confirmPassword, response) {
+  if (newPassword != confirmPassword) {
+    return response.status(400).send("Passwords did not match.\n");
+  }
+  var sql = "SELECT ??, ?? FROM ?? WHERE ??=?";
+  var post = [email, passwordResetExpires, db_table, passwordResetToken, token];
+  dbConnection.query(sql, post, function(err, result) {
+    if (err) throw err;
+    if (Object.keys(result).length != 1) {
+      return response.status(500).send("Password reset attempt has failed.\n");
+    } else {
+      if (Date.now() > result[0].passwordResetExpires) {
+        return response.status(400).send("Password reset link has expired.\n");
+      } else {
+        var e = result[0].email;
+        bcrypt.hash(newPassword, saltRounds, function(err, hash) {
+          sql = "UPDATE ?? SET ??=? WHERE ??=? AND ??=?";
+          post = [db_table, password, hash, passwordResetToken, token, email, e];
+          dbConnection.query(sql, post, function(err, result) {
+            if (err) throw err;
+            if (result.affectedRows != 1) {
+              return response.status(500).send("Error resetting password.\n");
+            } else {
+              sql = "UPDATE ?? SET ??=NULL WHERE ??=? AND ??=?";
+              post = [db_table, passwordResetExpires, passwordResetToken, token, email, e];
+              dbConnection.query(sql, post, function(err, result) {
+                if (err) throw err;
+                if (result.affectedRows != 1) {
+                  return response.status(500).send("Error resetting password.\n");
+                } else {
+                  sql = "UPDATE ?? SET ??=NULL WHERE ??=? AND ??=?";
+                  post = [db_table, passwordResetToken, passwordResetToken, token, email, e];
+                  dbConnection.query(sql, post, function(err, result) {
+                    if (err) throw err;
+                    if (result.affectedRows != 1) {
+                      return response.status(500).send("Error resetting password.\n");
+                    } else {
+                      const msg = {
+                        to: e,
+                        from: 'support@vvander.me',
+                        subject: 'Wander Password Reset Successful',
+                        text: 'Your Wander password has been reset.',
+                        html: '<strong>Your Wander password has been reset.</strong>',
+                      };
+                      sgMail.send(msg);
+                      console.log("Account password reset.");
+                      return response.redirect('/');
+                    }
+                  });
+                }
+              });
+            }
+          });
+        });
+      }
     }
   });
 }
