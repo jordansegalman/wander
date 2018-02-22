@@ -59,7 +59,8 @@ sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 // Constants used for password reset
 const crypto = require('crypto');
 
-app.use(express.static(__dirname + '/website'));
+// Serve 'website' directory
+app.use(express.static('website'));
 
 // Called when a POST request is made to /registerAccount
 app.post('/registerAccount', json_parser, function(request, response) {
@@ -509,3 +510,14 @@ function resetPassword(token, newPassword, confirmPassword, response) {
     }
   });
 }
+
+// Serve 404 error page
+app.use(function(req, res, next) {
+  res.status(404).sendFile(__dirname + '/website/404.html');
+});
+
+// Server 500 error page
+app.use(function(err, req, res, next) {
+  console.error(err.stack);
+  res.status(500).sendFile(__dirname + '/website/500.html');
+});
