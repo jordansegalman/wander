@@ -3,6 +3,7 @@ var body_parser = require('body-parser');
 var mysql = require('mysql');
 var http = require('http');
 var bcrypt = require('bcrypt');
+var path = require('path');
 
 var app = express();
 var json_parser = body_parser.json();
@@ -56,7 +57,8 @@ sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 const crypto = require('crypto');
 
 app.get('/', function(request, response) {
-  response.send("GET request\n");
+  response.sendFile(path.join(__dirname+'/index.html'));
+  //response.send("GET request\n");
 });
 
 // Called when a POST request is made to /registerAccount
@@ -204,6 +206,24 @@ app.post('/forgotPassword', json_parser, function(request, response) {
   var e = request.body.email;
 
   forgotPassword(u, e, response);
+});
+
+app.post('/updateLinkedIn', json_parser, function(request, response){
+  
+  if (!request.body) return response.sendStatus(500);
+
+  var post_variables = Object.keys(request.body);
+  // POST request must have 2 parameters (username and email)
+/*
+  if (Object.keys(request.body).length != 2) {
+    return response.status(400).send("Invalid POST request\n");
+  }
+*/
+  var f = request.body.firstname;
+  var l = request.body.lastname;
+  console.log(f);
+  console.log(l);
+  //forgotPassword(u, e, response);
 });
 
 // Helper function that registers a user if username and email does not already exist
