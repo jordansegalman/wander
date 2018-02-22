@@ -13,8 +13,6 @@
     "bcrypt": "^1.0.3",
     "body-parser": "^1.18.2",
     "express": "^4.16.2",
-    "express-force-ssl": "^0.3.2",
-    "mysql": "^2.15.0",
-    "sendmail": "^1.2.0"
+    "mysql": "^2.15.0"
   }
 }
