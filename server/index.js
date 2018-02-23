@@ -304,7 +304,7 @@ app.post('/updateLocation', function(request, response){
 	}
 	var u = request.body.username;
 	var lat = request.body.latitude;
-	var lon = request.body.longitutde;
+	var lon = request.body.longitude;
 
 	updateLocation(u, lat, lon, response);
 });
@@ -317,20 +317,18 @@ function updateLocation(u, lat, lon, response) {
 	var post = [db_locations, username, u, longitude, lon, latitude, lat, times, currentTime];
 	dbConnection.query(sql, post, function(err, result){
 		if (err) throw err;
-		
-		var sql = "DELETE FROM ?? WHERE ?? BETWEEN "0" AND ??";
+		var sql = "DELETE FROM ?? WHERE ?? BETWEEN 0 AND ?";
 		var post = [db_locations, times, weekOld];
 		dbConnection.query(sql, post, function(err, result){
 			if (err) throw err;
 		});
-
 		return response.status(200).send(JSON.stringify({"response":"success"}));	
 	});
-	return response.status(400).send("Issue with updating location.\n");
+	//return response.status(400).send("Issue with updating location.\n");
 }
 
 function getProfile(e, response) {
-	var sql = "SELECT * FROM ?? wHERE ??=?";
+	var sql = "SELECT * FROM ?? WHERE ??=?";
 	var post = [db_profiles, "email", e];
 	dbConnection.query(sql, post, function(err, result) {
 		if (err) throw err;
