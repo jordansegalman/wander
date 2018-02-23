@@ -28,6 +28,8 @@ const passwordResetToken = "passwordResetToken";
 const passwordResetExpires = "passwordResetExpires";
 const latitude = "latitude";
 const longitude = "longitude";
+const times = "times";
+const TIME_INTERVAL = 604800000;
 
 // Need to change username and password for production
 const db_username = "wander";
@@ -308,10 +310,20 @@ app.post('/updateLocation', function(request, response){
 });
 
 function updateLocation(u, lat, lon, response) {
-	var sql = "INSERT INTO ?? SET ??=?, ??=?, ??=?";
-	var post = [db_locations, username, u, longitude, lon, latitude, lat];
+	var sql = "INSERT INTO ?? SET ??=?, ??=?, ??=?, ??=?";
+	var date = new Date();
+	var currentTime = date.getTime();
+	var weekOld = currentTime - TIME_INTERVAL;
+	var post = [db_locations, username, u, longitude, lon, latitude, lat, times, currentTime];
 	dbConnection.query(sql, post, function(err, result){
 		if (err) throw err;
+		
+		var sql = "DELETE FROM ?? WHERE ?? BETWEEN "0" AND ??";
+		var post = [db_locations, times, weekOld];
+		dbConnection.query(sql, post, function(err, result){
+			if (err) throw err;
+		});
+
 		return response.status(200).send(JSON.stringify({"response":"success"}));	
 	});
 	return response.status(400).send("Issue with updating location.\n");
