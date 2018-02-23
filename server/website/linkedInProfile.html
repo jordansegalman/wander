@@ -1,88 +1,83 @@
-<!DOCTYPE html>
-<html lang="en-US">
-  <head>
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+		<meta name="description" content="Wander LinkedIn Profile">
+		<title>Wander LinkedIn Profile</title>
+		<link href="bootstrap.min.css" rel="stylesheet">
+                <link href="linkedInProfile.css" rel="stylesheet">
+		<script type="text/javascript" src="http://platform.linkedin.com/in.js">
+			api_key: ***REMOVED***
+			onLoad: startUp
+			authorize: true
+		</script> 
+		<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+		<script type="text/javascript">
+		function startUp() {
+			IN.Event.on(IN, "auth", obtainUserData);
+		}
 
-  <title>Wander</title>
-  <script type="text/javascript" src="http://platform.linkedin.com/in.js">
-    api_key:   ***REMOVED***
-    onLoad:    startUp
-    authorize: true
-  </script> 
-  
-  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"> </script>
-  <script type="text/javascript">
+		// Use the API call wrapper to request the member's profile data
+		function obtainUserData() {
+			IN.API.Profile("me").fields("id", "first-name", "last-name", "headline", "location", "picture-url", "public-profile-url", "email-address").result(displayProfileData).error(onError);
+		}
 
+		// Handle the successful return from the API call
+		function displayProfileData(data){
+			var user = data.values[0];
+			document.getElementById("picture").innerHTML = '<img src="'+user.pictureUrl+'" />';
+			document.getElementById("name").innerHTML = user.firstName+' '+user.lastName;
+			document.getElementById("intro").innerHTML = user.headline;
+			document.getElementById("email").innerHTML = user.emailAddress;
+			document.getElementById("location").innerHTML = user.location.name;
+			document.getElementById("link").innerHTML = '<a href="'+user.publicProfileUrl+'" target="_blank">View User Profile</a>';
+			document.getElementById('profileData').style.display = 'block';
 
-   function startUp() {
-        IN.Event.on(IN, "auth", obtainUserData);
-    }
-    
-    // Use the API call wrapper to request the member's profile data
-    function obtainUserData() {
-        IN.API.Profile("me").fields("id", "first-name", "last-name", "headline", "location", "picture-url", "public-profile-url", "email-address").result(displayProfileData).error(onError);
-    }
+			var xhr = new XMLHttpRequest();
+			xhr.open('POST', "https://vvander.me/updateLinkedIn", true);
+			xhr.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
+			xhr.send(JSON.stringify({firstname: user.firstName, lastname: user.lastName}));
+			xhr.onloadend = function () {
+				console.log("Done!");
+			}
+		}
 
-    // Handle the successful return from the API call
-    function displayProfileData(data){
-        var user = data.values[0];
-        document.getElementById("picture").innerHTML = '<img src="'+user.pictureUrl+'" />';
-        document.getElementById("name").innerHTML = user.firstName+' '+user.lastName;
-        document.getElementById("intro").innerHTML = user.headline;
-        document.getElementById("email").innerHTML = user.emailAddress;
-        document.getElementById("location").innerHTML = user.location.name;
-        document.getElementById("link").innerHTML = '<a href="'+user.publicProfileUrl+'" target="_blank">View User Profile</a>';
-        document.getElementById('profileData').style.display = 'block';
+		// Handle an error response from the API call
+		function onError(error) {
+			console.log(error);
+		}
 
-        var xhr = new XMLHttpRequest();
-	xhr.open('POST', "https://vvander.me/updateLinkedIn", true);
-        xhr.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
-        xhr.send(JSON.stringify({firstname: user.firstName, lastname: user.lastName}));
-        xhr.onloadend = function () {
-          console.log("Done!");
+		// Destroy the session of LinkedIn
+		function logout(){
+			IN.User.logout(deleteData);
+		}
 
-        }
-    }
-
-    // Handle an error response from the API call
-    function onError(error) {
-        console.log(error);
-    }
-    
-    // Destroy the session of linkedin
-    function logout(){
-        IN.User.logout(deleteData);
-    }
-    
-    // Remove profile data from page
-    function deleteData(){
-        document.getElementById('profileData').remove();
-    }
-
-  </script>
-  
-  </head>
-
-  <body>
-
-    <div class='fullscreenDiv' style="text-align:center;position: absolute; width:100%; top:30%;">
-      <div class="center"><font face='Lato' size='32'><h1>Wander</h1></font></div>
-      <script type="in/Login"></script>
-      
-
-      <div id="profileData" style="display: none;">
-        <p><a href="javascript:void(0);" onclick="logout()">Logout</a></p>
-        <div id="picture"></div>
-        <div class="info">
-          <p id="name"></p>
-          <p id="intro"></p>
-          <p id="email"></p>
-          <p id="location"></p>
-          <p id="link"></p>
-        </div>
-      </div>
-
-
-</div>
-
-  </body>
+		// Remove profile data from page
+		function deleteData(){
+			document.getElementById('profileData').remove();
+		}
+		</script>
+	</head>
+	<body>
+		<div class="container">
+			<div class="row justify-content-center">
+				<h1 class="h1 font-weight-normal">LinkedIn Profile</h1>
+			</div>
+			<div class="row justify-content-center">
+				<script type="in/Login"></script>
+				<div id="profileData" class="text-center" style="display: none;">
+					<p><a href="javascript:void(0);" onclick="logout()">Logout</a></p>
+					<div id="picture"></div>
+					<div class="info">
+						<p id="name"></p>
+						<p id="intro"></p>
+						<p id="email"></p>
+						<p id="location"></p>
+						<p id="link"></p>
+					</div>
+				</div>
+			</div>
+		</div>
+	</body>
 </html>
