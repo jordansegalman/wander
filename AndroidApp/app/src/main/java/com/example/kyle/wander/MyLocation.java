@@ -41,9 +41,9 @@ public class MyLocation extends AppCompatActivity implements OnMapReadyCallback,
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
-        buildGoogleApiClient();
-        createLocationRequest();
-        startLocationUpdates();
+       // buildGoogleApiClient();
+        //createLocationRequest();
+       // startLocationUpdates();
     }
 
 
@@ -109,9 +109,11 @@ public class MyLocation extends AppCompatActivity implements OnMapReadyCallback,
 
     @Override
     protected void onStop(){
-        LocationServices.FusedLocationApi.removeLocationUpdates(mGoogleApiClient, this);
-        if(mGoogleApiClient != null)
+
+        if(mGoogleApiClient != null) {
             mGoogleApiClient.disconnect();
+            //LocationServices.FusedLocationApi.removeLocationUpdates(mGoogleApiClient, this);
+        }
         super.onStop();
     }
 
@@ -124,7 +126,7 @@ public class MyLocation extends AppCompatActivity implements OnMapReadyCallback,
         while (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
                 != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(this, new String[]{ACCESS_FINE_LOCATION}, 1);
-            LocationServices.FusedLocationApi.requestLocationUpdates(mGoogleApiClient, mLocationRequest, this);
+            //LocationServices.FusedLocationApi.requestLocationUpdates(mGoogleApiClient, mLocationRequest, this);
         }
     }
 
