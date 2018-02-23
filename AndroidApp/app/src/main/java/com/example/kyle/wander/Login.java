@@ -88,6 +88,7 @@ public class Login extends AppCompatActivity {
             }
         });
         ActivityCompat.requestPermissions(this, new String[]{ACCESS_FINE_LOCATION}, 1);
+        startService(new Intent(this, GpsCollection.class));
     }
 
     public void login(View view){
@@ -95,8 +96,6 @@ public class Login extends AppCompatActivity {
                 getSystemService(Registration.INPUT_METHOD_SERVICE);
 
 
-    Intent i = new Intent(this, GpsCollection.class);
-    startService(i);
 
 
         inputManager.hideSoftInputFromWindow(getCurrentFocus().getWindowToken(),
