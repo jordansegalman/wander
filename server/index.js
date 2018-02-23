@@ -26,6 +26,8 @@ const session_id = "session_id";
 const confirmed = "confirmed";
 const passwordResetToken = "passwordResetToken";
 const passwordResetExpires = "passwordResetExpires";
+const latitude = "latitude";
+const longitude = "longitude";
 
 // Need to change username and password for production
 const db_username = "wander";
@@ -33,6 +35,7 @@ const db_password = "wander";
 const db_name = "wander";
 const db_accounts = "accounts";
 const db_profiles = "profiles";
+const db_locations = "locations";
 
 // Constants used for password hashing
 const saltRounds = 14;
@@ -105,13 +108,13 @@ app.post('/logout', json_parser, function(request, response) {
 
 	var post_variables = Object.keys(request.body);
 	// POST request must have 2 parameters (username and session_id)
-	if (Object.keys(request.body).length != 2 || !request.body.username || !request.body.session_id) {
+	if (Object.keys(request.body).length != 1 || !request.body.session_id) {
 		return response.status(400).send("Invalid POST request\n");
 	}
-	var u = request.body.username;
+	//var u = request.body.username;
 	var s = request.body.session_id;
 
-	logout(u, s, response);
+	logout(s, response);
 });
 
 app.post('/verifySession', function(request, response){
@@ -225,7 +228,8 @@ app.post('/updateLinkedIn', json_parser, function(request, response) {
 	var l = request.body.lastname;
 	var e = request.body.email;
 	var loc = request.body.loc;
-	updateLinkedInProfile(f, l, e, loc, response);
+	var a = request.body.about;
+	updateLinkedInProfile(f, l, e, loc, a, response);
 });
 
 // Called when a GET request is made to /resetPassword
@@ -275,27 +279,83 @@ app.get('/confirmEmail', function(request, response) {
 	});
 });
 
+app.post('/getProfile', function(request, response) {
+	if (!request.body) return response.sendStatus(500);
+
+	var post_variables = Object.keys(request.body);
+	// POST request must have 2 parameters (username and email)
+	if (Object.keys(request.body).length != 1 || !request.body.email) {
+		return response.status(400).send("Invalid POST request\n");
+	}
+	var e = request.body.email;
+
+	getProfile(e, response);
+});
+
+app.post('/updateLocation', function(request, response){
+	if (!request.body) return response.sendStatus(500);
+
+	var post_variables = Object.keys(request.body);
+	// POST request must have 2 parameters (username and email)
+	if (Object.keys(request.body).length != 3 || !request.body.username || !request.body.latitude || !request.body.longitude) {
+		return response.status(400).send("Invalid POST request\n");
+	}
+	var u = request.body.username;
+	var lat = request.body.latitude;
+	var lon = request.body.longitutde;
+
+	updateLocation(u, lat, lon, response);
+});
+
+function updateLocation(u, lat, lon, response) {
+	var sql = "INSERT INTO ?? SET ??=?, ??=?, ??=?";
+	var post = [db_locations, username, u, longitude, lon, latitude, lat];
+	dbConnection.query(sql, post, function(err, result){
+		if (err) throw err;
+		return response.status(200).send(JSON.stringify({"response":"success"}));	
+	});
+	return response.status(400).send("Issue with updating location.\n");
+}
+
+function getProfile(e, response) {
+	var sql = "SELECT * FROM ?? wHERE ??=?";
+	var post = [db_profiles, "email", e];
+	dbConnection.query(sql, post, function(err, result) {
+		if (err) throw err;
+		if (result[0]) {
+			var f = result[0].firstname;
+			var l = result[0].lastname;
+			var e = result[0].email;
+			var loc = result[0].location;
+			var a = result[0].about;
+			return response.status(200).send(JSON.stringify({"response":"pass", "firstname":f, "lastname":l, "email":e, "location":loc, "about":a}));
+		} else {
+			return response.status(400).send("Nothing to update\n");
+		}
+	});
+}
+
 // As of right now, uses the same email as 
-function updateLinkedInProfile(f, l, e, loc, response) {
+function updateLinkedInProfile(f, l, e, loc, a, response) {
   var sql = "SELECT * FROM ?? WHERE ??=?";
-  var post = [db_profile, "email", e];
+  var post = [db_profiles, "email", e];
   dbConnection.query(sql, post, function(err, result) {
     if (err) throw err;
     if (Object.keys(result).length == 0) {
-      var sql = "INSERT INTO ?? SET ??=?, ??=?, ??=?, ??=?";
-      var post = [db_profile, "firstname", f, "lastname", l, "email", e, "location", loc];
+      var sql = "INSERT INTO ?? SET ??=?, ??=?, ??=?, ??=?, ??=?";
+      var post = [db_profiles, "firstname", f, "lastname", l, "email", e, "location", loc, "about", a];
       dbConnection.query(sql, post, function(err, result) {
         if (err) throw err;
         console.log("LinkedIn profile downloaded."); 
-        return response.status(200).send(JSON.stringify({"response":"Profile created."}));
+        return response.status(200).send(JSON.stringify({"response":"pass"}));
       });
     } else {
-      var sql = "UPDATE ?? SET ??=?, ??=?, ??=? WHERE ??=?";
-      var post = [db_profile, "firstname", f, "lastname", l, "location", loc, "email", e];
+      var sql = "UPDATE ?? SET ??=?, ??=?, ??=?, ??=? WHERE ??=?";
+      var post = [db_profiles, "firstname", f, "lastname", l, "location", loc, "about", a, "email", e];
       dbConnection.query(sql, post, function(err, result) {
         if (err) throw err;
         console.log("LinkedIn profile updated."); 
-        return response.status(200).send(JSON.stringify({"response":"Profile updated."}));
+        return response.status(200).send(JSON.stringify({"response":"pass"}));
       });
     }
   });
@@ -303,14 +363,14 @@ function updateLinkedInProfile(f, l, e, loc, response) {
 
 function verifySession(s, response) {
   var sql = "SELECT * FROM ?? WHERE ??=?";
-  var post = [db_table, session_id, s];
+  var post = [db_accounts, session_id, s];
   dbConnection.query(sql, post, function(err, result){
     if (err) throw err;
     // the given session ID does not exist
     if (Object.keys(result).length == 0) {
       return response.status(400).send(JSON.stringify({"response":"fail"}));
     } else {
-      return response.status(400).send(JSON.stringify({"response":"pass"}));
+      return response.status(200).send(JSON.stringify({"response":"pass"}));
     }
   });
 }
@@ -338,7 +398,7 @@ function register(u, p, e, response) {
 					};
 					sgMail.send(msg);
 					console.log("Account registered.");
-					return response.status(200).send(JSON.stringify({"response":"Successfully registered an account."}));
+					return response.status(200).send(JSON.stringify({"response":"pass"}));
 				});
 			});
 		}
@@ -347,13 +407,14 @@ function register(u, p, e, response) {
 
 // Helper function that verifies user has an account and logs them in
 function login(u, p, response) {
-	var sql = "SELECT ??,?? FROM ?? WHERE ??=?";
-	var post = [password, session_id, db_accounts, username, u];
+	var sql = "SELECT ??,??,?? FROM ?? WHERE ??=?";
+	var post = [password, session_id, email, db_accounts, username, u];
 	dbConnection.query(sql, post, function (err, result) {
 		if (err) throw err;
 		if (Object.keys(result).length != 1) {
 			return response.status(400).send("Invalid username or password. Try again.\n");
 		} else {
+			var e = result[0].email;
 			bcrypt.compare(p, result[0].password, function(err, res) {
 				if (res !== true) {
 					return response.status(400).send("Invalid username or password. Try again.\n");
@@ -367,7 +428,7 @@ function login(u, p, response) {
 							dbConnection.query(sql, post, function(err, result) {
 								if (err) throw err;
 								console.log("User logged in.");
-								return response.status(200).send(JSON.stringify({"response":"Successfully logged in.", "session_id":session}));
+								return response.status(200).send(JSON.stringify({"response":"pass", "session_id":session, "email":e}));
 							});
 						});
 					} else {
@@ -380,9 +441,9 @@ function login(u, p, response) {
 }
 
 // Helper function that verifies user is logged in and can now log out
-function logout(u, s, response) {
+function logout(s, response) {
 	var sql = "SELECT ?? FROM ?? WHERE ??=?";
-	var post = [session_id, db_accounts, username, u];
+	var post = [session_id, db_accounts, session_id, s];
 	dbConnection.query(sql, post, function (err, result) {
 		if (err) throw err;
 		if (Object.keys(result).length != 1) {
@@ -395,7 +456,7 @@ function logout(u, s, response) {
 			dbConnection.query(sql, post, function(err, result){
 				if (err) throw err;
 				console.log("User logged out.");
-				return response.status(200).send(JSON.stringify({"response":"Successfully logged out."}));
+				return response.status(200).send(JSON.stringify({"response":"pass"}));
 			});
 		}
 	});
@@ -421,16 +482,21 @@ function deleteAccount(u, p, e, response) {
 					dbConnection.query(sql, post, function(err, result) {
 						if (err) throw err;
 						if (result.affectedRows == 1) {
-							console.log("Account deleted.");
-							const msg = {
-								to: e,
-								from: 'support@vvander.me',
-								subject: 'Wander Account Deleted',
-								text: 'Hey ' + u + '! You have successfully deleted your Wander account. We are sorry to see you go.',
-								html: '<strong>Hey ' + u + '! You have successfully deleted your Wander account. We are sorry to see you go.</strong>',
-							};
-							sgMail.send(msg);
-							return response.status(200).send(JSON.stringify({"response":"Successfully deleted account."}));
+							var sql = "DELETE FROM ?? WHERE ??=?";
+							var post = [db_locations, email, e];
+							dbConnection.query(sql, post, function(err, result){
+								if (err) throw err;
+								console.log("Account deleted.");
+								const msg = {
+									to: e,
+									from: 'support@vvander.me',
+									subject: 'Wander Account Deleted',
+									text: 'Hey ' + u + '! You have successfully deleted your Wander account. We are sorry to see you go.',
+									html: '<strong>Hey ' + u + '! You have successfully deleted your Wander account. We are sorry to see you go.</strong>',
+								};
+								sgMail.send(msg);
+								return response.status(200).send(JSON.stringify({"response":"pass"}));
+							});
 						} else if (result.affectedRows > 1) {
 							// For testing purposes only
 							return reponse.status(400).send("Error deleted multiple accounts.\n");
@@ -487,7 +553,7 @@ function changeUsername(u, p, e, n, response) {
 												html: '<strong>You have changed your Wander account username from ' + u + ' to ' + n + '.</strong>',
 											};
 											sgMail.send(msg);
-											return response.status(200).send(JSON.stringify({"response":"Successfully changed username."}));
+											return response.status(200).send(JSON.stringify({"response":"pass"}));
 										} else if (result.affectedRows > 1) {
 											// For testing purposes only
 											return reponse.status(400).send("Error changed multiple account usernames.\n");
@@ -512,12 +578,17 @@ function changePassword(u, p, e, n, response) {
 	dbConnection.query(sql, post, function (err, result) {
 		if (err) throw err;
 		if (Object.keys(result).length != 1) {
+			console.log("err 1");
+			console.log(e);
+			console.log(u);
 			return response.status(400).send("Invalid username or email.\n");
 		} else if (result[0].session_id === null) {
+			console.log("err 2");
 			return response.status(400).send("User not logged in.\n");
 		} else {
 			bcrypt.compare(p, result[0].password, function(err, res) {
 				if (res !== true) {
+					console.log("err 3");
 					return response.status(400).send("Invalid password. Try again.\n");
 				} else {
 					bcrypt.hash(n, saltRounds, function(err, hash) {
@@ -536,11 +607,13 @@ function changePassword(u, p, e, n, response) {
 										html: '<strong>You have changed your Wander account password.</strong>',
 									};
 									sgMail.send(msg);
-									return response.status(200).send(JSON.stringify({"response":"Successfully changed password."}));
+									return response.status(200).send(JSON.stringify({"response":"pass"}));
 								} else if (result.affectedRows > 1) {
 									// For testing purposes only
 									return reponse.status(400).send("Error changed multiple account passwords.\n");
 								} else if (result.affectedRows == 0) {
+
+									console.log("err 4");
 									return response.status(400).send("Failed to change password.\n");
 								}
 							}
@@ -608,7 +681,7 @@ function changeEmail(u, p, e, n, response) {
 													};
 													sgMail.send(newmsg);
 													console.log("Account email changed.");
-													return response.status(200).send(JSON.stringify({"response":"Successfully changed email."}));
+													return response.status(200).send(JSON.stringify({"response":"pass"}));
 												} else {
 													return response.status(400).send("Error changing email.\n");
 												}
@@ -637,6 +710,7 @@ function forgotPassword(u, e, response) {
 	dbConnection.query(sql, post, function (err, result) {
 		if (err) throw err;
 		if (Object.keys(result).length != 1) {
+			console.log(result);
 			return response.status(400).send("Invalid username or email.\n");
 		} else {
 			crypto.randomBytes(32, (err, buf) => {
@@ -666,7 +740,7 @@ function forgotPassword(u, e, response) {
 								};
 								sgMail.send(msg);
 								console.log("Password reset email sent.");
-								return response.status(200).send(JSON.stringify({"response":"Password reset email sent."}));
+								return response.status(200).send(JSON.stringify({"response":"pass"}));
 							}
 						});
 					}
@@ -739,26 +813,26 @@ function resetPassword(token, newPassword, confirmPassword, response) {
 }
 
 // Helper function for updating LinkedIn profile information
-function updateLinkedInProfile(f, l, e, loc, response) {
+function updateLinkedInProfile(f, l, e, loc, a, response) {
 	var sql = "SELECT * FROM ?? WHERE ??=?";
 	var post = [db_profiles, "email", e];
 	dbConnection.query(sql, post, function(err, result) {
 		if (err) throw err;
 		if (Object.keys(result).length == 0) {
-			var sql = "INSERT INTO ?? SET ??=?, ??=?, ??=?, ??=?";
-			var post = [db_profiles, "firstname", f, "lastname", l, "email", e, "location", loc];
+			var sql = "INSERT INTO ?? SET ??=?, ??=?, ??=?, ??=?, ??=?";
+			var post = [db_profiles, "firstname", f, "lastname", l, "email", e, "location", loc, "about", a];
 			dbConnection.query(sql, post, function(err, result) {
 				if (err) throw err;
 				console.log("LinkedIn profile created."); 
-				return response.status(200).send(JSON.stringify({"response":"Profile created."}));
+				return response.status(200).send(JSON.stringify({"response":"pass"}));
 			});
 		} else {
-			var sql = "UPDATE ?? SET ??=?, ??=?, ??=? WHERE ??=?";
-			var post = [db_profiles, "firstname", f, "lastname", l, "location", loc, "email", e];
+			var sql = "UPDATE ?? SET ??=?, ??=?, ??=?, ??=? WHERE ??=?";
+			var post = [db_profiles, "firstname", f, "lastname", l, "location", loc, "email", e, "about", a];
 			dbConnection.query(sql, post, function(err, result) {
 				if (err) throw err;
 				console.log("LinkedIn profile updated."); 
-				return response.status(200).send(JSON.stringify({"response":"Profile updated."}));
+				return response.status(200).send(JSON.stringify({"response":"pass"}));
 			});
 		}
 	});
