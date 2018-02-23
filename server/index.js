@@ -203,7 +203,7 @@ app.post('/forgotPassword', json_parser, function(request, response) {
 
 // Called when a GET request is made to /linkedInProfile
 app.get('/linkedInProfile', function(request, response) {
-  response.sendFile(__dirname + '/linkedInProfile.html');
+  response.sendFile(__dirname + '/website/linkedInProfile.html');
 });
 
 // Called when a POST request is made to /linkedInProfile
@@ -220,7 +220,7 @@ app.get('/resetPassword', function(request, response) {
   if (Object.keys(request.query).length != 1 || !request.query.token) {
     return response.redirect('/');
   }
-  response.sendFile(__dirname + '/resetPassword.html');
+  response.sendFile(__dirname + '/website/resetPassword.html');
 });
 
 // Called when a POST request is made to /resetPassword
