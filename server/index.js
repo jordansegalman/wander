@@ -33,6 +33,7 @@ const db_username = "wander";
 const db_password = "wander";
 const db_name = "wander";
 const db_table = "accounts";
+const db_profile = "profile";
 
 // Constants used for password hashing
 const saltRounds = 14;
@@ -211,8 +212,11 @@ app.post('/updateLinkedIn', json_parser, function(request, response) {
   if (!request.body) return response.sendStatus(500);
   var f = request.body.firstname;
   var l = request.body.lastname;
-  console.log(f);
-  console.log(l);
+  var e = request.body.email;
+  var loc = request.body.loc;
+  //console.log(f);
+  //console.log(l);
+  updateLinkedInProfile(f, l, e, loc, response);
 });
 
 // Called when a GET request is made to /resetPassword
@@ -257,6 +261,32 @@ app.get('/confirmEmail', function(request, response) {
     return response.redirect('/emailConfirmed.html');
   });
 });
+
+// As of right now, uses the same email as 
+function updateLinkedInProfile(f, l, e, loc, response) {
+  var sql = "SELECT * FROM ?? WHERE ??=?";
+  var post = [db_profile, "email", e];
+  dbConnection.query(sql, post, function(err, result) {
+    if (err) throw err;
+    if (Object.keys(result).length == 0) {
+      var sql = "INSERT INTO ?? SET ??=?, ??=?, ??=?, ??=?";
+      var post = [db_profile, "firstname", f, "lastname", l, "email", e, "location", loc];
+      dbConnection.query(sql, post, function(err, result) {
+        if (err) throw err;
+        console.log("LinkedIn profile downloaded."); 
+        return response.status(200).send(JSON.stringify("response":"Profile created."));
+      });
+    } else {
+      var sql = "UPDATE ?? SET ??=?, ??=?, ??=? WHERE ??=?";
+      var post = [db_profile, "firstname", f, "lastname", l, "location", loc, "email", e];
+      dbConnection.query(sql, post, function(err, result) {
+        if (err) throw err;
+        console.log("LinkedIn profile updated."); 
+        return response.status(200).send(JSON.stringify("response":"Profile updated."));
+      });
+    }
+  });
+}
 
 // Helper function that registers a user if username and email does not already exist
 function register(u, p, e, response) {
