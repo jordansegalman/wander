@@ -115,6 +115,18 @@ app.post('/logout', json_parser, function(request, response) {
   logout(u, s, response);
 });
 
+app.post('/verifySession', function(request, response){
+  if (!request.body) return response.sendStatus(500);
+  var post_variables = Object.keys(request.body);
+  // POST request must have 2 parameters (username and password)
+  if (Object.keys(request.body).length != 1) {
+    return response.status(400).send("Invalid POST request\n");
+  }
+  var s = request.body.session_id;
+
+  verifySession(s, response);
+});
+
 // Called when a POST request is made to /deleteAccount
 app.post('/deleteAccount', json_parser, function(request, response) {
   // If the object request.body is null, respond with status 500 'Internal Server Error'
@@ -274,7 +286,7 @@ function updateLinkedInProfile(f, l, e, loc, response) {
       dbConnection.query(sql, post, function(err, result) {
         if (err) throw err;
         console.log("LinkedIn profile downloaded."); 
-        return response.status(200).send(JSON.stringify("response":"Profile created."));
+        return response.status(200).send(JSON.stringify({"response":"Profile created."}));
       });
     } else {
       var sql = "UPDATE ?? SET ??=?, ??=?, ??=? WHERE ??=?";
@@ -282,8 +294,22 @@ function updateLinkedInProfile(f, l, e, loc, response) {
       dbConnection.query(sql, post, function(err, result) {
         if (err) throw err;
         console.log("LinkedIn profile updated."); 
-        return response.status(200).send(JSON.stringify("response":"Profile updated."));
+        return response.status(200).send(JSON.stringify({"response":"Profile updated."}));
       });
+    }
+  });
+}
+
+function verifySession(s, response) {
+  var sql = "SELECT * FROM ?? WHERE ??=?";
+  var post = [db_table, session_id, s];
+  dbConnection.query(sql, post, function(err, result){
+    if (err) throw err;
+    // the given session ID does not exist
+    if (Object.keys(result).length == 0) {
+      return response.status(400).send(JSON.stringify({"response":"fail"}));
+    } else {
+      return response.status(400).send(JSON.stringify({"response":"pass"}));
     }
   });
 }
@@ -302,6 +328,7 @@ function register(u, p, e, response) {
         var post = {username: u, password: hash, email: e};
         dbConnection.query(sql, [db_table, post], function (err, result) {
           if (err) throw err;
+/*
           const msg = {
             to: e,
             from: 'support@vvander.me',
@@ -309,9 +336,9 @@ function register(u, p, e, response) {
             text: 'Hey ' + u + '! You have registered for a new Wander account. Click the link to confirm your account: https://vvander.me/confirmEmail?email=' + e,
             html: '<strong>Hey ' + u + '! You have registered for a new Wander account. Click the following link to confirm your account: https://vvander.me/confirmEmail?email=' + e + '</strong>',
           };
-          sgMail.send(msg);
+          sgMail.send(msg);*/
           console.log("User account registered.");
-          return response.status(200).send(JSON.stringify({"response":"Successfully registered an account."}));
+          return response.status(200).send(JSON.stringify({"response":"pass"}));
         });
       });
     }
@@ -340,7 +367,7 @@ function login(u, p, response) {
               dbConnection.query(sql, post, function(err, result) {
                 if (err) throw err;
                 console.log("User logged in.");
-                return response.status(200).send(JSON.stringify({"response":"Successfully logged in.", "session_id":session}));
+                return response.status(200).send(JSON.stringify({"response":"pass", "session_id":session}));
               });
             });
           } else {
@@ -369,7 +396,7 @@ function logout(u, s, response) {
       dbConnection.query(sql, post, function(err, result){
         if (err) throw err;
         console.log("User logged out.");
-        return response.status(200).send(JSON.stringify({"response":"Successfully logged out."}));
+        return response.status(200).send(JSON.stringify({"response":"pass"}));
       });
     }
   });
@@ -405,7 +432,7 @@ function deleteAccount(u, p, e, response) {
                 html: '<strong>Hey ' + u + '! You have successfully deleted your account. We are sorry to see you go.</strong>',
               };
               sgMail.send(msg);
-              return response.status(200).send(JSON.stringify({"response":"Successfully deleted account."}));
+              return response.status(200).send(JSON.stringify({"response":"pass"}));
             } else if (result.affectedRows > 1) {
               // For testing purposes only
               return reponse.status(400).send("Error deleted multiple accounts.\n");
@@ -463,7 +490,7 @@ function changeUsername(u, p, e, n, response) {
                         html: '<strong>You have changed your username from' + u + ' to ' + n + '.</strong>',
                       };
                       sgMail.send(msg);
-                      return response.status(200).send(JSON.stringify({"response":"Successfully changed username."}));
+                      return response.status(200).send(JSON.stringify({"response":"pass"}));
                     } else if (result.affectedRows > 1) {
                       // For testing purposes only
                       return reponse.status(400).send("Error changed multiple account usernames.\n");
@@ -513,7 +540,7 @@ function changePassword(u, p, e, n, response) {
                     html: '<strong>You have changed your Wander password for username: ' + u + '.</strong>',
                   };
                   sgMail.send(msg);
-                  return response.status(200).send(JSON.stringify({"response":"Successfully changed password."}));
+                  return response.status(200).send(JSON.stringify({"response":"pass"}));
                 } else if (result.affectedRows > 1) {
                   // For testing purposes only
                   return reponse.status(400).send("Error changed multiple account passwords.\n");
@@ -566,7 +593,7 @@ function changeEmail(u, p, e, n, response) {
                     html: '<strong>You have changed your Wander email to: ' + e + '.</strong>',
                   };
                   sgMail.send(msg);
-                  return response.status(200).send(JSON.stringify({"response":"Successfully changed email."}));
+                  return response.status(200).send(JSON.stringify({"response":"pass"}));
                 } else if (result.affectedRows > 1) {
                   // For testing purposes only
                   return reponse.status(400).send("Error changed multiple account emails.\n");
@@ -618,7 +645,7 @@ function forgotPassword(u, e, response) {
                 };
                 sgMail.send(msg);
                 console.log("Password reset email sent.");
-                return response.status(200).send(JSON.stringify({"response":"Password reset email sent."}));
+                return response.status(200).send(JSON.stringify({"response":"pass"}));
               }
             });
           }
