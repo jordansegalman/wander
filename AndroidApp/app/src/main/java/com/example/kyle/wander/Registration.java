@@ -1,13 +1,34 @@
 package com.example.kyle.wander;
 
+import android.content.Context;
+import android.content.Intent;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.EditText;
 import android.view.inputmethod.InputMethodManager;
+import android.widget.Toast;
+
+import com.android.volley.AuthFailureError;
+import com.android.volley.Request;
+import com.android.volley.RequestQueue;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
+import com.android.volley.toolbox.JsonObjectRequest;
+import com.android.volley.toolbox.StringRequest;
+import com.android.volley.toolbox.Volley;
+
+import org.json.JSONObject;
+
+import java.util.HashMap;
+import java.util.Map;
 
 public class Registration extends AppCompatActivity {
+
+    private RequestQueue requestQueue;
+    private String url;
 
     EditText emailText;
     EditText usernameText;
@@ -23,10 +44,12 @@ public class Registration extends AppCompatActivity {
         usernameText = (EditText) findViewById(R.id.username);
         passwordText = (EditText) findViewById(R.id.password);
         confirmPasswordText = (EditText) findViewById(R.id.confirmPassword);
+
+        requestQueue = Volley.newRequestQueue(this);
+        url = Data.getInstance().getUrl() + "/registerAccount";
     }
 
     public void submit(View view){
-
         InputMethodManager inputManager = (InputMethodManager)
                 getSystemService(Registration.INPUT_METHOD_SERVICE);
 
@@ -38,12 +61,40 @@ public class Registration extends AppCompatActivity {
         String password = passwordText.getText().toString();
         String confirmPassword = confirmPasswordText.getText().toString();
 
+
         if(!password.equals(confirmPassword)){
             Snackbar.make(findViewById(R.id.myCoordinatorLayout),
                     "Passwords do not match", Snackbar.LENGTH_INDEFINITE).show();
         } else {
-            //TODO: Impliment account registration
+            sendPOSTRequest();
         }
+    }
+
+    private void sendPOSTRequest() {
+        Map<String, String> params = new HashMap<String,String>();
+        params.put("username", usernameText.getText().toString());
+        params.put("password", passwordText.getText().toString());
+        params.put("email", emailText.getText().toString());
+
+        JsonObjectRequest postRequest = new JsonObjectRequest(Request.Method.POST, url, new JSONObject(params),
+                new Response.Listener<JSONObject>() {
+                    @Override
+                    public void onResponse(JSONObject response) {
+                        // still need a check to ensure response is good, but we need to implement json response first
+                        // https://developer.android.com/reference/android/content/Context.html
+                        Toast.makeText(getApplicationContext(), "Account successfully created!", Toast.LENGTH_LONG).show();
+                        Intent intent = new Intent(Registration.this, Login.class);
+                        startActivity(intent);
+                    }
+                },
+                new Response.ErrorListener() {
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+                        Log.d("Error: ", error.toString());
+                    }
+                }
+        );
+        requestQueue.add(postRequest);
     }
 
 }

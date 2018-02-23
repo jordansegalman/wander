@@ -27,16 +27,16 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
 import android.widget.Toast;
-
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 
-public class AppHome extends AppCompatActivity{
+public class AppHome extends AppCompatActivity {
     private ListView mDrawerList;
     private ArrayAdapter<String> mAdapter;
     private ActionBarDrawerToggle mDrawerToggle;
     private DrawerLayout mDrawerLayout;
     private String mActivityTitle;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -71,6 +71,10 @@ public class AppHome extends AppCompatActivity{
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 if(position == 1){
                     startActivity(new Intent(AppHome.this, Profile.class));
+                }
+
+                if(position == 4){
+                    startActivity(new Intent(AppHome.this, Settings.class));
                 }
             }
         });

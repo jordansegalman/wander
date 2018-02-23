@@ -50,6 +50,12 @@
         </activity>
 
         <service android:name="GpsCollection" />
+
+        <activity android:name=".Delete" />
+        <activity android:name=".Settings" />
+        <activity android:name=".ChangeEmail" />
+        <activity android:name=".ChangePassword">
+        </activity>
     </application>
 
 </manifest>

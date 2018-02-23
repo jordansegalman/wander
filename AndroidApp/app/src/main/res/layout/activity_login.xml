@@ -20,12 +20,13 @@
             android:orientation="vertical"
             android:paddingHorizontal="20dp"
             android:paddingBottom="10dp">
+
             <ImageView
                 android:layout_width="200dp"
-                android:layout_height="0dp"
-                android:layout_weight="1"
+                android:layout_height="225dp"
                 android:layout_gravity="center_horizontal"
-                android:src="@drawable/wander_logo_black"/>
+                android:layout_weight="1"
+                android:src="@drawable/wander_logo_black" />
 
             <TextView
                 android:layout_width="match_parent"
@@ -72,26 +73,33 @@
             <EditText
                 android:id="@+id/username"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
+                android:layout_height="56dp"
+                android:backgroundTint="#000000"
                 android:hint="User Name"
+                android:imeOptions="actionNext"
                 android:inputType="textFilter"
                 android:maxLines="1"
-                android:imeOptions="actionNext"
-                android:backgroundTint="#000000"
-                android:textCursorDrawable="@null"
-                android:textColor="#000000"/>
+                android:textColor="#000000"
+                android:textCursorDrawable="@null" />
 
             <EditText
                 android:id="@+id/password"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
+                android:layout_height="56dp"
+                android:backgroundTint="#000000"
                 android:hint="Password"
+                android:imeOptions="actionDone"
                 android:inputType="textPassword"
                 android:maxLines="1"
-                android:imeOptions="actionDone"
-                android:backgroundTint="#000000"
-                android:textCursorDrawable="@null"
-                android:textColor="#000000"/>
+                android:textColor="#000000"
+                android:textCursorDrawable="@null" />
+
+            <Button
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:onClick="login"
+                android:text="Log In" />
 
             <TextView
                 android:layout_width="wrap_content"
