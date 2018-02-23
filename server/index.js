@@ -185,16 +185,6 @@ app.post('/changeEmail', json_parser, function(request, response) {
 });
 
 // Called when a POST request is made to /forgotPassword
-app.post('/resetPassword', function(request, response) {
-  // If the object request.body is null, respond with status 500 'Internal Server Error'
-  //if (!request.body) return response.sendStatus(500);
-
-  var token = request.query.token;
-
-  resetPassword(token, response);
-});
-
-// Called when a POST request is made to /forgotPassword
 app.post('/forgotPassword', json_parser, function(request, response) {
   // If the object request.body is null, respond with status 500 'Internal Server Error'
   if (!request.body) return response.sendStatus(500);
@@ -212,7 +202,7 @@ app.post('/forgotPassword', json_parser, function(request, response) {
 
 // Called when a GET request is made to /linkedInProfile
 app.get('/linkedInProfile', function(request, response) {
-  response.sendFile(path.join(__dirname+'/website/linkedInProfile.html'));
+  response.sendFile(__dirname + '/website/linkedInProfile.html');
 });
 
 // Called when a POST request is made to /linkedInProfile
@@ -287,24 +277,21 @@ function login(u, p, response) {
         if (res !== true) {
           return response.status(400).send("Invalid username or password. Try again.\n");
         } else {
-          console.log("User logged in.");
           if (result[0].session_id === null) {
-            // generates a session id
             crypto.randomBytes(16, (err, buf) => {
-              var session = buf.toString('hex');
               if (err) throw err;
+              var session = buf.toString('hex');
               sql = "UPDATE ?? SET ??=? WHERE ??=?";
               post = [db_table, session_id, session, username, u];
               dbConnection.query(sql, post, function(err, result) {
                 if (err) throw err;
+                console.log("User logged in.");
                 return response.status(200).send(JSON.stringify({"response":"Successfully logged in.", "session_id":session}));
               });
             });
           } else {
-            // If there is an existing session ID, don't let user log in twice.
             return response.status(400).send("User already logged in.\n");
           }
-          
         }
       });
     }
@@ -324,9 +311,9 @@ function logout(u, s, response) {
       post = [db_table, session_id, null];
       dbConnection.query(sql, post, function(err, result){
         if (err) throw err;
+        console.log("User logged out.");
         return response.status(200).send(JSON.stringify({"response":"Successfully logged out."}));
       });
-      console.log("User logged out.");
     }
   });
 }
@@ -553,15 +540,15 @@ function resetPassword(token, newPassword, confirmPassword, response) {
             if (result.affectedRows != 1) {
               return response.status(500).send("Error resetting password.\n");
             } else {
-              sql = "UPDATE ?? SET ??=NULL WHERE ??=? AND ??=?";
-              post = [db_table, passwordResetExpires, passwordResetToken, token, email, e];
+              sql = "UPDATE ?? SET ??=? WHERE ??=? AND ??=?";
+              post = [db_table, passwordResetExpires, null, passwordResetToken, token, email, e];
               dbConnection.query(sql, post, function(err, result) {
                 if (err) throw err;
                 if (result.affectedRows != 1) {
                   return response.status(500).send("Error resetting password.\n");
                 } else {
-                  sql = "UPDATE ?? SET ??=NULL WHERE ??=? AND ??=?";
-                  post = [db_table, passwordResetToken, passwordResetToken, token, email, e];
+                  sql = "UPDATE ?? SET ??=? WHERE ??=? AND ??=?";
+                  post = [db_table, passwordResetToken, null, passwordResetToken, token, email, e];
                   dbConnection.query(sql, post, function(err, result) {
                     if (err) throw err;
                     if (result.affectedRows != 1) {
