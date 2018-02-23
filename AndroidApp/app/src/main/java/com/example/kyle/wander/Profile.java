@@ -1,34 +1,144 @@
 package com.example.kyle.wander;
 
 import android.content.Intent;
+import android.net.Uri;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
+
+import com.android.volley.DefaultRetryPolicy;
+import com.android.volley.Request;
+import com.android.volley.RequestQueue;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
+import com.android.volley.toolbox.JsonObjectRequest;
+import com.android.volley.toolbox.Volley;
+
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.util.HashMap;
+import java.util.Map;
 
 public class Profile extends AppCompatActivity {
 
+    private RequestQueue requestQueue;
+    private TextView nameText;
+    private TextView interestText;
+    private TextView aboutText;
+    private TextView locationText;
+    private TextView emailText;
+
+    private TextView nameText_input;
+    private TextView interestText_input;
+    private TextView aboutText_input;
+    private TextView locationText_input;
+    private TextView emailText_input;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_profile);
+        requestQueue = Volley.newRequestQueue(this);
+
 
         //TODO: Get profile info from server
-        String name = "Test Name";
-        String interests = "Test Interests";
-        String about = "Test About";
+        String name = "Name";
+        String interests = "Interests";
+        String about = "About";
+        String location = "Location";
+        String email = "Email";
 
         ImageView profilePicture = (ImageView)findViewById(R.id.picture);
-        TextView nameText = (TextView)findViewById(R.id.name);
-        TextView interestText = (TextView)findViewById(R.id.interests);
-        TextView aboutText = (TextView)findViewById(R.id.about);
-        //profilePicture.setBackground();
-        nameText.setText(name);
-        interestText.setText(interests);
-        aboutText.setText(about);
+        nameText = (TextView)findViewById(R.id.name);
+        interestText = (TextView)findViewById(R.id.interests);
+        aboutText = (TextView)findViewById(R.id.about);
+        locationText = (TextView)findViewById(R.id.location);
+        emailText = (TextView)findViewById(R.id.email);
 
+        nameText_input = (TextView)findViewById(R.id.name);
+        interestText_input = (TextView)findViewById(R.id.interests_text);
+        aboutText_input = (TextView)findViewById(R.id.about_text);
+        locationText_input = (TextView)findViewById(R.id.location_text);
+        emailText_input = (TextView)findViewById(R.id.email_text);
+
+        //profilePicture.setBackground();
+        //nameText.setText(name);
+        //interestText.setText(interests);
+        //aboutText.setText(about);
+        //locationText.setText(location);
+        //emailText.setText(email);
+
+    }
+
+    public void linkedInProfile(View view) {
+        Intent intent = new Intent();
+        intent.setAction(Intent.ACTION_VIEW);
+        intent.addCategory(Intent.CATEGORY_BROWSABLE);
+        intent.setData(Uri.parse("https://vvander.me/linkedInProfile"));
+        startActivity(intent);
+    }
+
+    public void update(View view) {
+        sendPOSTRequest();
+    }
+
+    private void sendPOSTRequest() {
+        String email = Data.getInstance().getEmail();
+
+        Map<String, String> params = new HashMap<String,String>();
+        params.put("email", email);
+
+        String url = Data.getInstance().getUrl() + "/getProfile";
+
+        JsonObjectRequest postRequest = new JsonObjectRequest(Request.Method.POST, url, new JSONObject(params),
+                new Response.Listener<JSONObject>() {
+                    @Override
+                    public void onResponse(JSONObject response) {
+                        try
+                        {
+                            String res = response.getString("response");
+                            if (res.equalsIgnoreCase("pass")) {
+
+                                String first = response.getString("firstname");
+                                String last = response.getString("lastname");
+                                String e = response.getString("email");
+                                String location = response.getString("location");
+                                String about = response.getString("about");
+
+                                nameText_input.setText(first + " " + last);
+                                locationText_input.setText(location);
+                                emailText_input.setText(e);
+                                aboutText_input.setText(about);
+
+                                Toast.makeText(getApplicationContext(), "Profile Updated!", Toast.LENGTH_LONG).show();
+                            }
+                            else {
+                                return;
+                            }
+                        } catch (JSONException j) {
+                            j.printStackTrace();
+                        }
+                    }
+                },
+                new Response.ErrorListener() {
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+                        Toast.makeText(getApplicationContext(), "Nothing to Update!", Toast.LENGTH_LONG).show();
+
+                        Log.d("Error: ", error.toString());
+                    }
+                }
+        );
+        postRequest.setRetryPolicy(new DefaultRetryPolicy(
+                0,
+                DefaultRetryPolicy.DEFAULT_MAX_RETRIES,
+                DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
+        requestQueue.add(postRequest);
     }
 
     public void edit(View view){

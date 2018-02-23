@@ -51,6 +51,29 @@
                 android:clickable="true"
                 android:onClick="changePassword"/>
 
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:paddingVertical="5dp"
+                android:text="Change Username"
+                android:clickable="true"
+                android:onClick="changeUsername"/>
+
+            <Space
+                android:layout_width="1dp"
+                android:layout_height="30dp"/>
+
+            <Button
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="#add8e6"
+                android:text="Log Out"
+                android:onClick="logout"/>
+
+            <Space
+                android:layout_width="1dp"
+                android:layout_height="30dp"/>
+
             <Button
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"

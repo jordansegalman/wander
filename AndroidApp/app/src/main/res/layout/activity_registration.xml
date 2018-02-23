@@ -76,7 +76,7 @@
                 android:id="@+id/password"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:inputType="textFilter"
+                android:inputType="textPassword"
                 android:maxLines="1"
                 android:imeOptions="actionNext"
                 android:backgroundTint="#000000"
@@ -94,7 +94,7 @@
                 android:id="@+id/confirmPassword"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:inputType="textFilter"
+                android:inputType="textPassword"
                 android:maxLines="1"
                 android:imeOptions="actionDone"
                 android:backgroundTint="#000000"
@@ -103,6 +103,7 @@
 
             <Button
                 android:layout_width="wrap_content"
+                android:id="@+id/button"
                 android:layout_height="wrap_content"
                 android:layout_gravity="right"
                 android:onClick="submit"

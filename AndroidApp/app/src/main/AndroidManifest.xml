@@ -2,12 +2,16 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.example.kyle.wander">
 
-    <permission android:name="com.example.kyle.wander.permission.MAPS_RECEIVE"
-                android:protectionLevel="signature"/>
-    <uses-permission android:name="android.permission.MAPS_RECEIVE"/>
+    <permission
+        android:name="com.example.kyle.wander.permission.MAPS_RECEIVE"
+        android:protectionLevel="signature" />
+
+    <uses-permission android:name="android.permission.MAPS_RECEIVE" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
-    <uses-permission android:name="android.permission.INTERNET"/>
-    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+
+    <uses-sdk android:minSdkVersion="3"/>
 
     <application
         android:allowBackup="true"
@@ -28,8 +32,7 @@
         <activity android:name=".GoogleLogin" />
         <activity android:name=".AppHome" />
         <activity android:name=".Profile" />
-        <activity android:name=".ProfileEdit">
-        </activity>
+        <activity android:name=".ProfileEdit" />
         <!--
              The API key for Google Maps-based APIs is defined as a string resource.
              (See the file "res/values/google_maps_api.xml").
@@ -42,7 +45,6 @@
             android:name="com.google.android.geo.API_KEY"
             android:value="@string/google_maps_key" />
 
-
         <activity
             android:name=".MyLocation"
             android:label="@string/title_activity_my_location">
@@ -53,13 +55,17 @@
             </intent-filter>
         </activity>
 
-        <service android:name="GpsCollection" />
+        <service android:name=".GpsCollection" />
 
         <activity android:name=".Delete" />
         <activity android:name=".Settings" />
         <activity android:name=".ChangeEmail" />
-        <activity android:name=".ChangePassword">
-        </activity>
+        <activity android:name=".ChangePassword" />
+        <activity android:name=".ChangeUsername" />
+        <activity
+            android:name=".ForgotPassword"
+            android:label="@string/title_activity_forgot_password"
+            android:theme="@style/AppTheme.NoActionBar" />
     </application>
 
 </manifest>

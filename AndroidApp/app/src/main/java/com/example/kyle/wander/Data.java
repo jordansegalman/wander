@@ -1,5 +1,7 @@
 package com.example.kyle.wander;
 
+import java.io.File;
+
 /**
  * This is a singleton class that will store data that we need shared between
  * multiple classes. This includes information like URL, session ID, etc.
@@ -10,20 +12,31 @@ package com.example.kyle.wander;
  * https://www.geeksforgeeks.org/singleton-class-java/
  */
 public class Data {
-    private String url;
+    private final String url = "https://vvander.me";
+    private final String sessionInfoFile = "sessionInfoFile";
     private String username;
+    private String sessionId;
+    private String email;
 
     public String getUsername(){return username;}
+
+    public String getSessionId() {return sessionId;}
+
+    public String getSessionInfoFile() {
+        return sessionInfoFile;
+    }
 
     public String getUrl() {
         return url;
     }
 
+    public String getEmail() {return email;}
+
     public void setUsername(String username){this.username = username;}
 
-    public void setUrl(String url) {
-        this.url = url;
-    }
+    public void setEmail(String email){this.email = email;}
+
+    public void setSessionId(String sessionId) {this.sessionId = sessionId;}
 
     private static final Data data = new Data();
 
