@@ -11,13 +11,20 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
+import android.util.Log;
+import android.widget.Toast;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApi;
 import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.common.api.Response;
 import com.google.android.gms.location.LocationListener;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
+
+import org.json.JSONObject;
+import java.util.HashMap;
+import java.util.Map;
 
 import static android.Manifest.permission.ACCESS_FINE_LOCATION;
 
@@ -41,6 +48,13 @@ public class GpsCollection extends Service implements GoogleApiClient.Connection
 
         createLocationRequest();
         startLocationUpdates();
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        if(mGoogleApiClient != null)
+        mGoogleApiClient.disconnect();
     }
 
     @Override
@@ -77,7 +91,7 @@ public class GpsCollection extends Service implements GoogleApiClient.Connection
     }
 
     private void pushToDatabase(Location location) {
-    //TODO: PUSH TO DATABASE HERE using location.getLatitude()/LONG
+        //TODO:PUSH DATA HERE USING location.getLatitude() and longitude
     }
 
     private void buildGoogleApiClient(){
