@@ -2,6 +2,7 @@ package com.example.kyle.wander;
 
 import android.content.Intent;
 import android.support.design.widget.Snackbar;
+import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -24,6 +25,8 @@ import org.json.JSONObject;
 
 import java.util.HashMap;
 import java.util.Map;
+
+import static android.Manifest.permission.ACCESS_FINE_LOCATION;
 
 public class Login extends AppCompatActivity {
 
@@ -72,6 +75,7 @@ public class Login extends AppCompatActivity {
                 return handled;
             }
         });
+        ActivityCompat.requestPermissions(this, new String[]{ACCESS_FINE_LOCATION}, 1);
     }
 
     public void login(View view){
@@ -114,6 +118,9 @@ public class Login extends AppCompatActivity {
         Map<String, String> params = new HashMap<String,String>();
         params.put("username", usernameText.getText().toString());
         params.put("password", passwordText.getText().toString());
+
+        //set the Data username when login
+    Data.getInstance().setUsername(usernameText.getText().toString());
 
         JsonObjectRequest postRequest = new JsonObjectRequest(Request.Method.POST, url, new JSONObject(params),
                 new Response.Listener<JSONObject>() {

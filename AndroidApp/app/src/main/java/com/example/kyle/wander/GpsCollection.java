@@ -14,6 +14,9 @@ import android.support.v4.content.ContextCompat;
 import android.util.Log;
 import android.widget.Toast;
 
+import com.android.volley.Request;
+import com.android.volley.VolleyError;
+import com.android.volley.toolbox.JsonObjectRequest;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApi;
 import com.google.android.gms.common.api.GoogleApiClient;
@@ -92,7 +95,29 @@ public class GpsCollection extends Service implements GoogleApiClient.Connection
 
     private void pushToDatabase(Location location) {
         //TODO:PUSH DATA HERE USING location.getLatitude() and longitude
+        Map<String, String> params = new HashMap<String,String>();
+        params.put("username", Data.getInstance().getUsername());
+        params.put("latitude", Double.toString(location.getLatitude()));
+        params.put("longitude", Double.toString(location.getLongitude()));
+
+        JsonObjectRequest postRequest = new JsonObjectRequest(Request.Method.POST, Data.getInstance().getUrl(), new JSONObject(params),
+                new com.android.volley.Response.Listener<JSONObject>() {
+                    @Override
+                    public void onResponse(JSONObject response) {
+                        // still need a check to ensure response is good, but we need to implement json response first
+                        // https://developer.android.com/reference/android/content/Context.html
+                    }
+                },
+                new com.android.volley.Response.ErrorListener() {
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+                        Log.d("Error: ", error.toString());
+                    }
+                }
+        );
     }
+
+
 
     private void buildGoogleApiClient(){
         mGoogleApiClient = new GoogleApiClient.Builder(this)

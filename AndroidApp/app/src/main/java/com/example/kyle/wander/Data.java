@@ -11,10 +11,15 @@ package com.example.kyle.wander;
  */
 public class Data {
     private String url;
+    private String username;
+
+    public String getUsername(){return username;}
 
     public String getUrl() {
         return url;
     }
+
+    public void setUsername(String username){this.username = username;}
 
     public void setUrl(String url) {
         this.url = url;
