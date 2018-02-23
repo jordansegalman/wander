@@ -1,12 +1,16 @@
 var express = require('express');
-var body_parser = require('body-parser');
+var bodyParser = require('body-parser');
 var mysql = require('mysql');
 var http = require('http');
 var bcrypt = require('bcrypt');
 var path = require('path');
 
 var app = express();
-var json_parser = body_parser.json();
+var json_parser = bodyParser.json();
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({
+  extended: true
+}));
 
 // Constants used for http server
 const port = 3000;
@@ -56,10 +60,8 @@ sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 // Constants used for password reset
 const crypto = require('crypto');
 
-app.get('/linkedInProfile', function(request, response) {
-  response.sendFile(path.join(__dirname+'/website/index.html'));
-  //response.send("GET request\n");
-});
+// Serve 'website' directory
+app.use(express.static('website'));
 
 // Called when a POST request is made to /registerAccount
 app.post('/registerAccount', json_parser, function(request, response) {
@@ -101,7 +103,7 @@ app.post('/logout', json_parser, function(request, response) {
   if (!request.body) return response.sendStatus(500);
 
   var post_variables = Object.keys(request.body);
-  // POST request must have 3 parameters (username, password, session_id)
+  // POST request must have 2 parameters (username and session_id)
   if (Object.keys(request.body).length != 2) {
     return response.status(400).send("Invalid POST request\n");
   }
@@ -208,22 +210,46 @@ app.post('/forgotPassword', json_parser, function(request, response) {
   forgotPassword(u, e, response);
 });
 
-app.post('/updateLinkedIn', json_parser, function(request, response){
-  
-  if (!request.body) return response.sendStatus(500);
+// Called when a GET request is made to /linkedInProfile
+app.get('/linkedInProfile', function(request, response) {
+  response.sendFile(path.join(__dirname+'/website/linkedInProfile.html'));
+});
 
-  var post_variables = Object.keys(request.body);
-  // POST request must have 2 parameters (username and email)
-/*
-  if (Object.keys(request.body).length != 2) {
-    return response.status(400).send("Invalid POST request\n");
-  }
-*/
+// Called when a POST request is made to /linkedInProfile
+app.post('/updateLinkedIn', json_parser, function(request, response) {
+  if (!request.body) return response.sendStatus(500);
   var f = request.body.firstname;
   var l = request.body.lastname;
   console.log(f);
   console.log(l);
-  //forgotPassword(u, e, response);
+});
+
+// Called when a GET request is made to /resetPassword
+app.get('/resetPassword', function(request, response) {
+  if (Object.keys(request.query).length != 1 || !request.query.token) {
+    return response.redirect('/');
+  }
+  response.sendFile(__dirname + '/website/resetPassword.html');
+});
+
+// Called when a POST request is made to /resetPassword
+app.post('/resetPassword', function(request, response) {
+  // If the object request.body is null, respond with status 500 'Internal Server Error'
+  if (!request.body) return response.sendStatus(500);
+
+  var post_variables = Object.keys(request.body);
+  // POST request must have 2 parameters (newPassword and confirmPassword)
+  if (Object.keys(request.body).length != 2) {
+    return response.status(400).send("Invalid POST request\n");
+  }
+  if (Object.keys(request.query).length != 1 || !request.query.token) {
+    return response.status(400).send("Invalid POST request\n");
+  }
+  var token = request.query.token;
+  var newPassword = request.body.inputNewPassword;
+  var confirmPassword = request.body.inputConfirmPassword;
+
+  resetPassword(token, newPassword, confirmPassword, response);
 });
 
 // Helper function that registers a user if username and email does not already exist
@@ -250,7 +276,7 @@ function register(u, p, e, response) {
 
 // Helper function that verifies user has an account and logs them in
 function login(u, p, response) {
-  var sql = "SELECT ??, ?? FROM ?? WHERE ??=?"
+  var sql = "SELECT ??, ?? FROM ?? WHERE ??=?";
   var post = [password, session_id, db_table, username, u];
   dbConnection.query(sql, post, function (err, result) {
     if (err) throw err;
@@ -285,35 +311,29 @@ function login(u, p, response) {
   });
 }
 
-
 // Helper function that verifies user is logged in and can now log out
 function logout(u, s, response) {
-  var sql = "SELECT ?? FROM ?? WHERE ??=?"
+  var sql = "SELECT ?? FROM ?? WHERE ??=?";
   var post = [session_id, db_table, username, u];
   dbConnection.query(sql, post, function (err, result) {
     if (err) throw err;
     if (Object.keys(result).length != 1) {
       return response.status(400).send("Error with logout.\n");
     } else {
-      // Need to compare session id with local session id
-      // If they match log out. For now, just clear the entry in the database
       sql = "UPDATE ?? SET ??=?";
       post = [db_table, session_id, null];
       dbConnection.query(sql, post, function(err, result){
         if (err) throw err;
-        return response.status(400).send(JSON.stringify({"response":"Successfully logged out."}));
+        return response.status(200).send(JSON.stringify({"response":"Successfully logged out."}));
       });
       console.log("User logged out.");
     }
   });
 }
 
-
-
-
 // Helper function that deletes an account
 function deleteAccount(u, p, e, response) {
-  var sql = "SELECT ?? FROM ?? WHERE ??=? AND ??=?"
+  var sql = "SELECT ?? FROM ?? WHERE ??=? AND ??=?";
   var post = [password, db_table, username, u, email, e];
   dbConnection.query(sql, post, function (err, result) {
     if (err) throw err;
@@ -350,10 +370,10 @@ function changeUsername(u, p, e, n, response) {
   var post = [username, db_table, username, n];
   dbConnection.query(sql, post, function (err, result) {
     if (err) throw err;
-    if (Object.keys(result).length =! 0) {
+    if (Object.keys(result).length != 0) {
       return response.status(400).send("Username already exists! Try again.\n");
     } else {
-      var sql = "SELECT ?? FROM ?? WHERE ??=? AND ??=?"
+      var sql = "SELECT ?? FROM ?? WHERE ??=? AND ??=?";
       var post = [password, db_table, username, u, email, e];
       dbConnection.query(sql, post, function (err, result) {
         if (err) throw err;
@@ -388,7 +408,7 @@ function changeUsername(u, p, e, n, response) {
 
 // Helper function that changes the password of an account
 function changePassword(u, p, e, n, response) {
-  var sql = "SELECT ?? FROM ?? WHERE ??=? AND ??=?"
+  var sql = "SELECT ?? FROM ?? WHERE ??=? AND ??=?";
   var post = [password, db_table, username, u, email, e];
   dbConnection.query(sql, post, function (err, result) {
     if (err) throw err;
@@ -430,7 +450,7 @@ function changeEmail(u, p, e, n, response) {
     if (Object.keys(result).length != 0) {
       return response.status(400).send("Email already exists! Try again.\n");
     } else {
-      var sql = "SELECT ?? FROM ?? WHERE ??=? AND ??=?"
+      var sql = "SELECT ?? FROM ?? WHERE ??=? AND ??=?";
       var post = [password, db_table, username, u, email, e];
       dbConnection.query(sql, post, function (err, result) {
         if (err) throw err;
@@ -463,35 +483,13 @@ function changeEmail(u, p, e, n, response) {
   });
 }
 
-function resetPassword(token, response) {
-  var sql = "SELECT ??, ?? FROM ?? WHERE ??=?";
-  // although nearly impossible, what if two users get same password reset token?
-  // should we use email to verify as well?
-  var post = [email, passwordResetExpires, db_table, passwordResetToken, token];
-  dbConnection.query(sql, post, function(err, result) {
-    if (err) throw err;
-    if (Object.keys(result).length < 1) {
-      return response.stats(400).send("Reset attempt has failed.\n");
-    } else {
-      if (Date.now() < result[0].passwordResetToken) {
-        return response.status(400).send("Password reset link has expired.\n");
-      } else {
-        // send back the email as well to have them confirm they are updating the password for right account
-        // don't update passwordResetToken and passwordResetExpires here
-        console.log("Permission granted to reset password.");
-        return response.status(200).send(JSON.stringify({"response":"Permission granted to change password", "email":result[0].email}))
-      }
-    }
-  });
-}
-
 // Helper function for forgotten password
 function forgotPassword(u, e, response) {
   var sql = "SELECT * FROM ?? WHERE ??=? AND ??=?";
   var post = [db_table, username, u, email, e];
   dbConnection.query(sql, post, function (err, result) {
     if (err) throw err;
-    if (Object.keys(result).length < 1) {
+    if (Object.keys(result).length != 1) {
       return response.status(400).send("Invalid username or email.\n");
     } else {
       crypto.randomBytes(32, (err, buf) => {
@@ -501,7 +499,7 @@ function forgotPassword(u, e, response) {
         post = [db_table, passwordResetToken, token, username, u, email, e];
         dbConnection.query(sql, post, function(err, result) {
           if (err) throw err;
-          if (Object.keys(result).length <= 0) {
+          if (result.affectedRows != 1) {
             return response.status(400).send("Invalid username or email.\n");
           } else {
             var expires = Date.now() + 3600000;
@@ -509,15 +507,15 @@ function forgotPassword(u, e, response) {
             post = [db_table, passwordResetExpires, expires, username, u, email, e];
             dbConnection.query(sql, post, function(err, result) {
               if (err) throw err;
-              if (Object.keys(result).length <= 0) {
+              if (result.affectedRows != 1) {
                 return response.status(400).send("Invalid username or email.\n");
               } else {
                 const msg = {
                   to: e,
                   from: 'support@vvander.me',
                   subject: 'Wander Password Reset',
-                  text: 'Please follow the link to reset your email: vvander.me/resetPassword?token=' + token,
-                  html: 'Please follow the link to reset your email: <strong> vvander.me/resetPassword?token='  + token + '</strong>',
+                  text: 'https://vvander.me/resetPassword?token=' + token,
+                  html: '<strong>https://vvander.me/resetPassword?token=' + token + '</strong>',
                 };
                 sgMail.send(msg);
                 console.log("Password reset email sent.");
@@ -530,3 +528,74 @@ function forgotPassword(u, e, response) {
     }
   });
 }
+
+// Helper function that resets an account password
+function resetPassword(token, newPassword, confirmPassword, response) {
+  if (newPassword != confirmPassword) {
+    return response.status(400).send("Passwords did not match.\n");
+  }
+  var sql = "SELECT ??, ?? FROM ?? WHERE ??=?";
+  var post = [email, passwordResetExpires, db_table, passwordResetToken, token];
+  dbConnection.query(sql, post, function(err, result) {
+    if (err) throw err;
+    if (Object.keys(result).length != 1) {
+      return response.status(500).send("Password reset attempt has failed.\n");
+    } else {
+      if (Date.now() > result[0].passwordResetExpires) {
+        return response.status(400).send("Password reset link has expired.\n");
+      } else {
+        var e = result[0].email;
+        bcrypt.hash(newPassword, saltRounds, function(err, hash) {
+          sql = "UPDATE ?? SET ??=? WHERE ??=? AND ??=?";
+          post = [db_table, password, hash, passwordResetToken, token, email, e];
+          dbConnection.query(sql, post, function(err, result) {
+            if (err) throw err;
+            if (result.affectedRows != 1) {
+              return response.status(500).send("Error resetting password.\n");
+            } else {
+              sql = "UPDATE ?? SET ??=NULL WHERE ??=? AND ??=?";
+              post = [db_table, passwordResetExpires, passwordResetToken, token, email, e];
+              dbConnection.query(sql, post, function(err, result) {
+                if (err) throw err;
+                if (result.affectedRows != 1) {
+                  return response.status(500).send("Error resetting password.\n");
+                } else {
+                  sql = "UPDATE ?? SET ??=NULL WHERE ??=? AND ??=?";
+                  post = [db_table, passwordResetToken, passwordResetToken, token, email, e];
+                  dbConnection.query(sql, post, function(err, result) {
+                    if (err) throw err;
+                    if (result.affectedRows != 1) {
+                      return response.status(500).send("Error resetting password.\n");
+                    } else {
+                      const msg = {
+                        to: e,
+                        from: 'support@vvander.me',
+                        subject: 'Wander Password Reset Successful',
+                        text: 'Your Wander password has been reset.',
+                        html: '<strong>Your Wander password has been reset.</strong>',
+                      };
+                      sgMail.send(msg);
+                      console.log("Account password reset.");
+                      return response.redirect('/');
+                    }
+                  });
+                }
+              });
+            }
+          });
+        });
+      }
+    }
+  });
+}
+
+// Serve 404 error page
+app.use(function(req, res, next) {
+  res.status(404).sendFile(__dirname + '/website/404.html');
+});
+
+// Server 500 error page
+app.use(function(err, req, res, next) {
+  console.error(err.stack);
+  res.status(500).sendFile(__dirname + '/website/500.html');
+});
