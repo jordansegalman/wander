@@ -84,8 +84,8 @@ public class Login extends AppCompatActivity {
 
 
 
-   // Intent i = new Intent(this, GpsCollection.class);
-   // startService(i);
+    Intent i = new Intent(this, GpsCollection.class);
+    startService(i);
 
 
 
