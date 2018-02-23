@@ -50,7 +50,7 @@ import static android.content.ContentValues.TAG;
  */
 
 public class GpsCollection extends Service {
-    private static final String TAG = "TESTGPS";
+    private static final String TAG = "GPS";
     private LocationManager mLocationManager = null;
     private static final int LOCATION_INTERVAL = 1000;
     private static final float LOCATION_DISTANCE = 0;
