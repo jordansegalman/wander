@@ -14,9 +14,12 @@ import android.support.v4.content.ContextCompat;
 import android.util.Log;
 import android.widget.Toast;
 
+import com.android.volley.DefaultRetryPolicy;
 import com.android.volley.Request;
+import com.android.volley.RequestQueue;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonObjectRequest;
+import com.android.volley.toolbox.Volley;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApi;
 import com.google.android.gms.common.api.GoogleApiClient;
@@ -25,6 +28,7 @@ import com.google.android.gms.location.LocationListener;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
 
+import org.json.JSONException;
 import org.json.JSONObject;
 import java.util.HashMap;
 import java.util.Map;
@@ -40,10 +44,13 @@ public class GpsCollection extends Service implements GoogleApiClient.Connection
     private Location mLastLocation;
     private LocationRequest mLocationRequest;
     private GoogleApiClient mGoogleApiClient;
+    private RequestQueue requestQueue;
+
 
     @Override
     public void onCreate() {
         super.onCreate();
+        requestQueue = Volley.newRequestQueue(this);
 
         buildGoogleApiClient();
         if(mGoogleApiClient != null)
@@ -100,10 +107,24 @@ public class GpsCollection extends Service implements GoogleApiClient.Connection
         params.put("latitude", Double.toString(location.getLatitude()));
         params.put("longitude", Double.toString(location.getLongitude()));
 
-        JsonObjectRequest postRequest = new JsonObjectRequest(Request.Method.POST, Data.getInstance().getUrl(), new JSONObject(params),
+        String url = Data.getInstance().getUrl() + "/updateLocation";
+        JsonObjectRequest postRequest = new JsonObjectRequest(Request.Method.POST, url, new JSONObject(params),
                 new com.android.volley.Response.Listener<JSONObject>() {
                     @Override
                     public void onResponse(JSONObject response) {
+                        try
+                        {
+                            String res = response.getString("response");
+                            if (res.equalsIgnoreCase("pass")) {
+
+                                Log.d("Tag", "Location recorded.");
+                            }
+                            else {
+                                return;
+                            }
+                        } catch (JSONException j) {
+                            j.printStackTrace();
+                        }
                         // still need a check to ensure response is good, but we need to implement json response first
                         // https://developer.android.com/reference/android/content/Context.html
                     }
@@ -115,6 +136,12 @@ public class GpsCollection extends Service implements GoogleApiClient.Connection
                     }
                 }
         );
+        postRequest.setRetryPolicy(new DefaultRetryPolicy(
+                0,
+                DefaultRetryPolicy.DEFAULT_MAX_RETRIES,
+                DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
+        requestQueue.add(postRequest);
+
     }
 
 

@@ -62,7 +62,7 @@ public class AppHome extends AppCompatActivity {
     private void addDrawerItems() {
         //IMPORTANT: Currently where the nav bar links lead depends on the order of this list, if the order is
         //changed be sure to update the values of the "position" variable below
-        String[] osArray = { "My Matches", "Profile", "Popular Locations", "History","Settings" };
+        String[] osArray = { "My Matches", "Profile", "Popular Locations", "History","Settings" ,"Map"};
         mAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, osArray);
         mDrawerList.setAdapter(mAdapter);
 
@@ -75,6 +75,10 @@ public class AppHome extends AppCompatActivity {
 
                 if(position == 4){
                     startActivity(new Intent(AppHome.this, Settings.class));
+                }
+
+                if (position == 5) {
+                    startActivity(new Intent(AppHome.this, MyLocation.class));
                 }
             }
         });

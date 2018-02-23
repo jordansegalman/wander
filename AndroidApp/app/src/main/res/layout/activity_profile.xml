@@ -20,58 +20,103 @@
             android:orientation="vertical"
             android:gravity="top">
 
-            <ImageView
-                android:id="@+id/picture"
-                android:layout_width="match_parent"
-                android:layout_height="150dp"
-                android:gravity="center"/>
-
             <TextView
                 android:id="@+id/name"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:textSize="25sp"
-                android:textColor="#000000"
                 android:gravity="center"
-                android:text="No Name"/>
-
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
+                android:text="No Name"
                 android:textColor="#000000"
-                android:textSize="20sp"
-                android:text="Interests:"/>
+                android:textSize="25sp" />
+
+            <ImageView
+                android:id="@+id/picture"
+                android:layout_width="match_parent"
+                android:layout_height="89dp"
+                android:gravity="center" />
 
             <TextView
                 android:id="@+id/interests"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="No Interests"/>
+                android:text="Interests:"
+                android:textColor="#000000"
+                android:textSize="20sp" />
 
             <TextView
+                android:id="@+id/interests_text"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="About Me:"
-                android:textColor="#000000"
-                android:textSize="20sp"/>
+                android:text="No Interests" />
 
             <TextView
                 android:id="@+id/about"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="No Interests"/>
+                android:text="About Me:"
+                android:textColor="#000000"
+                android:textSize="20sp" />
+
+            <TextView
+                android:id="@+id/about_text"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="No Interests" />
+
+            <TextView
+                android:id="@+id/location"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Location"
+                android:textColor="#000000"
+                android:textSize="20sp" />
+
+            <TextView
+                android:id="@+id/location_text"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="No Location" />
+
+            <TextView
+                android:id="@+id/email"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Email"
+                android:textColor="#000000"
+                android:textSize="20sp" />
+
+            <TextView
+                android:id="@+id/email_text"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="No Email" />
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="0dp"
                 android:layout_weight="1"/>
 
+
             <Button
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Edit"
                 android:layout_gravity="right"
-                android:onClick="edit"/>
+                android:onClick="edit"
+                android:text="Edit" />
+
+            <Button
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="right"
+                android:onClick="update"
+                android:text="Update" />
+
+            <Button
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Import LinkedIn Profile"
+                android:layout_gravity="right"
+                android:onClick="linkedInProfile"/>
 
         </LinearLayout>
 

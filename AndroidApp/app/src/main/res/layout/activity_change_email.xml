@@ -23,22 +23,56 @@
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:textSize="25sp"
-                android:textColor="#000000"
                 android:gravity="center"
-                android:text="New Email:"/>
+                android:text="Current Email:"
+                android:textColor="#000000"
+                android:textSize="25sp" />
 
             <EditText
-                android:id="@+id/email"
+                android:id="@+id/current_email"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:backgroundTint="#000000"
+                android:imeOptions="actionDone"
                 android:inputType="textFilter"
                 android:maxLines="1"
-                android:imeOptions="actionDone"
-                android:backgroundTint="#000000"
-                android:textCursorDrawable="@null"
-                android:textColor="#000000"/>
+                android:textColor="#000000"
+                android:textCursorDrawable="@null" />
 
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:text="New Email:"
+                android:textColor="#000000"
+                android:textSize="25sp" />
+
+            <EditText
+                android:id="@+id/new_email"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:backgroundTint="#000000"
+                android:imeOptions="actionDone"
+                android:inputType="textFilter"
+                android:maxLines="1"
+                android:textColor="#000000"
+                android:textCursorDrawable="@null" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:text="Password"
+                android:textColor="#000000"
+                android:textSize="25sp" />
+
+            <EditText
+                android:id="@+id/password"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:ems="10"
+                android:inputType="textPassword" />
 
             <TextView
                 android:layout_width="wrap_content"

@@ -23,7 +23,7 @@
 
             <ImageView
                 android:layout_width="200dp"
-                android:layout_height="225dp"
+                android:layout_height="192dp"
                 android:layout_gravity="center_horizontal"
                 android:layout_weight="1"
                 android:src="@drawable/wander_logo_black" />
@@ -94,9 +94,21 @@
                 android:textColor="#000000"
                 android:textCursorDrawable="@null" />
 
-            <Button
+            <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:layout_margin="0dp"
+                android:layout_weight="1"
+                android:clickable="true"
+                android:onClick="forgotPassword"
+                android:padding="0dp"
+                android:text="Forgot your password?"
+                android:textColor="#0645AD" />
+
+            <Button
+                android:layout_width="match_parent"
+                android:layout_height="38dp"
                 android:layout_weight="1"
                 android:onClick="login"
                 android:text="Log In" />
@@ -105,12 +117,12 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center"
-                android:padding="0dp"
                 android:layout_margin="0dp"
-                android:text="Don't have an account?"
-                android:textColor="#0645AD"
                 android:clickable="true"
-                android:onClick="registerButton"/>
+                android:onClick="registerButton"
+                android:padding="0dp"
+                android:text="Don't have an account?"
+                android:textColor="#0645AD" />
 
         </LinearLayout>
     </android.support.design.widget.CoordinatorLayout>
