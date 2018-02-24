@@ -40,7 +40,7 @@ const db_profiles = "profiles";
 const db_locations = "locations";
 
 // Constants used for password hashing
-const saltRounds = 14;
+const saltRounds = 10;
 
 // Create http server and listen on specified port
 var httpServer = http.createServer(app);
@@ -465,7 +465,7 @@ function deleteAccount(u, p, e, response) {
 						if (result.affectedRows == 1) {
 							// Delete location data for email
 							var sql = "DELETE FROM ?? WHERE ??=?";
-							var post = [db_locations, email, e];
+							var post = [db_locations, username, u];
 							dbConnection.query(sql, post, function(err, result){
 								if (err) throw err;
 								// Send account deletion notification email
@@ -758,14 +758,12 @@ function resetPassword(token, newPassword, confirmPassword, response) {
 		return response.status(400).send("Passwords did not match.\n");
 	}
 	// Get email, passwordResetExpires, and session_id for passwordResetToken
-	var sql = "SELECT ??, ??, ?? FROM ?? WHERE ??=?";
-	var post = [email, passwordResetExpires, session_id, db_accounts, passwordResetToken, token];
+	var sql = "SELECT ??, ?? FROM ?? WHERE ??=?";
+	var post = [email, passwordResetExpires, db_accounts, passwordResetToken, token];
 	dbConnection.query(sql, post, function(err, result) {
 		if (err) throw err;
 		if (Object.keys(result).length != 1) {
 			return response.status(500).send("Password reset attempt has failed.\n");
-		} else if (result[0].session_id === null) {
-			return response.status(400).send("User not logged in.\n");
 		} else {
 			// Check if password reset token is expired
 			if (Date.now() > result[0].passwordResetExpires) {
