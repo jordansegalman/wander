@@ -102,8 +102,7 @@ app.post('/login', json_parser, function(request, response) {
 	login(u, p, response);
 });
 
-
-// Called when a POST request is made to /login
+// Called when a POST request is made to /logout
 app.post('/logout', json_parser, function(request, response) {
 	// If the object request.body is null, respond with status 500 'Internal Server Error'
 	if (!request.body) return response.sendStatus(500);
@@ -118,6 +117,7 @@ app.post('/logout', json_parser, function(request, response) {
 	logout(s, response);
 });
 
+// Called when a POST request is made to /verifySession
 app.post('/verifySession', function(request, response){
 	// If the object request.body is null, respond with status 500 'Internal Server Error'
 	if (!request.body) return response.sendStatus(500);
@@ -869,6 +869,7 @@ function getProfile(e, response) {
 
 // Helper function for updating user location data
 function updateLocation(u, lat, lon, response) {
+	// Insert username, longitude, latitude, and time
 	var sql = "INSERT INTO ?? SET ??=?, ??=?, ??=?, ??=?";
 	var date = new Date();
 	var currentTime = date.getTime();
