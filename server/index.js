@@ -3,9 +3,9 @@ var bodyParser = require('body-parser');
 var mysql = require('mysql');
 var http = require('http');
 var bcrypt = require('bcrypt');
+var session = require('express-session');
 
 var app = express();
-var json_parser = bodyParser.json();
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({
 	extended: true
@@ -22,14 +22,16 @@ const newUsername = "newUsername";
 const newPassword = "newPassword";
 const newEmail = "newEmail";
 const host = "localhost";
-const session_id = "session_id";
 const confirmed = "confirmed";
 const passwordResetToken = "passwordResetToken";
 const passwordResetExpires = "passwordResetExpires";
 const latitude = "latitude";
 const longitude = "longitude";
-const times = "times";
-const TIME_INTERVAL = 604800000;
+const time = "time";
+const firstName = "firstname";
+const lastName = "lastname";
+const loc = "location";
+const about = "about";
 
 // Need to change username and password for production
 const db_username = "wander";
@@ -39,8 +41,25 @@ const db_accounts = "accounts";
 const db_profiles = "profiles";
 const db_locations = "locations";
 
-// Constants used for password hashing
+// Constant used for password hashing
 const saltRounds = 10;
+
+// Constant used for password reset and session
+const crypto = require('crypto');
+
+// Setup SendGrid for transactional email
+const sgMail = require('@sendgrid/mail');
+sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+
+// Setup session
+app.set('trust proxy', 1);
+app.use(session({
+	name: 'wander-cookie',
+	secret: crypto.randomBytes(16).toString('hex'),
+	resave: false,
+	saveUninitialized: true,
+	cookie: { domain: '.vvander.me', httpOnly: true, secure: true, maxAge: 31536000000 }
+}));
 
 // Create http server and listen on specified port
 var httpServer = http.createServer(app);
@@ -59,18 +78,11 @@ var dbConnection = mysql.createConnection({
 	database: db_name
 });
 
-// Setup SendGrid for transactional email
-const sgMail = require('@sendgrid/mail');
-sgMail.setApiKey(process.env.SENDGRID_API_KEY);
-
-// Constants used for password reset
-const crypto = require('crypto');
-
 // Serve 'website' directory
 app.use(express.static('website'));
 
 // Called when a POST request is made to /registerAccount
-app.post('/registerAccount', json_parser, function(request, response) {
+app.post('/registerAccount', function(request, response) {
 	// If the object request.body is null, respond with status 500 'Internal Server Error'
 	if (!request.body) return response.sendStatus(500);
 
@@ -87,7 +99,7 @@ app.post('/registerAccount', json_parser, function(request, response) {
 });
 
 // Called when a POST request is made to /login
-app.post('/login', json_parser, function(request, response) {
+app.post('/login', function(request, response) {
 	// If the object request.body is null, respond with status 500 'Internal Server Error'
 	if (!request.body) return response.sendStatus(500);
 
@@ -96,44 +108,55 @@ app.post('/login', json_parser, function(request, response) {
 		return response.status(400).send("Invalid POST request\n");
 	}
 
+	// If session already authenticated
+	if (request.session && request.session.authenticated && request.session.authenticated === true) {
+		return response.status(400).send("User already logged in.\n");
+	}
+
 	var u = request.body.username;
 	var p = request.body.password;
 
-	login(u, p, response);
+	login(u, p, request, response);
 });
 
 // Called when a POST request is made to /logout
-app.post('/logout', json_parser, function(request, response) {
+app.post('/logout', function(request, response) {
 	// If the object request.body is null, respond with status 500 'Internal Server Error'
 	if (!request.body) return response.sendStatus(500);
 
-	// POST request must have 1 parameter (session_id)
-	if (Object.keys(request.body).length != 1 || !request.body.session_id) {
+	// POST request must have 0 parameters
+	if (Object.keys(request.body).length != 0) {
 		return response.status(400).send("Invalid POST request\n");
 	}
 
-	var s = request.body.session_id;
+	// If session not authenticated
+	if (!request.session || !request.session.authenticated || request.session.authenticated === false) {
+		return response.status(400).send("User not logged in.\n");
+	}
 
-	logout(s, response);
+	logout(request, response);
 });
 
 // Called when a POST request is made to /verifySession
-app.post('/verifySession', function(request, response){
+app.post('/verifySession', function(request, response) {
 	// If the object request.body is null, respond with status 500 'Internal Server Error'
 	if (!request.body) return response.sendStatus(500);
 
-	// POST request must have 2 parameters (username and password)
-	if (Object.keys(request.body).length != 1) {
+	// POST request must have 0 parameters
+	if (Object.keys(request.body).length != 0) {
 		return response.status(400).send("Invalid POST request\n");
 	}
 
-	var s = request.body.session_id;
+	// If session not authenticated
+	if (!request.session || !request.session.authenticated || request.session.authenticated === false) {
+		return response.status(400).send(JSON.stringify({"response":"fail"}));
+	}
 
-	verifySession(s, response);
+	return response.status(200).send(JSON.stringify({"response":"pass"}));
 });
 
 // Called when a POST request is made to /deleteAccount
-app.post('/deleteAccount', json_parser, function(request, response) {
+app.post('/deleteAccount', function(request, response) {
 	// If the object request.body is null, respond with status 500 'Internal Server Error'
 	if (!request.body) return response.sendStatus(500);
 
@@ -142,15 +165,20 @@ app.post('/deleteAccount', json_parser, function(request, response) {
 		return response.status(400).send("Invalid POST request\n");
 	}
 
+	// If session not authenticated
+	if (!request.session || !request.session.authenticated || request.session.authenticated === false) {
+		return response.status(400).send("User not logged in.\n");
+	}
+
 	var u = request.body.username;
 	var p = request.body.password;
 	var e = request.body.email;
 
-	deleteAccount(u, p, e, response);
+	deleteAccount(u, p, e, request, response);
 });
 
 // Called when a POST request is made to /changeUsername
-app.post('/changeUsername', json_parser, function(request, response) {
+app.post('/changeUsername', function(request, response) {
 	// If the object request.body is null, respond with status 500 'Internal Server Error'
 	if (!request.body) return response.sendStatus(500);
 
@@ -159,16 +187,21 @@ app.post('/changeUsername', json_parser, function(request, response) {
 		return response.status(400).send("Invalid POST request\n");
 	}
 
+	// If session not authenticated
+	if (!request.session || !request.session.authenticated || request.session.authenticated === false) {
+		return response.status(400).send("User not logged in.\n");
+	}
+
 	var u = request.body.username;
 	var p = request.body.password;
 	var e = request.body.email;
 	var n = request.body.newUsername;
 
-	changeUsername(u, p, e, n, response);
+	changeUsername(u, p, e, n, request, response);
 });
 
 // Called when a POST request is made to /changePassword
-app.post('/changePassword', json_parser, function(request, response) {
+app.post('/changePassword', function(request, response) {
 	// If the object request.body is null, respond with status 500 'Internal Server Error'
 	if (!request.body) return response.sendStatus(500);
 
@@ -177,16 +210,21 @@ app.post('/changePassword', json_parser, function(request, response) {
 		return response.status(400).send("Invalid POST request\n");
 	}
 
+	// If session not authenticated
+	if (!request.session || !request.session.authenticated || request.session.authenticated === false) {
+		return response.status(400).send("User not logged in.\n");
+	}
+
 	var u = request.body.username;
 	var p = request.body.password;
 	var e = request.body.email;
 	var n = request.body.newPassword;
 
-	changePassword(u, p, e, n, response);
+	changePassword(u, p, e, n, request, response);
 });
 
 // Called when a POST request is made to /changeEmail
-app.post('/changeEmail', json_parser, function(request, response) {
+app.post('/changeEmail', function(request, response) {
 	// If the object request.body is null, respond with status 500 'Internal Server Error'
 	if (!request.body) return response.sendStatus(500);
 
@@ -195,16 +233,21 @@ app.post('/changeEmail', json_parser, function(request, response) {
 		return response.status(400).send("Invalid POST request\n");
 	}
 
+	// If session not authenticated
+	if (!request.session || !request.session.authenticated || request.session.authenticated === false) {
+		return response.status(400).send("User not logged in.\n");
+	}
+
 	var u = request.body.username;
 	var p = request.body.password;
 	var e = request.body.email;
 	var n = request.body.newEmail;
 
-	changeEmail(u, p, e, n, response);
+	changeEmail(u, p, e, n, request, response);
 });
 
 // Called when a POST request is made to /forgotPassword
-app.post('/forgotPassword', json_parser, function(request, response) {
+app.post('/forgotPassword', function(request, response) {
 	// If the object request.body is null, respond with status 500 'Internal Server Error'
 	if (!request.body) return response.sendStatus(500);
 
@@ -225,7 +268,7 @@ app.get('/linkedInProfile', function(request, response) {
 });
 
 // Called when a POST request is made to /updateLinkedIn
-app.post('/updateLinkedIn', json_parser, function(request, response) {
+app.post('/updateLinkedIn', function(request, response) {
 	// If the object request.body is null, respond with status 500 'Internal Server Error'
 	if (!request.body) return response.sendStatus(500);
 
@@ -237,10 +280,10 @@ app.post('/updateLinkedIn', json_parser, function(request, response) {
 	var f = request.body.firstname;
 	var l = request.body.lastname;
 	var e = request.body.email;
-	var loc = request.body.loc;
+	var lo = request.body.loc;
 	var a = request.body.about;
 
-	updateLinkedInProfile(f, l, e, loc, a, response);
+	updateLinkedInProfile(f, l, e, lo, a, response);
 });
 
 // Called when a GET request is made to /resetPassword
@@ -308,9 +351,14 @@ app.post('/getProfile', function(request, response) {
 		return response.status(400).send("Invalid POST request\n");
 	}
 
+	// If session not authenticated
+	if (!request.session || !request.session.authenticated || request.session.authenticated === false) {
+		return response.status(400).send("User not logged in.\n");
+	}
+
 	var e = request.body.email;
 
-	getProfile(e, response);
+	getProfile(e, request, response);
 });
 
 // Called when a POST request is made to /updateLocation
@@ -323,11 +371,16 @@ app.post('/updateLocation', function(request, response){
 		return response.status(400).send("Invalid POST request\n");
 	}
 
+	// If session not authenticated
+	if (!request.session || !request.session.authenticated || request.session.authenticated === false) {
+		return response.status(400).send("User not logged in.\n");
+	}
+
 	var u = request.body.username;
 	var lat = request.body.latitude;
 	var lon = request.body.longitude;
 
-	updateLocation(u, lat, lon, response);
+	updateLocation(u, lat, lon, request, response);
 });
 
 // Helper function that registers a user if username and email does not already exist
@@ -364,37 +417,25 @@ function register(u, p, e, response) {
 }
 
 // Helper function that verifies user has an account and logs them in
-function login(u, p, response) {
-	// Get password hash, session_id, and email for username
-	var sql = "SELECT ??,??,?? FROM ?? WHERE ??=?";
-	var post = [password, session_id, email, db_accounts, username, u];
+function login(u, p, request, response) {
+	// Get password hash and email for username
+	var sql = "SELECT ??,?? FROM ?? WHERE ??=?";
+	var post = [password, email, db_accounts, username, u];
 	dbConnection.query(sql, post, function (err, result) {
 		if (err) throw err;
 		if (Object.keys(result).length != 1) {
 			return response.status(400).send("Invalid username or password. Try again.\n");
 		} else {
 			// Compare sent password hash to account password hash
-			var e = result[0].email;
 			bcrypt.compare(p, result[0].password, function(err, res) {
-				if (res !== true) {
-					return response.status(400).send("Invalid username or password. Try again.\n");
+				if (res === true) {
+					request.session.authenticated = true;
+					request.session.username = u;
+					request.session.email = result[0].email;
+					console.log("User logged in.");
+					return response.status(200).send(JSON.stringify({"response":"pass", "email":result[0].email}));
 				} else {
-					if (result[0].session_id === null) {
-						// Update account session_id and send response with session_id
-						crypto.randomBytes(16, (err, buf) => {
-							if (err) throw err;
-							var session = buf.toString('hex');
-							sql = "UPDATE ?? SET ??=? WHERE ??=?";
-							post = [db_accounts, session_id, session, username, u];
-							dbConnection.query(sql, post, function(err, result) {
-								if (err) throw err;
-								console.log("User logged in.");
-								return response.status(200).send(JSON.stringify({"response":"pass", "session_id":session, "email":e}));
-							});
-						});
-					} else {
-						return response.status(400).send("User already logged in.\n");
-					}
+					return response.status(400).send("Invalid username or password. Try again.\n");
 				}
 			});
 		}
@@ -402,55 +443,23 @@ function login(u, p, response) {
 }
 
 // Helper function that verifies user is logged in and can now log out
-function logout(s, response) {
-	// Check for session_id
-	var sql = "SELECT ?? FROM ?? WHERE ??=?";
-	var post = [session_id, db_accounts, session_id, s];
-	dbConnection.query(sql, post, function (err, result) {
-		if (err) throw err;
-		if (Object.keys(result).length != 1) {
-			return response.status(400).send("Error with logout.\n");
-		} else if (result[0].session_id === null) {
-			return response.status(400).send("User not logged in.\n");
-		} else {
-			// Update session_id to null
-			sql = "UPDATE ?? SET ??=? WHERE ??=?";
-			post = [db_accounts, session_id, null, session_id, s];
-			dbConnection.query(sql, post, function(err, result){
-				if (err) throw err;
-				console.log("User logged out.");
-				return response.status(200).send(JSON.stringify({"response":"pass"}));
-			});
-		}
-	});
-}
-
-// Helper function that verifies a session exists
-function verifySession(s, response) {
-	// Check if session_id exists
-	var sql = "SELECT * FROM ?? WHERE ??=?";
-	var post = [db_accounts, session_id, s];
-	dbConnection.query(sql, post, function(err, result){
-		if (err) throw err;
-		if (Object.keys(result).length == 0) {
-			return response.status(400).send(JSON.stringify({"response":"fail"}));
-		} else {
-			return response.status(200).send(JSON.stringify({"response":"pass"}));
-		}
-	});
+function logout(request, response) {
+	delete request.session.authenticated;
+	delete request.session.username;
+	delete request.session.email;
+	console.log("User logged out.");
+	return response.status(200).send(JSON.stringify({"response":"pass"}));
 }
 
 // Helper function that deletes an account
-function deleteAccount(u, p, e, response) {
-	// Get password hash and session_id for username and email
-	var sql = "SELECT ??,?? FROM ?? WHERE ??=? AND ??=?";
-	var post = [password, session_id, db_accounts, username, u, email, e];
+function deleteAccount(u, p, e, request, response) {
+	// Get password hash for username and email
+	var sql = "SELECT ?? FROM ?? WHERE ??=? AND ??=?";
+	var post = [password, db_accounts, username, u, email, e];
 	dbConnection.query(sql, post, function (err, result) {
 		if (err) throw err;
 		if (Object.keys(result).length != 1) {
 			return response.status(400).send("Invalid username or email.\n");
-		} else if (result[0].session_id === null) {
-			return response.status(400).send("User not logged in.\n");
 		} else {
 			// Compare sent password hash to account password hash
 			bcrypt.compare(p, result[0].password, function(err, res) {
@@ -468,6 +477,9 @@ function deleteAccount(u, p, e, response) {
 							var post = [db_locations, username, u];
 							dbConnection.query(sql, post, function(err, result){
 								if (err) throw err;
+								delete request.session.authenticated;
+								delete request.session.username;
+								delete request.session.email;
 								// Send account deletion notification email
 								const msg = {
 									to: e,
@@ -494,16 +506,14 @@ function deleteAccount(u, p, e, response) {
 }
 
 // Helper function that changes the username of an account
-function changeUsername(u, p, e, n, response) {
-	// Get username and session_id for username and email
-	var sql = "SELECT ??,?? FROM ?? WHERE ??=? && ??=?";
-	var post = [username, session_id, db_accounts, username, u, email, e];
+function changeUsername(u, p, e, n, request, response) {
+	// Get username for username and email
+	var sql = "SELECT ?? FROM ?? WHERE ??=? && ??=?";
+	var post = [username, db_accounts, username, u, email, e];
 	dbConnection.query(sql, post, function(err, result){
 		if (err) throw err;
 		if (Object.keys(result).length == 0) {
 			return response.status(400).send("Invalid username or email.\n");
-		} else if (result[0].session_id === null) {
-			return response.status(400).send("User not logged in.\n");
 		} else {
 			// Check if new username already exists
 			var sql = "SELECT ?? FROM ?? WHERE ??=?";
@@ -561,25 +571,20 @@ function changeUsername(u, p, e, n, response) {
 }
 
 // Helper function that changes the password of an account
-function changePassword(u, p, e, n, response) {
-	// Get password hash and session_id for username and email
-	var sql = "SELECT ??,?? FROM ?? WHERE ??=? AND ??=?";
-	var post = [password, session_id, db_accounts, username, u, email, e];
+function changePassword(u, p, e, n, request, response) {
+	// Get password hash for username and email
+	var sql = "SELECT ?? FROM ?? WHERE ??=? AND ??=?";
+	var post = [password, db_accounts, username, u, email, e];
 	dbConnection.query(sql, post, function (err, result) {
 		if (err) throw err;
 		if (Object.keys(result).length != 1) {
 			console.log("err 1");
-			console.log(e);
-			console.log(u);
 			return response.status(400).send("Invalid username or email.\n");
-		} else if (result[0].session_id === null) {
-			console.log("err 2");
-			return response.status(400).send("User not logged in.\n");
 		} else {
 			// Compare sent password hash to account password hash
 			bcrypt.compare(p, result[0].password, function(err, res) {
 				if (res !== true) {
-					console.log("err 3");
+					console.log("err 2");
 					return response.status(400).send("Invalid password. Try again.\n");
 				} else {
 					// Hash new password and update password for username and email
@@ -604,7 +609,7 @@ function changePassword(u, p, e, n, response) {
 								// For testing purposes only
 								return reponse.status(400).send("Error changed multiple account passwords.\n");
 							} else if (result.affectedRows == 0) {
-								console.log("err 4");
+								console.log("err 3");
 								return response.status(400).send("Failed to change password.\n");
 							}
 						});
@@ -616,20 +621,18 @@ function changePassword(u, p, e, n, response) {
 }
 
 // Helper function that changes the email of an account
-function changeEmail(u, p, e, n, response) {
-	// Get email and session_id for username and email
-	var sql = "SELECT ??,?? FROM ?? WHERE ??=? && ??=?";
-	var post = [email, session_id, db_accounts, username, u, email, e];
+function changeEmail(u, p, e, n, request, response) {
+	// Get email for username and email
+	var sql = "SELECT ?? FROM ?? WHERE ??=? && ??=?";
+	var post = [email, db_accounts, username, u, email, e];
 	dbConnection.query(sql, post, function(err, result){
 		if (err) throw err;
 		if (Object.keys(result).length == 0) {
 			return response.status(400).send("Invalid username or email.\n");
-		} else if (result[0].session_id === null) {
-			return response.status(400).send("User not logged in.\n");
 		} else {
 			// Check if new email already exists
-			var sql = "SELECT ??,?? FROM ?? WHERE ??=?";
-			var post = [email, session_id, db_accounts, email, n];
+			var sql = "SELECT ?? FROM ?? WHERE ??=?";
+			var post = [email, db_accounts, email, n];
 			dbConnection.query(sql, post, function (err, result) {
 				if (err) throw err;
 				if (Object.keys(result).length != 0) {
@@ -757,7 +760,7 @@ function resetPassword(token, newPassword, confirmPassword, response) {
 	if (newPassword != confirmPassword) {
 		return response.status(400).send("Passwords did not match.\n");
 	}
-	// Get email, passwordResetExpires, and session_id for passwordResetToken
+	// Get email and passwordResetExpires for passwordResetToken
 	var sql = "SELECT ??, ?? FROM ?? WHERE ??=?";
 	var post = [email, passwordResetExpires, db_accounts, passwordResetToken, token];
 	dbConnection.query(sql, post, function(err, result) {
@@ -819,16 +822,16 @@ function resetPassword(token, newPassword, confirmPassword, response) {
 }
 
 // Helper function for updating LinkedIn profile information
-function updateLinkedInProfile(f, l, e, loc, a, response) {
+function updateLinkedInProfile(f, l, e, lo, a, response) {
 	// Get profile for email
 	var sql = "SELECT * FROM ?? WHERE ??=?";
-	var post = [db_profiles, "email", e];
+	var post = [db_profiles, email, e];
 	dbConnection.query(sql, post, function(err, result) {
 		if (err) throw err;
 		if (Object.keys(result).length == 0) {
 			// Create profile if none exists for email
 			var sql = "INSERT INTO ?? SET ??=?, ??=?, ??=?, ??=?, ??=?";
-			var post = [db_profiles, "firstname", f, "lastname", l, "email", e, "location", loc, "about", a];
+			var post = [db_profiles, firstName, f, lastName, l, email, e, loc, lo, about, a];
 			dbConnection.query(sql, post, function(err, result) {
 				if (err) throw err;
 				console.log("LinkedIn profile created."); 
@@ -837,7 +840,7 @@ function updateLinkedInProfile(f, l, e, loc, a, response) {
 		} else {
 			// Update profile if already exists for email
 			var sql = "UPDATE ?? SET ??=?, ??=?, ??=?, ??=? WHERE ??=?";
-			var post = [db_profiles, "firstname", f, "lastname", l, "location", loc, "email", e, "about", a];
+			var post = [db_profiles, firstName, f, lastName, l, email, e, loc, lo, about, a];
 			dbConnection.query(sql, post, function(err, result) {
 				if (err) throw err;
 				console.log("LinkedIn profile updated."); 
@@ -848,38 +851,37 @@ function updateLinkedInProfile(f, l, e, loc, a, response) {
 }
 
 // Helper function for getting LinkedIn profile information
-function getProfile(e, response) {
+function getProfile(e, request, response) {
 	// Get profile for email and respond with profile data
 	var sql = "SELECT * FROM ?? WHERE ??=?";
-	var post = [db_profiles, "email", e];
+	var post = [db_profiles, email, e];
 	dbConnection.query(sql, post, function(err, result) {
 		if (err) throw err;
 		if (Object.keys(result).length == 0) {
-			return response.status(400).send("Nothing to update.\n");
+			return response.status(400).send("No profile.\n");
 		} else {
 			var f = result[0].firstname;
 			var l = result[0].lastname;
 			var e = result[0].email;
-			var loc = result[0].location;
+			var lo = result[0].location;
 			var a = result[0].about;
-			return response.status(200).send(JSON.stringify({"response":"pass", "firstname":f, "lastname":l, "email":e, "location":loc, "about":a}));
+			return response.status(200).send(JSON.stringify({"response":"pass", firstname:f, lastname:l, email:e, loc:lo, about:a}));
 		}
 	});
 }
 
 // Helper function for updating user location data
-function updateLocation(u, lat, lon, response) {
+function updateLocation(u, lat, lon, request, response) {
 	// Insert username, longitude, latitude, and time
 	var sql = "INSERT INTO ?? SET ??=?, ??=?, ??=?, ??=?";
-	var date = new Date();
-	var currentTime = date.getTime();
-	var weekOld = currentTime - TIME_INTERVAL;
-	var post = [db_locations, username, u, longitude, lon, latitude, lat, times, currentTime];
+	var currentTime = Date.now();
+	var weekOld = currentTime - 604800000;
+	var post = [db_locations, username, u, longitude, lon, latitude, lat, time, currentTime];
 	dbConnection.query(sql, post, function(err, result){
 		if (err) throw err;
 		// Delete all location data more than a week old
 		var sql = "DELETE FROM ?? WHERE ?? BETWEEN 0 AND ?";
-		var post = [db_locations, times, weekOld];
+		var post = [db_locations, time, weekOld];
 		dbConnection.query(sql, post, function(err, result){
 			if (err) throw err;
 		});
