@@ -15,6 +15,7 @@ app.use(bodyParser.urlencoded({
 const port = 3000;
 
 // Constants used for verifying JSON subsmission by users
+const uid = "uid";
 const username = "username";
 const password = "password";
 const email = "email";
@@ -160,8 +161,8 @@ app.post('/deleteAccount', function(request, response) {
 	// If the object request.body is null, respond with status 500 'Internal Server Error'
 	if (!request.body) return response.sendStatus(500);
 
-	// POST request must have 3 parameters (username, password, and email)
-	if (Object.keys(request.body).length != 3 || !request.body.username || !request.body.password || !request.body.email) {
+	// POST request must have 1 parameter (password)
+	if (Object.keys(request.body).length != 1 || !request.body.password) {
 		return response.status(400).send("Invalid POST request\n");
 	}
 
@@ -170,11 +171,32 @@ app.post('/deleteAccount', function(request, response) {
 		return response.status(400).send("User not logged in.\n");
 	}
 
-	var u = request.body.username;
 	var p = request.body.password;
-	var e = request.body.email;
 
-	deleteAccount(u, p, e, request, response);
+	deleteAccount(p, request, response);
+});
+
+// Called when a GET request is made to /confirmEmail
+app.get('/confirmEmail', function(request, response) {
+	// GET request must have 1 query (email)
+	if (Object.keys(request.query).length != 1 || !request.query.email) {
+		return response.redirect('/');
+	}
+
+	var e = request.query.email;
+
+	// Update account confirmed to true
+	var sql = "UPDATE ?? SET ??=? WHERE ??=?";
+	var post = [db_accounts, confirmed, true, email, e];
+	dbConnection.query(sql, post, function (err, result){
+		if (err) throw err;
+		if (result.affectedRows == 1) {
+			console.log("Account email confirmed.");
+			return response.sendFile(__dirname + '/website/emailConfirmed.html');
+		} else {
+			return response.redirect('/');
+		}
+	});
 });
 
 // Called when a POST request is made to /changeUsername
@@ -182,8 +204,8 @@ app.post('/changeUsername', function(request, response) {
 	// If the object request.body is null, respond with status 500 'Internal Server Error'
 	if (!request.body) return response.sendStatus(500);
 
-	// POST request must have 4 parameters (username, password, email, and newUsername)
-	if (Object.keys(request.body).length != 4 || !request.body.username || !request.body.password || !request.body.email || !request.body.newUsername) {
+	// POST request must have 2 parameters (password and newUsername)
+	if (Object.keys(request.body).length != 2 || !request.body.password || !request.body.newUsername) {
 		return response.status(400).send("Invalid POST request\n");
 	}
 
@@ -192,12 +214,10 @@ app.post('/changeUsername', function(request, response) {
 		return response.status(400).send("User not logged in.\n");
 	}
 
-	var u = request.body.username;
 	var p = request.body.password;
-	var e = request.body.email;
 	var n = request.body.newUsername;
 
-	changeUsername(u, p, e, n, request, response);
+	changeUsername(p, n, request, response);
 });
 
 // Called when a POST request is made to /changePassword
@@ -205,8 +225,8 @@ app.post('/changePassword', function(request, response) {
 	// If the object request.body is null, respond with status 500 'Internal Server Error'
 	if (!request.body) return response.sendStatus(500);
 
-	// POST request must have 4 parameters (username, password, email, and newPassword)
-	if (Object.keys(request.body).length != 4 || !request.body.username || !request.body.password || !request.body.email || !request.body.newPassword) {
+	// POST request must have 2 parameters (password and newPassword)
+	if (Object.keys(request.body).length != 2 || !request.body.password || !request.body.newPassword) {
 		return response.status(400).send("Invalid POST request\n");
 	}
 
@@ -215,12 +235,10 @@ app.post('/changePassword', function(request, response) {
 		return response.status(400).send("User not logged in.\n");
 	}
 
-	var u = request.body.username;
 	var p = request.body.password;
-	var e = request.body.email;
 	var n = request.body.newPassword;
 
-	changePassword(u, p, e, n, request, response);
+	changePassword(p, n, request, response);
 });
 
 // Called when a POST request is made to /changeEmail
@@ -228,8 +246,8 @@ app.post('/changeEmail', function(request, response) {
 	// If the object request.body is null, respond with status 500 'Internal Server Error'
 	if (!request.body) return response.sendStatus(500);
 
-	// POST request must have 4 parameters (username, password, email, and newEmail)
-	if (Object.keys(request.body).length != 4 || !request.body.username || !request.body.password || !request.body.email || !request.body.newEmail) {
+	// POST request must have 2 parameters (password and newEmail)
+	if (Object.keys(request.body).length != 2 || !request.body.password || !request.body.newEmail) {
 		return response.status(400).send("Invalid POST request\n");
 	}
 
@@ -238,12 +256,10 @@ app.post('/changeEmail', function(request, response) {
 		return response.status(400).send("User not logged in.\n");
 	}
 
-	var u = request.body.username;
 	var p = request.body.password;
-	var e = request.body.email;
 	var n = request.body.newEmail;
 
-	changeEmail(u, p, e, n, request, response);
+	changeEmail(p, n, request, response);
 });
 
 // Called when a POST request is made to /forgotPassword
@@ -260,30 +276,6 @@ app.post('/forgotPassword', function(request, response) {
 	var e = request.body.email;
 
 	forgotPassword(u, e, response);
-});
-
-// Called when a GET request is made to /linkedInProfile
-app.get('/linkedInProfile', function(request, response) {
-	response.sendFile(__dirname + '/website/linkedInProfile.html');
-});
-
-// Called when a POST request is made to /updateLinkedIn
-app.post('/updateLinkedIn', function(request, response) {
-	// If the object request.body is null, respond with status 500 'Internal Server Error'
-	if (!request.body) return response.sendStatus(500);
-
-	// POST request must have 5 parameters (firstname, lastname, email, loc, and about)
-	if (Object.keys(request.body).length != 5 || !request.body.firstname || !request.body.lastname || !request.body.email || !request.body.loc || !request.body.about) {
-		return response.status(400).send("Invalid POST request\n");
-	}
-
-	var f = request.body.firstname;
-	var l = request.body.lastname;
-	var e = request.body.email;
-	var lo = request.body.loc;
-	var a = request.body.about;
-
-	updateLinkedInProfile(f, l, e, lo, a, response);
 });
 
 // Called when a GET request is made to /resetPassword
@@ -318,27 +310,28 @@ app.post('/resetPassword', function(request, response) {
 	resetPassword(token, newPassword, confirmPassword, response);
 });
 
-// Called when a GET request is made to /confirmEmail
-app.get('/confirmEmail', function(request, response) {
-	// GET request must have 1 query (email)
-	if (Object.keys(request.query).length != 1 || !request.query.email) {
-		return response.redirect('/');
+// Called when a GET request is made to /linkedInProfile
+app.get('/linkedInProfile', function(request, response) {
+	response.sendFile(__dirname + '/website/linkedInProfile.html');
+});
+
+// Called when a POST request is made to /updateLinkedIn
+app.post('/updateLinkedIn', function(request, response) {
+	// If the object request.body is null, respond with status 500 'Internal Server Error'
+	if (!request.body) return response.sendStatus(500);
+
+	// POST request must have 5 parameters (firstname, lastname, email, loc, and about)
+	if (Object.keys(request.body).length != 5 || !request.body.firstname || !request.body.lastname || !request.body.email || !request.body.loc || !request.body.about) {
+		return response.status(400).send("Invalid POST request\n");
 	}
 
-	var e = request.query.email;
+	var f = request.body.firstname;
+	var l = request.body.lastname;
+	var e = request.body.email;
+	var lo = request.body.loc;
+	var a = request.body.about;
 
-	// Update account confirmed to true
-	var sql = "UPDATE ?? SET ??=? WHERE ??=?";
-	var post = [db_accounts, confirmed, true, email, e];
-	dbConnection.query(sql, post, function (err, result){
-		if (err) throw err;
-		if (result.affectedRows == 1) {
-			console.log("Account email confirmed.");
-			return response.sendFile(__dirname + '/website/emailConfirmed.html');
-		} else {
-			return response.redirect('/');
-		}
-	});
+	updateLinkedInProfile(f, l, e, lo, a, response);
 });
 
 // Called when a POST request is made to /getProfile
@@ -346,8 +339,8 @@ app.post('/getProfile', function(request, response) {
 	// If the object request.body is null, respond with status 500 'Internal Server Error'
 	if (!request.body) return response.sendStatus(500);
 
-	// POST request must have 1 parameter (email)
-	if (Object.keys(request.body).length != 1 || !request.body.email) {
+	// POST request must have 0 parameters
+	if (Object.keys(request.body).length != 0) {
 		return response.status(400).send("Invalid POST request\n");
 	}
 
@@ -356,9 +349,7 @@ app.post('/getProfile', function(request, response) {
 		return response.status(400).send("User not logged in.\n");
 	}
 
-	var e = request.body.email;
-
-	getProfile(e, request, response);
+	getProfile(request, response);
 });
 
 // Called when a POST request is made to /updateLocation
@@ -366,8 +357,8 @@ app.post('/updateLocation', function(request, response){
 	// If the object request.body is null, respond with status 500 'Internal Server Error'
 	if (!request.body) return response.sendStatus(500);
 
-	// POST request must have 3 parameters (username, latitude, and longitude)
-	if (Object.keys(request.body).length != 3 || !request.body.username || !request.body.latitude || !request.body.longitude) {
+	// POST request must have 2 parameters (latitude and longitude)
+	if (Object.keys(request.body).length != 2 || !request.body.latitude || !request.body.longitude) {
 		return response.status(400).send("Invalid POST request\n");
 	}
 
@@ -376,11 +367,10 @@ app.post('/updateLocation', function(request, response){
 		return response.status(400).send("User not logged in.\n");
 	}
 
-	var u = request.body.username;
 	var lat = request.body.latitude;
 	var lon = request.body.longitude;
 
-	updateLocation(u, lat, lon, request, response);
+	updateLocation(lat, lon, request, response);
 });
 
 // Helper function that registers a user if username and email does not already exist
@@ -395,21 +385,32 @@ function register(u, p, e, response) {
 		} else {
 			// Hash password and insert username, hash, and email
 			bcrypt.hash(p, saltRounds, function(err, hash) {
-				var sql = "INSERT INTO ?? SET ?";
-				var post = {username: u, password: hash, email: e};
-				dbConnection.query(sql, [db_accounts, post], function (err, result) {
+				var userID = crypto.randomBytes(8).toString('hex');
+				// Check if user ID already exists
+				var sql = "SELECT ?? FROM ?? WHERE ??=?";
+				var post = [uid, db_accounts, uid, userID];
+				dbConnection.query(sql, post, function (err, result) {
 					if (err) throw err;
-					// Send registration confirm email
-					const msg = {
-						to: e,
-						from: 'support@vvander.me',
-						subject: 'Welcome to Wander!',
-						text: 'Hey ' + u + '! You have registered for a Wander account. Click the following link to confirm your email: https://vvander.me/confirmEmail?email=' + e,
-						html: '<strong>Hey ' + u + '! You have registered for a Wander account. Click the following link to confirm your email: https://vvander.me/confirmEmail?email=' + e + '</strong>',
-					};
-					sgMail.send(msg);
-					console.log("Account registered.");
-					return response.status(200).send(JSON.stringify({"response":"pass"}));
+					if (Object.keys(result).length != 0) {
+						return response.status(500).send("User ID collision!\n");
+					} else {
+						var sql = "INSERT INTO ?? SET ?";
+						var post = {uid: userID, username: u, password: hash, email: e};
+						dbConnection.query(sql, [db_accounts, post], function (err, result) {
+							if (err) throw err;
+							// Send registration confirm email
+							const msg = {
+								to: e,
+								from: 'support@vvander.me',
+								subject: 'Welcome to Wander!',
+								text: 'Hey ' + u + '! You have registered for a Wander account. Click the following link to confirm your email: https://vvander.me/confirmEmail?email=' + e,
+								html: '<strong>Hey ' + u + '! You have registered for a Wander account. Click the following link to confirm your email: https://vvander.me/confirmEmail?email=' + e + '</strong>',
+							};
+							sgMail.send(msg);
+							console.log("Account registered.");
+							return response.status(200).send(JSON.stringify({"response":"pass"}));
+						});
+					}
 				});
 			});
 		}
@@ -419,8 +420,8 @@ function register(u, p, e, response) {
 // Helper function that verifies user has an account and logs them in
 function login(u, p, request, response) {
 	// Get password hash and email for username
-	var sql = "SELECT ??,?? FROM ?? WHERE ??=?";
-	var post = [password, email, db_accounts, username, u];
+	var sql = "SELECT ??,??,?? FROM ?? WHERE ??=?";
+	var post = [uid, password, email, db_accounts, username, u];
 	dbConnection.query(sql, post, function (err, result) {
 		if (err) throw err;
 		if (Object.keys(result).length != 1) {
@@ -430,10 +431,11 @@ function login(u, p, request, response) {
 			bcrypt.compare(p, result[0].password, function(err, res) {
 				if (res === true) {
 					request.session.authenticated = true;
+					request.session.uid = result[0].uid;
 					request.session.username = u;
 					request.session.email = result[0].email;
 					console.log("User logged in.");
-					return response.status(200).send(JSON.stringify({"response":"pass", "email":result[0].email}));
+					return response.status(200).send(JSON.stringify({"response":"pass", "email":request.session.email}));
 				} else {
 					return response.status(400).send("Invalid username or password. Try again.\n");
 				}
@@ -445,6 +447,7 @@ function login(u, p, request, response) {
 // Helper function that verifies user is logged in and can now log out
 function logout(request, response) {
 	delete request.session.authenticated;
+	delete request.session.uid;
 	delete request.session.username;
 	delete request.session.email;
 	console.log("User logged out.");
@@ -452,51 +455,52 @@ function logout(request, response) {
 }
 
 // Helper function that deletes an account
-function deleteAccount(u, p, e, request, response) {
-	// Get password hash for username and email
-	var sql = "SELECT ?? FROM ?? WHERE ??=? AND ??=?";
-	var post = [password, db_accounts, username, u, email, e];
+function deleteAccount(p, request, response) {
+	// Get password hash for user ID
+	var sql = "SELECT ?? FROM ?? WHERE ??=?";
+	var post = [password, db_accounts, uid, request.session.uid];
 	dbConnection.query(sql, post, function (err, result) {
 		if (err) throw err;
 		if (Object.keys(result).length != 1) {
-			return response.status(400).send("Invalid username or email.\n");
+			return response.status(500).send("User ID not found.\n");
 		} else {
 			// Compare sent password hash to account password hash
 			bcrypt.compare(p, result[0].password, function(err, res) {
 				if (res !== true) {
 					return response.status(400).send("Invalid password. Try again.\n");
 				} else {
-					// Delete account for username and email
-					var sql = "DELETE FROM ?? WHERE ??=? AND ??=?";
-					var post = [db_accounts, username, u, email, e];
+					// Delete account for user ID
+					var sql = "DELETE FROM ?? WHERE ??=?";
+					var post = [db_accounts, uid, request.session.uid];
 					dbConnection.query(sql, post, function(err, result) {
 						if (err) throw err;
 						if (result.affectedRows == 1) {
-							// Delete location data for email
+							// Delete location data for user ID
 							var sql = "DELETE FROM ?? WHERE ??=?";
-							var post = [db_locations, username, u];
+							var post = [db_locations, uid, request.session.uid];
 							dbConnection.query(sql, post, function(err, result){
 								if (err) throw err;
-								delete request.session.authenticated;
-								delete request.session.username;
-								delete request.session.email;
 								// Send account deletion notification email
 								const msg = {
-									to: e,
+									to: request.session.email,
 									from: 'support@vvander.me',
 									subject: 'Wander Account Deleted',
-									text: 'Hey ' + u + '! You have successfully deleted your Wander account. We are sorry to see you go.',
-									html: '<strong>Hey ' + u + '! You have successfully deleted your Wander account. We are sorry to see you go.</strong>',
+									text: 'Hey ' + request.session.username + '! You have successfully deleted your Wander account. We are sorry to see you go.',
+									html: '<strong>Hey ' + request.session.username + '! You have successfully deleted your Wander account. We are sorry to see you go.</strong>',
 								};
 								sgMail.send(msg);
+								delete request.session.authenticated;
+								delete request.session.uid;
+								delete request.session.username;
+								delete request.session.email;
 								console.log("Account deleted.");
 								return response.status(200).send(JSON.stringify({"response":"pass"}));
 							});
 						} else if (result.affectedRows > 1) {
 							// For testing purposes only
-							return reponse.status(400).send("Error deleted multiple accounts.\n");
+							return reponse.status(500).send("Error deleted multiple accounts.\n");
 						} else if (result.affectedRows == 0) {
-							return response.status(400).send("Failed to delete account.\n");
+							return response.status(500).send("Failed to delete account.\n");
 						}
 					});
 				}
@@ -506,60 +510,51 @@ function deleteAccount(u, p, e, request, response) {
 }
 
 // Helper function that changes the username of an account
-function changeUsername(u, p, e, n, request, response) {
-	// Get username for username and email
-	var sql = "SELECT ?? FROM ?? WHERE ??=? && ??=?";
-	var post = [username, db_accounts, username, u, email, e];
-	dbConnection.query(sql, post, function(err, result){
+function changeUsername(p, n, request, response) {
+	// Check if new username already exists
+	var sql = "SELECT ?? FROM ?? WHERE ??=?";
+	var post = [username, db_accounts, username, n];
+	dbConnection.query(sql, post, function (err, result) {
 		if (err) throw err;
-		if (Object.keys(result).length == 0) {
-			return response.status(400).send("Invalid username or email.\n");
+		if (Object.keys(result).length != 0) {
+			return response.status(400).send("Username already exists! Try again.\n");
 		} else {
-			// Check if new username already exists
+			// Get password hash for user ID
 			var sql = "SELECT ?? FROM ?? WHERE ??=?";
-			var post = [username, db_accounts, username, n];
+			var post = [password, db_accounts, uid, request.session.uid];
 			dbConnection.query(sql, post, function (err, result) {
 				if (err) throw err;
-				if (Object.keys(result).length != 0) {
-					return response.status(400).send("Username already exists! Try again.\n");
+				if (Object.keys(result).length != 1) {
+					return response.status(500).send("User ID not found.\n");
 				} else {
-					// Get password hash for username and email
-					var sql = "SELECT ?? FROM ?? WHERE ??=? AND ??=?";
-					var post = [password, db_accounts, username, u, email, e];
-					dbConnection.query(sql, post, function (err, result) {
-						if (err) throw err;
-						if (Object.keys(result).length != 1) {
-							return response.status(400).send("Invalid username or email.\n");
+					// Compare sent password hash to account password hash
+					bcrypt.compare(p, result[0].password, function(err, res) {
+						if (res !== true) {
+							return response.status(400).send("Invalid password. Try again.\n");
 						} else {
-							// Compare sent password hash to account password hash
-							bcrypt.compare(p, result[0].password, function(err, res) {
-								if (res !== true) {
-									return response.status(400).send("Invalid password. Try again.\n");
-								} else {
-									// Update username for username and email
-									var sql = "UPDATE ?? SET ??=? WHERE ??=? AND ??=?";
-									var post = [db_accounts, username, n, username, u, email, e];
-									dbConnection.query(sql, post, function(err, result) {
-										if (err) throw err;
-										if (result.affectedRows == 1) {
-											// Send username change notification email
-											const msg = {
-												to: e,
-												from: 'support@vvander.me',
-												subject: 'Wander Username Changed',
-												text: 'You have changed your Wander account username from ' + u + ' to ' + n + '.',
-												html: '<strong>You have changed your Wander account username from ' + u + ' to ' + n + '.</strong>',
-											};
-											sgMail.send(msg);
-											console.log("Account username changed.");
-											return response.status(200).send(JSON.stringify({"response":"pass"}));
-										} else if (result.affectedRows > 1) {
-											// For testing purposes only
-											return reponse.status(400).send("Error changed multiple account usernames.\n");
-										} else if (result.affectedRows == 0) {
-											return response.status(400).send("Failed to change username.\n");
-										}
-									});
+							// Update username for user ID
+							var sql = "UPDATE ?? SET ??=? WHERE ??=?";
+							var post = [db_accounts, username, n, uid, request.session.uid];
+							dbConnection.query(sql, post, function(err, result) {
+								if (err) throw err;
+								if (result.affectedRows == 1) {
+									// Send username change notification email
+									const msg = {
+										to: request.session.email,
+										from: 'support@vvander.me',
+										subject: 'Wander Username Changed',
+										text: 'You have changed your Wander account username from ' + request.session.username + ' to ' + n + '.',
+										html: '<strong>You have changed your Wander account username from ' + request.session.username + ' to ' + n + '.</strong>',
+									};
+									sgMail.send(msg);
+									request.session.username = n;
+									console.log("Account username changed.");
+									return response.status(200).send(JSON.stringify({"response":"pass"}));
+								} else if (result.affectedRows > 1) {
+									// For testing purposes only
+									return reponse.status(500).send("Error changed multiple account usernames.\n");
+								} else if (result.affectedRows == 0) {
+									return response.status(500).send("Failed to change username.\n");
 								}
 							});
 						}
@@ -571,15 +566,15 @@ function changeUsername(u, p, e, n, request, response) {
 }
 
 // Helper function that changes the password of an account
-function changePassword(u, p, e, n, request, response) {
-	// Get password hash for username and email
-	var sql = "SELECT ?? FROM ?? WHERE ??=? AND ??=?";
-	var post = [password, db_accounts, username, u, email, e];
+function changePassword(p, n, request, response) {
+	// Get password hash for user ID
+	var sql = "SELECT ?? FROM ?? WHERE ??=?";
+	var post = [password, db_accounts, uid, request.session.uid];
 	dbConnection.query(sql, post, function (err, result) {
 		if (err) throw err;
 		if (Object.keys(result).length != 1) {
 			console.log("err 1");
-			return response.status(400).send("Invalid username or email.\n");
+			return response.status(500).send("User ID not found.\n");
 		} else {
 			// Compare sent password hash to account password hash
 			bcrypt.compare(p, result[0].password, function(err, res) {
@@ -587,16 +582,16 @@ function changePassword(u, p, e, n, request, response) {
 					console.log("err 2");
 					return response.status(400).send("Invalid password. Try again.\n");
 				} else {
-					// Hash new password and update password for username and email
+					// Hash new password and update password for user ID
 					bcrypt.hash(n, saltRounds, function(err, hash) {
-						var sql = "UPDATE ?? SET ??=? WHERE ??=? AND ??=?";
-						var post = [db_accounts, password, hash, username, u, email, e];
+						var sql = "UPDATE ?? SET ??=? WHERE ??=?";
+						var post = [db_accounts, password, hash, uid, request.session.uid];
 						dbConnection.query(sql, post, function(err, result) {
 							if (err) throw err;
 							if (result.affectedRows == 1) {
 								// Send password change notification email
 								const msg = {
-									to: e,
+									to: request.session.email,
 									from: 'support@vvander.me',
 									subject: 'Wander Password Changed',
 									text: 'You have changed your Wander account password.',
@@ -607,10 +602,10 @@ function changePassword(u, p, e, n, request, response) {
 								return response.status(200).send(JSON.stringify({"response":"pass"}));
 							} else if (result.affectedRows > 1) {
 								// For testing purposes only
-								return reponse.status(400).send("Error changed multiple account passwords.\n");
+								return reponse.status(500).send("Error changed multiple account passwords.\n");
 							} else if (result.affectedRows == 0) {
 								console.log("err 3");
-								return response.status(400).send("Failed to change password.\n");
+								return response.status(500).send("Failed to change password.\n");
 							}
 						});
 					});
@@ -621,78 +616,69 @@ function changePassword(u, p, e, n, request, response) {
 }
 
 // Helper function that changes the email of an account
-function changeEmail(u, p, e, n, request, response) {
-	// Get email for username and email
-	var sql = "SELECT ?? FROM ?? WHERE ??=? && ??=?";
-	var post = [email, db_accounts, username, u, email, e];
-	dbConnection.query(sql, post, function(err, result){
+function changeEmail(p, n, request, response) {
+	// Check if new email already exists
+	var sql = "SELECT ?? FROM ?? WHERE ??=?";
+	var post = [email, db_accounts, email, n];
+	dbConnection.query(sql, post, function (err, result) {
 		if (err) throw err;
-		if (Object.keys(result).length == 0) {
-			return response.status(400).send("Invalid username or email.\n");
+		if (Object.keys(result).length != 0) {
+			return response.status(400).send("Email already exists! Try again.\n");
 		} else {
-			// Check if new email already exists
+			// Get password hash for user ID
 			var sql = "SELECT ?? FROM ?? WHERE ??=?";
-			var post = [email, db_accounts, email, n];
+			var post = [password, db_accounts, uid, request.session.uid];
 			dbConnection.query(sql, post, function (err, result) {
 				if (err) throw err;
-				if (Object.keys(result).length != 0) {
-					return response.status(400).send("Email already exists! Try again.\n");
+				if (Object.keys(result).length != 1) {
+					return response.status(500).send("User ID not found.\n");
 				} else {
-					// Get password hash for username and email
-					var sql = "SELECT ?? FROM ?? WHERE ??=? AND ??=?";
-					var post = [password, db_accounts, username, u, email, e];
-					dbConnection.query(sql, post, function (err, result) {
-						if (err) throw err;
-						if (Object.keys(result).length != 1) {
-							return response.status(400).send("Invalid username or email.\n");
+					bcrypt.compare(p, result[0].password, function(err, res) {
+						if (res !== true) {
+							return response.status(400).send("Invalid password. Try again.\n");
 						} else {
-							bcrypt.compare(p, result[0].password, function(err, res) {
-								if (res !== true) {
-									return response.status(400).send("Invalid password. Try again.\n");
-								} else {
-									// Update email for username and email
-									var sql = "UPDATE ?? SET ??=? WHERE ??=? AND ??=?";
-									var post = [db_accounts, email, n, username, u, email, e];
-									dbConnection.query(sql, post, function(err, result) {
+							// Update email for user ID
+							var sql = "UPDATE ?? SET ??=? WHERE ??=?";
+							var post = [db_accounts, email, n, uid, request.session.uid];
+							dbConnection.query(sql, post, function(err, result) {
+								if (err) throw err;
+								if (result.affectedRows == 1) {
+									// Set confirmed to false for user ID
+									var sql = "UPDATE ?? SET ??=? WHERE ??=?";
+									var post = [db_accounts, confirmed, false, uid, request.session.uid];
+									dbConnection.query(sql, post, function (err, result){
 										if (err) throw err;
 										if (result.affectedRows == 1) {
-											// Set confirmed to false for email
-											var sql = "UPDATE ?? SET ??=? WHERE ??=?";
-											var post = [db_accounts, confirmed, false, email, n];
-											dbConnection.query(sql, post, function (err, result){
-												if (err) throw err;
-												if (result.affectedRows == 1) {
-													// Send email change notification email to old email
-													const oldmsg = {
-														to: e,
-														from: 'support@vvander.me',
-														subject: 'Wander Email Changed',
-														text: 'You have changed your Wander account email to ' + n + '.',
-														html: '<strong>You have changed your Wander account email to ' + n + '.</strong>',
-													};
-													sgMail.send(oldmsg);
-													// Send email confirm email to new email
-													const newmsg = {
-														to: n,
-														from: 'support@vvander.me',
-														subject: 'Confirm Your Email',
-														text: 'Hey ' + u + '! You have changed your Wander account email. Click the following link to confirm your email: https://vvander.me/confirmEmail?email=' + n,
-														html: '<strong>Hey ' + u + '! You have changed your Wander account email. Click the following link to confirm your email: https://vvander.me/confirmEmail?email=' + n + '</strong>',
-													};
-													sgMail.send(newmsg);
-													console.log("Account email changed.");
-													return response.status(200).send(JSON.stringify({"response":"pass"}));
-												} else {
-													return response.status(400).send("Error changing email.\n");
-												}
-											});
-										} else if (result.affectedRows > 1) {
-											// For testing purposes only
-											return reponse.status(400).send("Error changed multiple account emails.\n");
-										} else if (result.affectedRows == 0) {
-											return response.status(400).send("Failed to change email.\n");
+											// Send email change notification email to old email
+											const oldmsg = {
+												to: request.session.email,
+												from: 'support@vvander.me',
+												subject: 'Wander Email Changed',
+												text: 'You have changed your Wander account email to ' + n + '.',
+												html: '<strong>You have changed your Wander account email to ' + n + '.</strong>',
+											};
+											sgMail.send(oldmsg);
+											request.session.email = n;
+											// Send email confirm email to new email
+											const newmsg = {
+												to: request.session.email,
+												from: 'support@vvander.me',
+												subject: 'Confirm Your Email',
+												text: 'Hey ' + request.session.username + '! You have changed your Wander account email. Click the following link to confirm your email: https://vvander.me/confirmEmail?email=' + request.session.email,
+												html: '<strong>Hey ' + request.session.username + '! You have changed your Wander account email. Click the following link to confirm your email: https://vvander.me/confirmEmail?email=' + request.session.email + '</strong>',
+											};
+											sgMail.send(newmsg);
+											console.log("Account email changed.");
+											return response.status(200).send(JSON.stringify({"response":"pass"}));
+										} else {
+											return response.status(500).send("Error changing email.\n");
 										}
 									});
+								} else if (result.affectedRows > 1) {
+									// For testing purposes only
+									return reponse.status(500).send("Error changed multiple account emails.\n");
+								} else if (result.affectedRows == 0) {
+									return response.status(500).send("Failed to change email.\n");
 								}
 							});
 						}
@@ -766,7 +752,7 @@ function resetPassword(token, newPassword, confirmPassword, response) {
 	dbConnection.query(sql, post, function(err, result) {
 		if (err) throw err;
 		if (Object.keys(result).length != 1) {
-			return response.status(500).send("Password reset attempt has failed.\n");
+			return response.status(400).send("Invalid password reset token.\n");
 		} else {
 			// Check if password reset token is expired
 			if (Date.now() > result[0].passwordResetExpires) {
@@ -851,10 +837,10 @@ function updateLinkedInProfile(f, l, e, lo, a, response) {
 }
 
 // Helper function for getting LinkedIn profile information
-function getProfile(e, request, response) {
+function getProfile(request, response) {
 	// Get profile for email and respond with profile data
 	var sql = "SELECT * FROM ?? WHERE ??=?";
-	var post = [db_profiles, email, e];
+	var post = [db_profiles, email, request.session.email];
 	dbConnection.query(sql, post, function(err, result) {
 		if (err) throw err;
 		if (Object.keys(result).length == 0) {
@@ -871,12 +857,12 @@ function getProfile(e, request, response) {
 }
 
 // Helper function for updating user location data
-function updateLocation(u, lat, lon, request, response) {
-	// Insert username, longitude, latitude, and time
+function updateLocation(lat, lon, request, response) {
+	// Insert uid, longitude, latitude, and time
 	var sql = "INSERT INTO ?? SET ??=?, ??=?, ??=?, ??=?";
 	var currentTime = Date.now();
 	var weekOld = currentTime - 604800000;
-	var post = [db_locations, username, u, longitude, lon, latitude, lat, time, currentTime];
+	var post = [db_locations, uid, request.session.uid, longitude, lon, latitude, lat, time, currentTime];
 	dbConnection.query(sql, post, function(err, result){
 		if (err) throw err;
 		// Delete all location data more than a week old
