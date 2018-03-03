@@ -4,6 +4,8 @@ var mysql = require('mysql');
 var http = require('http');
 var bcrypt = require('bcrypt');
 var session = require('express-session');
+var fs = require('fs');
+var graphlib = require('graphlib');
 
 var app = express();
 app.use(bodyParser.json());
@@ -45,6 +47,12 @@ const db_locations = "locations";
 // Constant used for password hashing
 const saltRounds = 10;
 
+// Constants used for matching
+const MATCH_THRESHOLD = 10;
+const DEFAULT_CROSS_RADIUS = 0.0005;
+const CROSS_TIME = 30000;
+const CROSS_COOLDOWN = 1800000;
+
 // Constant used for password reset and session
 const crypto = require('crypto');
 
@@ -62,15 +70,6 @@ app.use(session({
 	cookie: { domain: '.vvander.me', httpOnly: true, secure: true, maxAge: 31536000000 }
 }));
 
-// Create http server and listen on specified port
-var httpServer = http.createServer(app);
-httpServer.listen(port, (err) => {
-	if (err) {
-		return console.log('HTTP server listen error!', err);
-	}
-	console.log(`HTTP server listening on port ${port}`);
-});
-
 // Create connection to MySQL database
 var dbConnection = mysql.createConnection({
 	host: host,
@@ -78,6 +77,27 @@ var dbConnection = mysql.createConnection({
 	password: db_password,
 	database: db_name
 });
+
+// Setup graph
+var matchGraph;
+if (fs.existsSync('matchGraph.json')) {
+	matchGraph = graphlib.json.read(JSON.parse(fs.readFileSync('matchGraph.json')));
+	console.log('Match graph read.');
+	createServer();
+} else {
+	createMatchGraph();
+}
+
+// Create http server and listen on specified port
+function createServer() {
+	var httpServer = http.createServer(app);
+	httpServer.listen(port, (err) => {
+		if (err) {
+			return console.log('Server listen error!', err);
+		}
+		console.log(`Server listening on port ${port}.`);
+	});
+}
 
 // Serve 'website' directory
 app.use(express.static('website'));
@@ -380,7 +400,7 @@ function register(u, p, e, response) {
 	var post = [username, db_accounts, username, u, email, e];
 	dbConnection.query(sql, post, function (err, result) {
 		if (err) throw err;
-		if (Object.keys(result).length != 0) {
+		if (result.length != 0) {
 			return response.status(400).send("Username or email already exists! Try again.\n");
 		} else {
 			// Hash password and insert username, hash, and email
@@ -391,7 +411,7 @@ function register(u, p, e, response) {
 				var post = [uid, db_accounts, uid, userID];
 				dbConnection.query(sql, post, function (err, result) {
 					if (err) throw err;
-					if (Object.keys(result).length != 0) {
+					if (result.length != 0) {
 						return response.status(500).send("User ID collision!\n");
 					} else {
 						var sql = "INSERT INTO ?? SET ?";
@@ -407,6 +427,8 @@ function register(u, p, e, response) {
 								html: '<strong>Hey ' + u + '! You have registered for a Wander account. Click the following link to confirm your email: https://vvander.me/confirmEmail?email=' + e + '</strong>',
 							};
 							sgMail.send(msg);
+							matchGraph.setNode(userID);
+							writeMatchGraph();
 							console.log("Account registered.");
 							return response.status(200).send(JSON.stringify({"response":"pass"}));
 						});
@@ -424,7 +446,7 @@ function login(u, p, request, response) {
 	var post = [uid, password, email, db_accounts, username, u];
 	dbConnection.query(sql, post, function (err, result) {
 		if (err) throw err;
-		if (Object.keys(result).length != 1) {
+		if (result.length != 1) {
 			return response.status(400).send("Invalid username or password. Try again.\n");
 		} else {
 			// Compare sent password hash to account password hash
@@ -461,7 +483,7 @@ function deleteAccount(p, request, response) {
 	var post = [password, db_accounts, uid, request.session.uid];
 	dbConnection.query(sql, post, function (err, result) {
 		if (err) throw err;
-		if (Object.keys(result).length != 1) {
+		if (result.length != 1) {
 			return response.status(500).send("User ID not found.\n");
 		} else {
 			// Compare sent password hash to account password hash
@@ -489,6 +511,8 @@ function deleteAccount(p, request, response) {
 									html: '<strong>Hey ' + request.session.username + '! You have successfully deleted your Wander account. We are sorry to see you go.</strong>',
 								};
 								sgMail.send(msg);
+								matchGraph.removeNode(request.session.uid);
+								writeMatchGraph();
 								delete request.session.authenticated;
 								delete request.session.uid;
 								delete request.session.username;
@@ -516,7 +540,7 @@ function changeUsername(p, n, request, response) {
 	var post = [username, db_accounts, username, n];
 	dbConnection.query(sql, post, function (err, result) {
 		if (err) throw err;
-		if (Object.keys(result).length != 0) {
+		if (result.length != 0) {
 			return response.status(400).send("Username already exists! Try again.\n");
 		} else {
 			// Get password hash for user ID
@@ -524,7 +548,7 @@ function changeUsername(p, n, request, response) {
 			var post = [password, db_accounts, uid, request.session.uid];
 			dbConnection.query(sql, post, function (err, result) {
 				if (err) throw err;
-				if (Object.keys(result).length != 1) {
+				if (result.length != 1) {
 					return response.status(500).send("User ID not found.\n");
 				} else {
 					// Compare sent password hash to account password hash
@@ -572,7 +596,7 @@ function changePassword(p, n, request, response) {
 	var post = [password, db_accounts, uid, request.session.uid];
 	dbConnection.query(sql, post, function (err, result) {
 		if (err) throw err;
-		if (Object.keys(result).length != 1) {
+		if (result.length != 1) {
 			console.log("err 1");
 			return response.status(500).send("User ID not found.\n");
 		} else {
@@ -622,7 +646,7 @@ function changeEmail(p, n, request, response) {
 	var post = [email, db_accounts, email, n];
 	dbConnection.query(sql, post, function (err, result) {
 		if (err) throw err;
-		if (Object.keys(result).length != 0) {
+		if (result.length != 0) {
 			return response.status(400).send("Email already exists! Try again.\n");
 		} else {
 			// Get password hash for user ID
@@ -630,7 +654,7 @@ function changeEmail(p, n, request, response) {
 			var post = [password, db_accounts, uid, request.session.uid];
 			dbConnection.query(sql, post, function (err, result) {
 				if (err) throw err;
-				if (Object.keys(result).length != 1) {
+				if (result.length != 1) {
 					return response.status(500).send("User ID not found.\n");
 				} else {
 					bcrypt.compare(p, result[0].password, function(err, res) {
@@ -696,8 +720,7 @@ function forgotPassword(u, e, response) {
 	var post = [db_accounts, username, u, email, e];
 	dbConnection.query(sql, post, function (err, result) {
 		if (err) throw err;
-		if (Object.keys(result).length != 1) {
-			console.log(result);
+		if (result.length != 1) {
 			return response.status(400).send("Invalid username or email.\n");
 		} else {
 			// Generate password reset token for username and email
@@ -751,7 +774,7 @@ function resetPassword(token, newPassword, confirmPassword, response) {
 	var post = [email, passwordResetExpires, db_accounts, passwordResetToken, token];
 	dbConnection.query(sql, post, function(err, result) {
 		if (err) throw err;
-		if (Object.keys(result).length != 1) {
+		if (result.length != 1) {
 			return response.status(400).send("Invalid password reset token.\n");
 		} else {
 			// Check if password reset token is expired
@@ -814,7 +837,7 @@ function updateLinkedInProfile(f, l, e, lo, a, response) {
 	var post = [db_profiles, email, e];
 	dbConnection.query(sql, post, function(err, result) {
 		if (err) throw err;
-		if (Object.keys(result).length == 0) {
+		if (result.length == 0) {
 			// Create profile if none exists for email
 			var sql = "INSERT INTO ?? SET ??=?, ??=?, ??=?, ??=?, ??=?";
 			var post = [db_profiles, firstName, f, lastName, l, email, e, loc, lo, about, a];
@@ -843,7 +866,7 @@ function getProfile(request, response) {
 	var post = [db_profiles, email, request.session.email];
 	dbConnection.query(sql, post, function(err, result) {
 		if (err) throw err;
-		if (Object.keys(result).length == 0) {
+		if (result.length == 0) {
 			return response.status(400).send("No profile.\n");
 		} else {
 			var f = result[0].firstname;
@@ -863,7 +886,7 @@ function updateLocation(lat, lon, request, response) {
 	var currentTime = Date.now();
 	var weekOld = currentTime - 604800000;
 	var post = [db_locations, uid, request.session.uid, longitude, lon, latitude, lat, time, currentTime];
-	dbConnection.query(sql, post, function(err, result){
+	dbConnection.query(sql, post, function(err, result) {
 		if (err) throw err;
 		// Delete all location data more than a week old
 		var sql = "DELETE FROM ?? WHERE ?? BETWEEN 0 AND ?";
@@ -871,8 +894,68 @@ function updateLocation(lat, lon, request, response) {
 		dbConnection.query(sql, post, function(err, result){
 			if (err) throw err;
 		});
-		return response.status(200).send(JSON.stringify({"response":"success"}));	
+		response.status(200).send(JSON.stringify({"response":"success"}));	
+		findCrossedPaths(lat, lon, currentTime, request, response);
 	});
+}
+
+// Helper function that checks if anyone crossed paths
+function findCrossedPaths(lat, lon, currentTime, request, response) {
+	var sql = "SELECT ?? FROM ?? WHERE ??!=? AND ?? BETWEEN ? AND ? AND ?? BETWEEN ? AND ? AND ?? BETWEEN ? AND ?";
+	var timeMin = currentTime - CROSS_TIME;
+	var latMin = lat - DEFAULT_CROSS_RADIUS;
+	var latMax = lat + DEFAULT_CROSS_RADIUS;
+	var lonMin = lon - DEFAULT_CROSS_RADIUS;
+	var lonMax = lon + DEFAULT_CROSS_RADIUS;
+	var post = [uid, db_locations, uid, request.session.uid, time, timeMin, currentTime, latitude, latMin, latMax, longitude, lonMin, lonMax];
+	dbConnection.query(sql, post, function(err, result) {
+		if (err) throw err;
+		for (var i = 0; i < result.length; i++) {
+			if (!matchGraph.hasEdge(request.session.uid, result[i].uid, "timesCrossed") && !matchGraph.hasEdge(result[i].uid, request.session.uid, "timesCrossed")) {
+				matchGraph.setEdge(request.session.uid, result[i].uid, 1, "timesCrossed");
+				matchGraph.setEdge(result[i].uid, request.session.uid, 1, "timesCrossed");
+				matchGraph.setEdge(request.session.uid, result[i].uid, currentTime, "lastTime");
+				matchGraph.setEdge(result[i].uid, request.session.uid, currentTime, "lastTime");
+				console.log('Users crossed paths for the first time.');
+			} else if (matchGraph.edge(request.session.uid, result[i].uid, "lastTime") < currentTime - CROSS_COOLDOWN && matchGraph.edge(result[i].uid, request.session.uid, "lastTime") < currentTime - CROSS_COOLDOWN) {
+				matchGraph.setEdge(request.session.uid, result[i].uid, matchGraph.edge(request.session.uid, result[i].uid, "timesCrossed") + 1, "timesCrossed");
+				matchGraph.setEdge(result[i].uid, request.session.uid, matchGraph.edge(result[i].uid, request.session.uid, "timesCrossed") + 1, "timesCrossed");
+				matchGraph.setEdge(request.session.uid, result[i].uid, currentTime, "lastTime");
+				matchGraph.setEdge(result[i].uid, request.session.uid, currentTime, "lastTime");
+				console.log('Users crossed paths again.');
+				if (matchGraph.edge(request.session.uid, result[i].uid, "timesCrossed") >= MATCH_THRESHOLD && matchGraph.edge(result[i].uid, request.session.uid, "timesCrossed") >= MATCH_THRESHOLD && !matchGraph.hasEdge(request.session.uid, result[i].uid, "matched") && !matchGraph.hasEdge(result[i].uid, request.session.uid, "matched")) {
+					matchGraph.setEdge(request.session.uid, result[i].uid, true, "matched");
+					matchGraph.setEdge(result[i].uid, request.session.uid, true, "matched");
+					matchGraph.setEdge(request.session.uid, result[i].uid, true, "newMatch");
+					matchGraph.setEdge(result[i].uid, request.session.uid, true, "newMatch");
+					console.log('Users matched.');
+				}
+			}
+		}
+		writeMatchGraph();
+	});
+}
+
+// Helper function that creates a match graph if none exists
+function createMatchGraph() {
+	// Create new match graph and insert all user IDs as nodes, then start server
+	matchGraph = new graphlib.Graph({ directed: true, multigraph: true, compound: false });
+	var sql = "SELECT ?? FROM ??";
+	var post = [uid, db_accounts];
+	dbConnection.query(sql, post, function(err, result) {
+		if (err) throw err;
+		for (var i = 0; i < result.length; i++) {
+			matchGraph.setNode(result[i].uid);
+		}
+		writeMatchGraph();
+		console.log('Match graph created.');
+		createServer();
+	});
+}
+
+// Helper function that writes the match graph to a file
+function writeMatchGraph() {
+	fs.writeFileSync('matchGraph.json', JSON.stringify(graphlib.json.write(matchGraph)));
 }
 
 // Serve 404 error page
