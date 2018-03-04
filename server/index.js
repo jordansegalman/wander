@@ -6,12 +6,7 @@ var bcrypt = require('bcrypt');
 var session = require('express-session');
 var fs = require('fs');
 var graphlib = require('graphlib');
-
-var app = express();
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({
-	extended: true
-}));
+var schedule = require('node-schedule');
 
 // Constants used for http server
 const port = 3000;
@@ -28,6 +23,7 @@ const host = "localhost";
 const confirmed = "confirmed";
 const passwordResetToken = "passwordResetToken";
 const passwordResetExpires = "passwordResetExpires";
+const crossRadius = "crossRadius";
 const latitude = "latitude";
 const longitude = "longitude";
 const time = "time";
@@ -48,10 +44,11 @@ const db_locations = "locations";
 const saltRounds = 10;
 
 // Constants used for matching
-const MATCH_THRESHOLD = 10;
-const DEFAULT_CROSS_RADIUS = 0.0005;
-const CROSS_TIME = 30000;
-const CROSS_COOLDOWN = 1800000;
+const MATCH_THRESHOLD = 10;			// 10 crossed paths
+const DEFAULT_CROSS_RADIUS = 150;		// 150 feet
+const CROSS_TIME = 30000;			// 30 seconds
+const CROSS_COOLDOWN = 1800000;			// 30 minutes
+const MATCH_NOTIFY_CRON = '0 20 * * * *';	// every day at 20:00
 
 // Constant used for password reset and session
 const crypto = require('crypto');
@@ -59,6 +56,13 @@ const crypto = require('crypto');
 // Setup SendGrid for transactional email
 const sgMail = require('@sendgrid/mail');
 sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+
+// Setup express
+var app = express();
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({
+	extended: true
+}));
 
 // Setup session
 app.set('trust proxy', 1);
@@ -78,7 +82,7 @@ var dbConnection = mysql.createConnection({
 	database: db_name
 });
 
-// Setup graph
+// Setup match graph
 var matchGraph;
 if (fs.existsSync('matchGraph.json')) {
 	matchGraph = graphlib.json.read(JSON.parse(fs.readFileSync('matchGraph.json')));
@@ -87,6 +91,11 @@ if (fs.existsSync('matchGraph.json')) {
 } else {
 	createMatchGraph();
 }
+
+// Setup schedule for notifying users who have matched
+schedule.scheduleJob(MATCH_NOTIFY_CRON, function() {
+	notifyMatches();
+});
 
 // Create http server and listen on specified port
 function createServer() {
@@ -208,7 +217,7 @@ app.get('/confirmEmail', function(request, response) {
 	// Update account confirmed to true
 	var sql = "UPDATE ?? SET ??=? WHERE ??=?";
 	var post = [db_accounts, confirmed, true, email, e];
-	dbConnection.query(sql, post, function (err, result){
+	dbConnection.query(sql, post, function(err, result){
 		if (err) throw err;
 		if (result.affectedRows == 1) {
 			console.log("Account email confirmed.");
@@ -280,6 +289,26 @@ app.post('/changeEmail', function(request, response) {
 	var n = request.body.newEmail;
 
 	changeEmail(p, n, request, response);
+});
+
+// Called when a POST request is made to /changeCrossRadius
+app.post('/changeCrossRadius', function(request, response) {
+	// If the object request.body is null, respond with status 500 'Internal Server Error'
+	if (!request.body) return response.sendStatus(500);
+
+	// POST request must have 1 parameter (newCrossRadius)
+	if (Object.keys(request.body).length != 1 || !request.body.newCrossRadius) {
+		return response.status(400).send("Invalid POST request\n");
+	}
+
+	// If session not authenticated
+	if (!request.session || !request.session.authenticated || request.session.authenticated === false) {
+		return response.status(400).send("User not logged in.\n");
+	}
+
+	var n = request.body.newCrossRadius;
+
+	changeCrossRadius(n, request, response);
 });
 
 // Called when a POST request is made to /forgotPassword
@@ -393,12 +422,12 @@ app.post('/updateLocation', function(request, response){
 	updateLocation(lat, lon, request, response);
 });
 
-// Helper function that registers a user if username and email does not already exist
+// Registers a user if username and email does not already exist
 function register(u, p, e, response) {
 	// Check if username or email already exists
 	var sql = "SELECT ?? FROM ?? WHERE ??=? OR ??=?";
 	var post = [username, db_accounts, username, u, email, e];
-	dbConnection.query(sql, post, function (err, result) {
+	dbConnection.query(sql, post, function(err, result) {
 		if (err) throw err;
 		if (result.length != 0) {
 			return response.status(400).send("Username or email already exists! Try again.\n");
@@ -409,14 +438,14 @@ function register(u, p, e, response) {
 				// Check if user ID already exists
 				var sql = "SELECT ?? FROM ?? WHERE ??=?";
 				var post = [uid, db_accounts, uid, userID];
-				dbConnection.query(sql, post, function (err, result) {
+				dbConnection.query(sql, post, function(err, result) {
 					if (err) throw err;
 					if (result.length != 0) {
 						return response.status(500).send("User ID collision!\n");
 					} else {
 						var sql = "INSERT INTO ?? SET ?";
-						var post = {uid: userID, username: u, password: hash, email: e};
-						dbConnection.query(sql, [db_accounts, post], function (err, result) {
+						var post = {uid: userID, username: u, password: hash, email: e, crossRadius: DEFAULT_CROSS_RADIUS};
+						dbConnection.query(sql, [db_accounts, post], function(err, result) {
 							if (err) throw err;
 							// Send registration confirm email
 							const msg = {
@@ -439,12 +468,12 @@ function register(u, p, e, response) {
 	});
 }
 
-// Helper function that verifies user has an account and logs them in
+// Verifies user has an account and logs them in
 function login(u, p, request, response) {
 	// Get password hash and email for username
 	var sql = "SELECT ??,??,?? FROM ?? WHERE ??=?";
 	var post = [uid, password, email, db_accounts, username, u];
-	dbConnection.query(sql, post, function (err, result) {
+	dbConnection.query(sql, post, function(err, result) {
 		if (err) throw err;
 		if (result.length != 1) {
 			return response.status(400).send("Invalid username or password. Try again.\n");
@@ -466,22 +495,20 @@ function login(u, p, request, response) {
 	});
 }
 
-// Helper function that verifies user is logged in and can now log out
+// Verifies user is logged in and logs them out
 function logout(request, response) {
-	delete request.session.authenticated;
-	delete request.session.uid;
-	delete request.session.username;
-	delete request.session.email;
-	console.log("User logged out.");
-	return response.status(200).send(JSON.stringify({"response":"pass"}));
+	request.session.destroy(function(err) {
+		console.log("User logged out.");
+		return response.status(200).send(JSON.stringify({"response":"pass"}));
+	});
 }
 
-// Helper function that deletes an account
+// Deletes an account
 function deleteAccount(p, request, response) {
 	// Get password hash for user ID
 	var sql = "SELECT ?? FROM ?? WHERE ??=?";
 	var post = [password, db_accounts, uid, request.session.uid];
-	dbConnection.query(sql, post, function (err, result) {
+	dbConnection.query(sql, post, function(err, result) {
 		if (err) throw err;
 		if (result.length != 1) {
 			return response.status(500).send("User ID not found.\n");
@@ -513,12 +540,10 @@ function deleteAccount(p, request, response) {
 								sgMail.send(msg);
 								matchGraph.removeNode(request.session.uid);
 								writeMatchGraph();
-								delete request.session.authenticated;
-								delete request.session.uid;
-								delete request.session.username;
-								delete request.session.email;
-								console.log("Account deleted.");
-								return response.status(200).send(JSON.stringify({"response":"pass"}));
+								request.session.destroy(function(err) {
+									console.log("Account deleted.");
+									return response.status(200).send(JSON.stringify({"response":"pass"}));
+								});
 							});
 						} else if (result.affectedRows > 1) {
 							// For testing purposes only
@@ -533,12 +558,12 @@ function deleteAccount(p, request, response) {
 	});
 }
 
-// Helper function that changes the username of an account
+// Changes the username of an account
 function changeUsername(p, n, request, response) {
 	// Check if new username already exists
 	var sql = "SELECT ?? FROM ?? WHERE ??=?";
 	var post = [username, db_accounts, username, n];
-	dbConnection.query(sql, post, function (err, result) {
+	dbConnection.query(sql, post, function(err, result) {
 		if (err) throw err;
 		if (result.length != 0) {
 			return response.status(400).send("Username already exists! Try again.\n");
@@ -546,7 +571,7 @@ function changeUsername(p, n, request, response) {
 			// Get password hash for user ID
 			var sql = "SELECT ?? FROM ?? WHERE ??=?";
 			var post = [password, db_accounts, uid, request.session.uid];
-			dbConnection.query(sql, post, function (err, result) {
+			dbConnection.query(sql, post, function(err, result) {
 				if (err) throw err;
 				if (result.length != 1) {
 					return response.status(500).send("User ID not found.\n");
@@ -589,12 +614,12 @@ function changeUsername(p, n, request, response) {
 	});
 }
 
-// Helper function that changes the password of an account
+// Changes the password of an account
 function changePassword(p, n, request, response) {
 	// Get password hash for user ID
 	var sql = "SELECT ?? FROM ?? WHERE ??=?";
 	var post = [password, db_accounts, uid, request.session.uid];
-	dbConnection.query(sql, post, function (err, result) {
+	dbConnection.query(sql, post, function(err, result) {
 		if (err) throw err;
 		if (result.length != 1) {
 			console.log("err 1");
@@ -639,12 +664,12 @@ function changePassword(p, n, request, response) {
 	});
 }
 
-// Helper function that changes the email of an account
+// Changes the email of an account
 function changeEmail(p, n, request, response) {
 	// Check if new email already exists
 	var sql = "SELECT ?? FROM ?? WHERE ??=?";
 	var post = [email, db_accounts, email, n];
-	dbConnection.query(sql, post, function (err, result) {
+	dbConnection.query(sql, post, function(err, result) {
 		if (err) throw err;
 		if (result.length != 0) {
 			return response.status(400).send("Email already exists! Try again.\n");
@@ -652,7 +677,7 @@ function changeEmail(p, n, request, response) {
 			// Get password hash for user ID
 			var sql = "SELECT ?? FROM ?? WHERE ??=?";
 			var post = [password, db_accounts, uid, request.session.uid];
-			dbConnection.query(sql, post, function (err, result) {
+			dbConnection.query(sql, post, function(err, result) {
 				if (err) throw err;
 				if (result.length != 1) {
 					return response.status(500).send("User ID not found.\n");
@@ -670,7 +695,7 @@ function changeEmail(p, n, request, response) {
 									// Set confirmed to false for user ID
 									var sql = "UPDATE ?? SET ??=? WHERE ??=?";
 									var post = [db_accounts, confirmed, false, uid, request.session.uid];
-									dbConnection.query(sql, post, function (err, result){
+									dbConnection.query(sql, post, function(err, result){
 										if (err) throw err;
 										if (result.affectedRows == 1) {
 											// Send email change notification email to old email
@@ -713,12 +738,35 @@ function changeEmail(p, n, request, response) {
 	});
 }
 
-// Helper function for forgotten password
+// Changes the crossRadius of an account
+function changeCrossRadius(n, request, response) {
+	// Check that new cross radius is valid
+	if (n < 10 || n > 5280) {
+		return response.status(400).send("Invalid cross radius.\n");
+	}
+	// Update cross radius for user ID
+	var sql = "UPDATE ?? SET ??=? WHERE ??=?";
+	var post = [db_accounts, crossRadius, n, uid, request.session.uid];
+	dbConnection.query(sql, post, function(err, result) {
+		if (err) throw err;
+		if (result.affectedRows == 1) {
+			console.log("Account cross radius changed.");
+			return response.status(200).send(JSON.stringify({"response":"pass"}));
+		} else if (result.affectedRows > 1) {
+			// For testing purposes only
+			return reponse.status(500).send("Error changed multiple account cross radii.\n");
+		} else if (result.affectedRows == 0) {
+			return response.status(500).send("Failed to change cross radius.\n");
+		}
+	});
+}
+
+// Sends password reset email
 function forgotPassword(u, e, response) {
 	// Check that account exists for username and email
 	var sql = "SELECT * FROM ?? WHERE ??=? AND ??=?";
 	var post = [db_accounts, username, u, email, e];
-	dbConnection.query(sql, post, function (err, result) {
+	dbConnection.query(sql, post, function(err, result) {
 		if (err) throw err;
 		if (result.length != 1) {
 			return response.status(400).send("Invalid username or email.\n");
@@ -763,7 +811,7 @@ function forgotPassword(u, e, response) {
 	});
 }
 
-// Helper function that resets an account password
+// Resets an account password
 function resetPassword(token, newPassword, confirmPassword, response) {
 	// Check that newPassword and confirmPassword are the same
 	if (newPassword != confirmPassword) {
@@ -830,7 +878,7 @@ function resetPassword(token, newPassword, confirmPassword, response) {
 	});
 }
 
-// Helper function for updating LinkedIn profile information
+// Updates LinkedIn profile information
 function updateLinkedInProfile(f, l, e, lo, a, response) {
 	// Get profile for email
 	var sql = "SELECT * FROM ?? WHERE ??=?";
@@ -859,7 +907,7 @@ function updateLinkedInProfile(f, l, e, lo, a, response) {
 	});
 }
 
-// Helper function for getting LinkedIn profile information
+// Gets LinkedIn profile information
 function getProfile(request, response) {
 	// Get profile for email and respond with profile data
 	var sql = "SELECT * FROM ?? WHERE ??=?";
@@ -879,7 +927,7 @@ function getProfile(request, response) {
 	});
 }
 
-// Helper function for updating user location data
+// Updates user location data
 function updateLocation(lat, lon, request, response) {
 	// Insert uid, longitude, latitude, and time
 	var sql = "INSERT INTO ?? SET ??=?, ??=?, ??=?, ??=?";
@@ -899,44 +947,88 @@ function updateLocation(lat, lon, request, response) {
 	});
 }
 
-// Helper function that checks if anyone crossed paths
+// Converts feet to degrees latitude
+function feetToLat(feet) {
+	return feet / 364537.4016;
+}
+
+// Converts feet to degrees longitude
+function feetToLon(feet, lat) {
+	return Math.abs(feet / (364537.4016 * Math.cos(lat)));
+}
+
+// Checks if anyone crossed paths
 function findCrossedPaths(lat, lon, currentTime, request, response) {
-	var sql = "SELECT ?? FROM ?? WHERE ??!=? AND ?? BETWEEN ? AND ? AND ?? BETWEEN ? AND ? AND ?? BETWEEN ? AND ?";
-	var timeMin = currentTime - CROSS_TIME;
-	var latMin = lat - DEFAULT_CROSS_RADIUS;
-	var latMax = lat + DEFAULT_CROSS_RADIUS;
-	var lonMin = lon - DEFAULT_CROSS_RADIUS;
-	var lonMax = lon + DEFAULT_CROSS_RADIUS;
-	var post = [uid, db_locations, uid, request.session.uid, time, timeMin, currentTime, latitude, latMin, latMax, longitude, lonMin, lonMax];
+	// Get cross radius for user ID
+	var sql = "SELECT ?? FROM ?? WHERE ??=?";
+	var post = [crossRadius, db_accounts, uid, request.session.uid];
 	dbConnection.query(sql, post, function(err, result) {
 		if (err) throw err;
-		for (var i = 0; i < result.length; i++) {
-			if (!matchGraph.hasEdge(request.session.uid, result[i].uid, "timesCrossed") && !matchGraph.hasEdge(result[i].uid, request.session.uid, "timesCrossed")) {
-				matchGraph.setEdge(request.session.uid, result[i].uid, 1, "timesCrossed");
-				matchGraph.setEdge(result[i].uid, request.session.uid, 1, "timesCrossed");
-				matchGraph.setEdge(request.session.uid, result[i].uid, currentTime, "lastTime");
-				matchGraph.setEdge(result[i].uid, request.session.uid, currentTime, "lastTime");
-				console.log('Users crossed paths for the first time.');
-			} else if (matchGraph.edge(request.session.uid, result[i].uid, "lastTime") < currentTime - CROSS_COOLDOWN && matchGraph.edge(result[i].uid, request.session.uid, "lastTime") < currentTime - CROSS_COOLDOWN) {
-				matchGraph.setEdge(request.session.uid, result[i].uid, matchGraph.edge(request.session.uid, result[i].uid, "timesCrossed") + 1, "timesCrossed");
-				matchGraph.setEdge(result[i].uid, request.session.uid, matchGraph.edge(result[i].uid, request.session.uid, "timesCrossed") + 1, "timesCrossed");
-				matchGraph.setEdge(request.session.uid, result[i].uid, currentTime, "lastTime");
-				matchGraph.setEdge(result[i].uid, request.session.uid, currentTime, "lastTime");
-				console.log('Users crossed paths again.');
-				if (matchGraph.edge(request.session.uid, result[i].uid, "timesCrossed") >= MATCH_THRESHOLD && matchGraph.edge(result[i].uid, request.session.uid, "timesCrossed") >= MATCH_THRESHOLD && !matchGraph.hasEdge(request.session.uid, result[i].uid, "matched") && !matchGraph.hasEdge(result[i].uid, request.session.uid, "matched")) {
-					matchGraph.setEdge(request.session.uid, result[i].uid, true, "matched");
-					matchGraph.setEdge(result[i].uid, request.session.uid, true, "matched");
-					matchGraph.setEdge(request.session.uid, result[i].uid, true, "newMatch");
-					matchGraph.setEdge(result[i].uid, request.session.uid, true, "newMatch");
-					console.log('Users matched.');
-				}
+		// Get all user IDs and coordinates within cross time and cross radius
+		sql = "SELECT ??, ??, ?? FROM ?? WHERE ??!=? AND ?? BETWEEN ? AND ? AND ?? BETWEEN ? AND ? AND ?? BETWEEN ? AND ?";
+		var timeMin = currentTime - CROSS_TIME;
+		var latMin = lat - feetToLat(result[0].crossRadius);
+		var latMax = lat + feetToLat(result[0].crossRadius);
+		var lonMin = lon - feetToLon(result[0].crossRadius, lat);
+		var lonMax = lon + feetToLon(result[0].crossRadius, lat);
+		post = [uid, latitude, longitude, db_locations, uid, request.session.uid, time, timeMin, currentTime, latitude, latMin, latMax, longitude, lonMin, lonMax];
+		dbConnection.query(sql, post, function(err, result) {
+			if (err) throw err;
+			// For every result within cross time and cross radius
+			for (var i = 0; i < result.length; i++) {
+				var uidOther = result[i].uid;
+				var latOther = result[i].latitude;
+				var lonOther = result[i].longitude;
+				// Get cross radius for other user ID
+				sql = "SELECT ?? FROM ?? WHERE ??=?";
+				post = [crossRadius, db_accounts, uid, uidOther];
+				dbConnection.query(sql, post, function(err, result) {
+					if (err) throw err;
+					var otherLatMin = latOther - feetToLat(result[0].crossRadius);
+					var otherLatMax = latOther + feetToLat(result[0].crossRadius);
+					var otherLonMin = lonOther - feetToLon(result[0].crossRadius, latOther);
+					var otherLonMax = lonOther + feetToLon(result[0].crossRadius, latOther);
+					if (lat >= otherLatMin && lat <= otherLatMax && lon >= otherLonMin && lon <= otherLonMax) {
+						// If also within other user ID's cross radius
+						if (!matchGraph.hasEdge(request.session.uid, uidOther, "timesCrossed") && !matchGraph.hasEdge(uidOther, request.session.uid, "timesCrossed")) {
+							// If never crossed before, create timesCrossed and lastTime edges
+							matchGraph.setEdge(request.session.uid, uidOther, 1, "timesCrossed");
+							matchGraph.setEdge(uidOther, request.session.uid, 1, "timesCrossed");
+							matchGraph.setEdge(request.session.uid, uidOther, currentTime, "lastTime");
+							matchGraph.setEdge(uidOther, request.session.uid, currentTime, "lastTime");
+							console.log('Users crossed paths for the first time.');
+						} else if (matchGraph.edge(request.session.uid, uidOther, "lastTime") < currentTime - CROSS_COOLDOWN && matchGraph.edge(uidOther, request.session.uid, "lastTime") < currentTime - CROSS_COOLDOWN) {
+							// If crossed before, increment timesCrossed edge and update lastTime edge
+							matchGraph.setEdge(request.session.uid, uidOther, matchGraph.edge(request.session.uid, uidOther, "timesCrossed") + 1, "timesCrossed");
+							matchGraph.setEdge(uidOther, request.session.uid, matchGraph.edge(uidOther, request.session.uid, "timesCrossed") + 1, "timesCrossed");
+							matchGraph.setEdge(request.session.uid, uidOther, currentTime, "lastTime");
+							matchGraph.setEdge(uidOther, request.session.uid, currentTime, "lastTime");
+							console.log('Users crossed paths again.');
+							if (matchGraph.edge(request.session.uid, uidOther, "timesCrossed") >= MATCH_THRESHOLD && matchGraph.edge(uidOther, request.session.uid, "timesCrossed") >= MATCH_THRESHOLD && !matchGraph.hasEdge(request.session.uid, uidOther, "matched") && !matchGraph.hasEdge(uidOther, request.session.uid, "matched")) {
+								// If crossed greater than or equal to match threshold times, create matched, approved, unmatched, blocked, and newMatch edges
+								matchGraph.setEdge(request.session.uid, uidOther, true, "matched");
+								matchGraph.setEdge(uidOther, request.session.uid, true, "matched");
+								matchGraph.setEdge(request.session.uid, uidOther, false, "approved");
+								matchGraph.setEdge(uidOther, request.session.uid, false, "approved");
+								matchGraph.setEdge(request.session.uid, uidOther, false, "unmatched");
+								matchGraph.setEdge(uidOther, request.session.uid, false, "unmatched");
+								matchGraph.setEdge(request.session.uid, uidOther, false, "blocked");
+								matchGraph.setEdge(uidOther, request.session.uid, false, "blocked");
+								matchGraph.setEdge(request.session.uid, uidOther, true, "newMatch");
+								matchGraph.setEdge(uidOther, request.session.uid, true, "newMatch");
+								console.log('Users matched.');
+							}
+						}
+					}
+
+				});
 			}
-		}
-		writeMatchGraph();
+			writeMatchGraph();
+		});
 	});
 }
 
-// Helper function that creates a match graph if none exists
+// Creates a new match graph
 function createMatchGraph() {
 	// Create new match graph and insert all user IDs as nodes, then start server
 	matchGraph = new graphlib.Graph({ directed: true, multigraph: true, compound: false });
@@ -953,7 +1045,26 @@ function createMatchGraph() {
 	});
 }
 
-// Helper function that writes the match graph to a file
+// Notifies users who have matched
+function notifyMatches() {
+	// Notify all users that have new matches, then remove newMatch edges
+	var edges = matchGraph.edges();
+	var edgesToRemove = [];
+	for (var i = 0; i < matchGraph.edgeCount(); i++) {
+		if (edges[i].name === "newMatch") {
+			// Notify user ID edges[i].v matched with user ID edges[i].w
+			console.log('Notify User ID: ' + edges[i].v + ' Matched With User ID: ' + edges[i].w);
+			edgesToRemove.push([edges[i].v, edges[i].w]);
+		}
+	}
+	for (var i = 0; i < edgesToRemove.length; i++) {
+		matchGraph.removeEdge(edgesToRemove[i][0], edgesToRemove[i][1], "newMatch");
+	}
+	writeMatchGraph();
+	console.log('Matches notified.');
+}
+
+// Writes the match graph to a file
 function writeMatchGraph() {
 	fs.writeFileSync('matchGraph.json', JSON.stringify(graphlib.json.write(matchGraph)));
 }
