@@ -61,7 +61,10 @@ public class Settings extends AppCompatActivity {
         SharedPreferences.Editor editor = sharedPref.edit();
         editor.putBoolean("tracking", value);
         editor.commit();
-
+        if(value)
+            startService(new Intent(this, GpsCollection.class));
+        else
+            stopService(new Intent(this, GpsCollection.class));
     }
 
     public void delete(View view){
@@ -102,6 +105,7 @@ public class Settings extends AppCompatActivity {
         Log.d("tag", session_id);
         //Log.d("tag", username);
 
+        //stopService(new Intent(this, GpsCollection.class));
 
         Map<String, String> params = new HashMap<String,String>();
         //params.put("username", username);

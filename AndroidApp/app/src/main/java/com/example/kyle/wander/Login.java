@@ -88,7 +88,6 @@ public class Login extends AppCompatActivity {
             }
         });
         ActivityCompat.requestPermissions(this, new String[]{ACCESS_FINE_LOCATION}, 1);
-        startService(new Intent(this, GpsCollection.class));
     }
 
     public void login(View view){
@@ -170,9 +169,11 @@ public class Login extends AppCompatActivity {
         params.put("username", username);
         params.put("password", password);
 
+        //FOLLOWING LINE IS FOR TESTING DO NOT UNCOMMENT
+        //startActivity(new Intent(Login.this, AppHome.class));
+
         //set the Data username when login
         Data.getInstance().setUsername(username);
-
         String url = Data.getInstance().getUrl() + "/login";
         JsonObjectRequest postRequest = new JsonObjectRequest(Request.Method.POST, url, new JSONObject(params),
                 new Response.Listener<JSONObject>() {
@@ -183,7 +184,6 @@ public class Login extends AppCompatActivity {
                             String res = response.getString("response");
                             if (res.equalsIgnoreCase("pass")) {
                                 Toast.makeText(getApplicationContext(), "Login Successful!", Toast.LENGTH_SHORT).show();
-
                                 String email = response.getString("email");
                                 Data.getInstance().setEmail(email);
 
@@ -196,7 +196,7 @@ public class Login extends AppCompatActivity {
                                 } catch(IOException e) {
                                     e.printStackTrace();
                                 }
-
+                                startGPSService();
                                 Intent intent = new Intent(Login.this, AppHome.class);//Change myLocation to AppHome
                                 startActivity(intent);
                             }
@@ -226,6 +226,10 @@ public class Login extends AppCompatActivity {
                 DefaultRetryPolicy.DEFAULT_MAX_RETRIES,
                 DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
         requestQueue.add(postRequest);
+    }
+
+    private void startGPSService() {
+        startService(new Intent(this, GpsCollection.class));
     }
 
     private void checkSessionId(String sessionId) {
