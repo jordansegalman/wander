@@ -8,6 +8,9 @@ var fs = require('fs');
 var graphlib = require('graphlib');
 var schedule = require('node-schedule');
 
+// Load environment variables
+require('dotenv').config();
+
 // Constants used for http server
 const port = 3000;
 
@@ -19,7 +22,6 @@ const email = "email";
 const newUsername = "newUsername";
 const newPassword = "newPassword";
 const newEmail = "newEmail";
-const host = "localhost";
 const confirmed = "confirmed";
 const passwordResetToken = "passwordResetToken";
 const passwordResetExpires = "passwordResetExpires";
@@ -33,8 +35,9 @@ const loc = "location";
 const about = "about";
 
 // Need to change username and password for production
-const db_username = "wander";
-const db_password = "wander";
+const db_host = process.env.DB_HOST;
+const db_username = process.env.DB_USERNAME;
+const db_password = process.env.DB_PASSWORD;
 const db_name = "wander";
 const db_accounts = "accounts";
 const db_profiles = "profiles";
@@ -76,7 +79,7 @@ app.use(session({
 
 // Create connection to MySQL database
 var dbConnection = mysql.createConnection({
-	host: host,
+	host: db_host,
 	user: db_username,
 	password: db_password,
 	database: db_name
