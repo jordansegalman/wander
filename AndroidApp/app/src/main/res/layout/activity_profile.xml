@@ -43,10 +43,13 @@
                 android:textColor="#000000"
                 android:textSize="20sp" />
 
-            <TextView
+            <EditText
                 android:id="@+id/interests_text"
-                android:layout_width="match_parent"
+                android:layout_width="fill_parent"
                 android:layout_height="wrap_content"
+                android:textSize="15dp"
+                android:textColor="#606060"
+                android:background="@android:color/transparent"
                 android:text="No Interests" />
 
             <TextView
@@ -57,11 +60,14 @@
                 android:textColor="#000000"
                 android:textSize="20sp" />
 
-            <TextView
+            <EditText
                 android:id="@+id/about_text"
-                android:layout_width="match_parent"
+                android:layout_width="fill_parent"
                 android:layout_height="wrap_content"
-                android:text="No Interests" />
+                android:textSize="15dp"
+                android:textColor="#606060"
+                android:background="@android:color/transparent"
+                android:text="No Information" />
 
             <TextView
                 android:id="@+id/location"
@@ -71,10 +77,13 @@
                 android:textColor="#000000"
                 android:textSize="20sp" />
 
-            <TextView
+            <EditText
                 android:id="@+id/location_text"
-                android:layout_width="match_parent"
+                android:layout_width="fill_parent"
                 android:layout_height="wrap_content"
+                android:textSize="15dp"
+                android:textColor="#606060"
+                android:background="@android:color/transparent"
                 android:text="No Location" />
 
             <TextView
@@ -85,10 +94,13 @@
                 android:textColor="#000000"
                 android:textSize="20sp" />
 
-            <TextView
+            <EditText
                 android:id="@+id/email_text"
-                android:layout_width="match_parent"
+                android:layout_width="fill_parent"
                 android:layout_height="wrap_content"
+                android:textSize="15dp"
+                android:textColor="#606060"
+                android:background="@android:color/transparent"
                 android:text="No Email" />
 
             <TextView
