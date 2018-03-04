@@ -7,6 +7,7 @@ var session = require('express-session');
 var fs = require('fs');
 var graphlib = require('graphlib');
 var schedule = require('node-schedule');
+var validator = require('validator');
 
 // Load environment variables
 require('dotenv').config();
@@ -124,9 +125,22 @@ app.post('/registerAccount', function(request, response) {
 		return response.status(400).send("Invalid POST request\n");
 	}
 
-	var u = request.body.username;
-	var p = request.body.password;
-	var e = request.body.email;
+	// Validate username, password, and email
+	if (validateUsername(request.body.username)) {
+		var u = request.body.username;
+	} else {
+		return response.status(400).send("Username must be alphanumeric and have a minimum length of 4 characters and a maximum length of 24 characters.\n");
+	}
+	if (validatePassword(request.body.password)) {
+		var p = request.body.password;
+	} else {
+		return response.status(400).send("Password must only contain ASCII characters and must have a minimum length of 8 characters and a maximum length of 64 characters.\n");
+	}
+	if (validateEmail(request.body.email)) {
+		var e = normalizeEmail(request.body.email);
+	} else {
+		return response.status(400).send("Email must be valid and have a minimum length of 3 characters and a maximum length of 255 characters.\n");
+	}
 
 	register(u, p, e, response);
 });
@@ -146,8 +160,17 @@ app.post('/login', function(request, response) {
 		return response.status(400).send("User already logged in.\n");
 	}
 
-	var u = request.body.username;
-	var p = request.body.password;
+	// Validate username and password
+	if (validateUsername(request.body.username)) {
+		var u = request.body.username;
+	} else {
+		return response.status(400).send("Invalid username or password.\n");
+	}
+	if (validatePassword(request.body.password)) {
+		var p = request.body.password;
+	} else {
+		return response.status(400).send("Invalid username or password.\n");
+	}
 
 	login(u, p, request, response);
 });
@@ -203,7 +226,12 @@ app.post('/deleteAccount', function(request, response) {
 		return response.status(400).send("User not logged in.\n");
 	}
 
-	var p = request.body.password;
+	// Validate password
+	if (validatePassword(request.body.password)) {
+		var p = request.body.password;
+	} else {
+		return response.status(400).send("Invalid password.\n");
+	}
 
 	deleteAccount(p, request, response);
 });
@@ -215,7 +243,12 @@ app.get('/confirmEmail', function(request, response) {
 		return response.redirect('/');
 	}
 
-	var e = request.query.email;
+	// Validate email
+	if (validateEmail(request.query.email)) {
+		var e = normalizeEmail(request.body.email);
+	} else {
+		return response.status(400).send("Invalid email.\n");
+	}
 
 	// Update account confirmed to true
 	var sql = "UPDATE ?? SET ??=? WHERE ??=?";
@@ -246,8 +279,17 @@ app.post('/changeUsername', function(request, response) {
 		return response.status(400).send("User not logged in.\n");
 	}
 
-	var p = request.body.password;
-	var n = request.body.newUsername;
+	// Validate password and newUsername
+	if (validatePassword(request.body.password)) {
+		var p = request.body.password;
+	} else {
+		return response.status(400).send("Invalid password.\n");
+	}
+	if (validateUsername(request.body.newUsername)) {
+		var n = request.body.newUsername;
+	} else {
+		return response.status(400).send("New username must be alphanumeric and have a minimum length of 4 characters and a maximum length of 24 characters.\n");
+	}
 
 	changeUsername(p, n, request, response);
 });
@@ -267,8 +309,17 @@ app.post('/changePassword', function(request, response) {
 		return response.status(400).send("User not logged in.\n");
 	}
 
-	var p = request.body.password;
-	var n = request.body.newPassword;
+	// Validate password and newPassword
+	if (validatePassword(request.body.password)) {
+		var p = request.body.password;
+	} else {
+		return response.status(400).send("Invalid password.\n");
+	}
+	if (validatePassword(request.body.newPassword)) {
+		var n = request.body.newPassword;
+	} else {
+		return response.status(400).send("New password must only contain ASCII characters and must have a minimum length of 8 characters and a maximum length of 64 characters.\n");
+	}
 
 	changePassword(p, n, request, response);
 });
@@ -288,8 +339,17 @@ app.post('/changeEmail', function(request, response) {
 		return response.status(400).send("User not logged in.\n");
 	}
 
-	var p = request.body.password;
-	var n = request.body.newEmail;
+	// Validate password and newEmail
+	if (validatePassword(request.body.password)) {
+		var p = request.body.password;
+	} else {
+		return response.status(400).send("Invalid password.\n");
+	}
+	if (validateEmail(request.body.newEmail)) {
+		var n = normalizeEmail(request.body.newEmail);
+	} else {
+		return response.status(400).send("New email must be valid and have a minimum length of 3 characters and a maximum length of 255 characters.\n");
+	}
 
 	changeEmail(p, n, request, response);
 });
@@ -309,7 +369,12 @@ app.post('/changeCrossRadius', function(request, response) {
 		return response.status(400).send("User not logged in.\n");
 	}
 
-	var n = request.body.newCrossRadius;
+	// Validate newCrossRadius
+	if (validateCrossRadius(request.body.newCrossRadius)) {
+		var n = request.body.newCrossRadius;
+	} else {
+		return response.status(400).send("Cross radius must be an integer with a minimum of 10 and a maximum of 5280.\n");
+	}
 
 	changeCrossRadius(n, request, response);
 });
@@ -324,8 +389,17 @@ app.post('/forgotPassword', function(request, response) {
 		return response.status(400).send("Invalid POST request\n");
 	}
 
-	var u = request.body.username;
-	var e = request.body.email;
+	// Validate username and email
+	if (validateUsername(request.body.username)) {
+		var u = request.body.username;
+	} else {
+		return response.status(400).send("Invalid username.\n");
+	}
+	if (validateEmail(request.body.email)) {
+		var e = normalizeEmail(request.body.email);
+	} else {
+		return response.status(400).send("Invalid email.\n");
+	}
 
 	forgotPassword(u, e, response);
 });
@@ -345,7 +419,7 @@ app.post('/resetPassword', function(request, response) {
 	// If the object request.body is null, respond with status 500 'Internal Server Error'
 	if (!request.body) return response.sendStatus(500);
 
-	// POST request must have 2 parameters (newPassword and confirmPassword)
+	// POST request must have 2 parameters (inputNewPassword and inputConfirmPassword)
 	if (Object.keys(request.body).length != 2 || !request.body.inputNewPassword || !request.body.inputConfirmPassword) {
 		return response.status(400).send("Invalid POST request\n");
 	}
@@ -355,9 +429,23 @@ app.post('/resetPassword', function(request, response) {
 		return response.status(400).send("Invalid POST request\n");
 	}
 
-	var token = request.query.token;
-	var newPassword = request.body.inputNewPassword;
-	var confirmPassword = request.body.inputConfirmPassword;
+	// Validate token, inputNewPassword, and inputConfirmPassword
+	if (validatePasswordResetToken(request.query.token)) {
+		var token = request.query.token;
+	} else {
+		return response.status(400).send("Invalid password reset token.\n");
+	}
+	if (validatePassword(request.body.inputNewPassword) && validatePassword(request.body.inputConfirmPassword)) {
+		var newPassword = request.body.inputNewPassword;
+		var confirmPassword = request.body.inputConfirmPassword;
+	} else {
+		return response.status(400).send("New password must only contain ASCII characters and must have a minimum length of 8 characters and a maximum length of 64 characters.\n");
+	}
+
+	// Check that newPassword and confirmPassword are the same
+	if (newPassword != confirmPassword) {
+		return response.status(400).send("Passwords did not match.\n");
+	}
 
 	resetPassword(token, newPassword, confirmPassword, response);
 });
@@ -419,11 +507,51 @@ app.post('/updateLocation', function(request, response){
 		return response.status(400).send("User not logged in.\n");
 	}
 
-	var lat = request.body.latitude;
-	var lon = request.body.longitude;
+	// Validate coordinates
+	if (validateCoordinates(request.body.latitude, request.body.longitude)) {
+		var lat = request.body.latitude;
+		var lon = request.body.longitude;
+	} else {
+		return response.status(400).send("Invalid coordinates.\n");
+	}
 
 	updateLocation(lat, lon, request, response);
 });
+
+// Validates a username
+function validateUsername(username) {
+	return !validator.isEmpty(username) && validator.isAlphanumeric(username) && validator.isLength(username, {min: 4, max: 24});
+}
+
+// Validates a password
+function validatePassword(password) {
+	return !validator.isEmpty(password) && validator.isAscii(password) && validator.isLength(password, {min: 8, max: 64});
+}
+
+// Validates an email
+function validateEmail(email) {
+	return !validator.isEmpty(email) && validator.isEmail(email) && validator.isLength(email, {min: 3, max: 255});
+}
+
+// Normalizes an email
+function normalizeEmail(email) {
+	return validator.normalizeEmail(email);
+}
+
+// Validates a cross radius
+function validateCrossRadius(crossRadius) {
+	return !validator.isEmpty(crossRadius) && validator.isInt(crossRadius, {min: 10, max: 5280});
+}
+
+// Validates a password reset token
+function validatePasswordResetToken(passwordResetToken) {
+	return !validator.isEmpty(passwordResetToken) && validator.isHexadecimal(passwordResetToken) && validator.isLength(passwordResetToken, {min: 64, max: 64});
+}
+
+// Validates latitude and longitude coordinates
+function validateCoordinates(lat, lon) {
+	return !validator.isEmpty(lat) && !validator.isEmpty(lon) && validator.isLatLong(lat + ',' + lon);
+}
 
 // Registers a user if username and email does not already exist
 function register(u, p, e, response) {
@@ -500,6 +628,7 @@ function login(u, p, request, response) {
 
 // Verifies user is logged in and logs them out
 function logout(request, response) {
+	// Destroy the session
 	request.session.destroy(function(err) {
 		console.log("User logged out.");
 		return response.status(200).send(JSON.stringify({"response":"pass"}));
@@ -743,10 +872,6 @@ function changeEmail(p, n, request, response) {
 
 // Changes the crossRadius of an account
 function changeCrossRadius(n, request, response) {
-	// Check that new cross radius is valid
-	if (n < 10 || n > 5280) {
-		return response.status(400).send("Invalid cross radius.\n");
-	}
 	// Update cross radius for user ID
 	var sql = "UPDATE ?? SET ??=? WHERE ??=?";
 	var post = [db_accounts, crossRadius, n, uid, request.session.uid];
@@ -816,10 +941,6 @@ function forgotPassword(u, e, response) {
 
 // Resets an account password
 function resetPassword(token, newPassword, confirmPassword, response) {
-	// Check that newPassword and confirmPassword are the same
-	if (newPassword != confirmPassword) {
-		return response.status(400).send("Passwords did not match.\n");
-	}
 	// Get email and passwordResetExpires for passwordResetToken
 	var sql = "SELECT ??, ?? FROM ?? WHERE ??=?";
 	var post = [email, passwordResetExpires, db_accounts, passwordResetToken, token];
