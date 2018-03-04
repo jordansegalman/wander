@@ -6,6 +6,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -65,6 +66,18 @@ public class Profile extends AppCompatActivity {
         aboutText_input = (TextView)findViewById(R.id.about_text);
         locationText_input = (TextView)findViewById(R.id.location_text);
         emailText_input = (TextView)findViewById(R.id.email_text);
+
+        if (getCallingActivity() != null) {
+            Log.d("TAG", getCallingActivity().getClassName());
+            if (getCallingActivity().getClassName().equalsIgnoreCase("com.example.kyle.wander.ProfileEdit")) {
+                Intent in = getIntent();
+                nameText_input.setText(in.getExtras().getString("name"));
+                interestText_input.setText(in.getExtras().getString("interests"));
+                aboutText_input.setText(in.getExtras().getString("about"));
+                emailText_input.setText(in.getExtras().getString("email"));
+                locationText_input.setText(in.getExtras().getString("location"));
+            }
+        }
 
         //profilePicture.setBackground();
         //nameText.setText(name);
@@ -142,6 +155,22 @@ public class Profile extends AppCompatActivity {
     }
 
     public void edit(View view){
-        startActivity(new Intent(Profile.this, ProfileEdit.class));
+        /*
+        EditText etInterests = (EditText) findViewById(R.id.interests_text);
+        EditText etAbout = (EditText) findViewById(R.id.about_text);
+        EditText etLocation = (EditText) findViewById(R.id.location_text);
+        EditText etEmail = (EditText) findViewById(R.id.location_text);
+        EditText etName = (EditText) findViewById(R.id.name);
+        */
+        Intent i = new Intent(Profile.this, ProfileEdit.class);
+        i.putExtra("location", locationText_input.getText().toString());
+        i.putExtra("about", aboutText_input.getText().toString());
+        i.putExtra("interests", interestText_input.getText().toString());
+        i.putExtra("email", emailText_input.getText().toString());
+        i.putExtra("name", nameText_input.getText().toString());
+        startActivity(i);
+
+
+        //startActivity(new Intent(Profile.this, ProfileEdit.class));
     }
 }
