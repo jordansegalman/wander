@@ -24,14 +24,8 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
-
-
 public class FacebookLogin extends AppCompatActivity {
-
-    private RequestQueue requestQueue;
     CallbackManager callbackManager;
-
-
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -62,7 +56,6 @@ public class FacebookLogin extends AppCompatActivity {
     }
 
     private void  sendPOSTRequest(AccessToken accessToken) {
-
         GraphRequest request = GraphRequest.newMeRequest(accessToken,
                 new GraphRequest.GraphJSONObjectCallback() {
                     @Override
@@ -88,7 +81,6 @@ public class FacebookLogin extends AppCompatActivity {
         request.setParameters(parameters);
         request.executeAsync();
     }
-
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {

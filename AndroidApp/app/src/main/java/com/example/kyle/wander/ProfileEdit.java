@@ -22,7 +22,7 @@ public class ProfileEdit extends AppCompatActivity {
         etInterests = (EditText) findViewById(R.id.interests_text);
         etAbout = (EditText) findViewById(R.id.about_text);
         etLocation = (EditText) findViewById(R.id.location_text);
-        etEmail = (EditText) findViewById(R.id.location_text);
+        etEmail = (EditText) findViewById(R.id.email_text);
         etName = (EditText) findViewById(R.id.name);
 
         Intent in = getIntent();
@@ -37,7 +37,6 @@ public class ProfileEdit extends AppCompatActivity {
         etLocation.setText(loc);
         etName.setText(name);
         etEmail.setText(email);
-
     }
 
     public void done(View view){

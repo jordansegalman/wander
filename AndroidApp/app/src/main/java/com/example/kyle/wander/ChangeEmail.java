@@ -24,7 +24,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class ChangeEmail extends AppCompatActivity {
-
     private RequestQueue requestQueue;
 
     EditText emailEdit;
@@ -40,26 +39,19 @@ public class ChangeEmail extends AppCompatActivity {
         newEmailEdit = (EditText)findViewById(R.id.new_email);
         passwordEdit = (EditText)findViewById(R.id.password);
         requestQueue = Volley.newRequestQueue(this);
-
-
     }
 
     public void done(View view){
-        String oldEmail = emailEdit.getText().toString();
         String newEmail = newEmailEdit.getText().toString();
         String password = passwordEdit.getText().toString();
 
-        sendPOSTRequest(oldEmail, newEmail, password);
+        sendPOSTRequest(newEmail, password);
         //startActivity(new Intent(ChangeEmail.this, Settings.class));
     }
 
-    private void sendPOSTRequest(String oldEmail, final String newEmail, String password) {
-        String username = Data.getInstance().getUsername();
-
+    private void sendPOSTRequest(String newEmail, String password) {
         Map<String, String> params = new HashMap<String,String>();
-        params.put("username", username);
         params.put("password", password);
-        params.put("email", oldEmail);
         params.put("newEmail", newEmail);
 
         String url = Data.getInstance().getUrl() + "/changeEmail";
@@ -72,14 +64,12 @@ public class ChangeEmail extends AppCompatActivity {
                         {
                             String res = response.getString("response");
                             if (res.equalsIgnoreCase("pass")) {
-                                Toast.makeText(getApplicationContext(), "Email changed!", Toast.LENGTH_LONG).show();
-                                Data.getInstance().setEmail(newEmail);
-                                Intent intent = new Intent(ChangeEmail.this, Settings.class);//Change myLocation to AppHome
+                                Toast.makeText(getApplicationContext(), "Email changed!", Toast.LENGTH_SHORT).show();
+                                Intent intent = new Intent(ChangeEmail.this, Settings.class);
                                 startActivity(intent);
                             }
                             else {
-                                Toast.makeText(getApplicationContext(), "Email change failed!", Toast.LENGTH_LONG).show();
-                                return;
+                                Toast.makeText(getApplicationContext(), "Email change failed!", Toast.LENGTH_SHORT).show();
                             }
                         } catch (JSONException j) {
                             j.printStackTrace();
@@ -101,5 +91,4 @@ public class ChangeEmail extends AppCompatActivity {
                 DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
         requestQueue.add(postRequest);
     }
-
 }

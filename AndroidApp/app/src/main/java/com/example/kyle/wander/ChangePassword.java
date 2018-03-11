@@ -1,7 +1,6 @@
 package com.example.kyle.wander;
 
 import android.content.Intent;
-import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -40,7 +39,6 @@ public class ChangePassword extends AppCompatActivity {
         oldPasswordEdit = (EditText)findViewById(R.id.old_password);
         confirmEdit = (EditText)findViewById(R.id.confirm);
         requestQueue = Volley.newRequestQueue(this);
-
     }
 
     public void done(View view){
@@ -50,8 +48,7 @@ public class ChangePassword extends AppCompatActivity {
 
 
         if(!password.equals(confirmPassword)){
-            Snackbar.make(findViewById(R.id.myCoordinatorLayout),
-                    "Passwords do not match", Snackbar.LENGTH_INDEFINITE).show();
+            Toast.makeText(getApplicationContext(), "Passwords do not match.", Toast.LENGTH_SHORT).show();
         } else {
             sendPOSTRequest(oldPassword, password);
             //startActivity(new Intent(ChangePassword.this, Settings.class));
@@ -59,13 +56,8 @@ public class ChangePassword extends AppCompatActivity {
     }
 
     private void sendPOSTRequest(String password, String newPassword) {
-        String username = Data.getInstance().getUsername();
-        String email = Data.getInstance().getEmail();
-
         Map<String, String> params = new HashMap<String,String>();
-        params.put("username", username);
         params.put("password", password);
-        params.put("email", email);
         params.put("newPassword", newPassword);
 
         String url = Data.getInstance().getUrl() + "/changePassword";
@@ -78,13 +70,12 @@ public class ChangePassword extends AppCompatActivity {
                         {
                             String res = response.getString("response");
                             if (res.equalsIgnoreCase("pass")) {
-                                Toast.makeText(getApplicationContext(), "Password changed!", Toast.LENGTH_LONG).show();
-                                Intent intent = new Intent(ChangePassword.this, Settings.class);//Change myLocation to AppHome
+                                Toast.makeText(getApplicationContext(), "Password changed!", Toast.LENGTH_SHORT).show();
+                                Intent intent = new Intent(ChangePassword.this, Settings.class);
                                 startActivity(intent);
                             }
                             else {
-                                Toast.makeText(getApplicationContext(), "Password change failed!", Toast.LENGTH_LONG).show();
-                                return;
+                                Toast.makeText(getApplicationContext(), "Password change failed!", Toast.LENGTH_SHORT).show();
                             }
                         } catch (JSONException j) {
                             j.printStackTrace();

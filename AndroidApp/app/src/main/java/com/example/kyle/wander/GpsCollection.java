@@ -45,10 +45,6 @@ import java.util.Map;
 import static android.Manifest.permission.ACCESS_FINE_LOCATION;
 import static android.content.ContentValues.TAG;
 
-/**
- * Created by Brandon on 2/21/2018.
- */
-
 public class GpsCollection extends Service {
     private static final String TAG = "GPS";
     private LocationManager mLocationManager = null;
@@ -150,10 +146,9 @@ public class GpsCollection extends Service {
             mLocationManager = (LocationManager) getApplicationContext().getSystemService(Context.LOCATION_SERVICE);
         }
     }
+
     private void pushToDatabase(Location location) {
-        //TODO:PUSH DATA HERE USING location.getLatitude() and longitude
         Map<String, String> params = new HashMap<String,String>();
-        params.put("username", Data.getInstance().getUsername());
         params.put("latitude", Double.toString(location.getLatitude()));
         params.put("longitude", Double.toString(location.getLongitude()));
 
@@ -166,17 +161,11 @@ public class GpsCollection extends Service {
                         {
                             String res = response.getString("response");
                             if (res.equalsIgnoreCase("pass")) {
-
                                 Log.d("Tag", "Location recorded.");
-                            }
-                            else {
-                                return;
                             }
                         } catch (JSONException j) {
                             j.printStackTrace();
                         }
-                        // still need a check to ensure response is good, but we need to implement json response first
-                        // https://developer.android.com/reference/android/content/Context.html
                     }
                 },
                 new com.android.volley.Response.ErrorListener() {

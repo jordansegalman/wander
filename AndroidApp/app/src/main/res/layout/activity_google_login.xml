@@ -6,9 +6,4 @@
     android:layout_height="match_parent"
     tools:context="com.example.kyle.wander.GoogleLogin">
 
-    <TextView
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:text="Google Login Screen"/>
-
 </android.support.constraint.ConstraintLayout>

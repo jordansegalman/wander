@@ -1,10 +1,14 @@
 package com.example.kyle.wander;
 
-import java.io.File;
+import android.content.Context;
+
+import java.net.CookieHandler;
+import java.net.CookieManager;
+import java.net.CookiePolicy;
 
 /**
  * This is a singleton class that will store data that we need shared between
- * multiple classes. This includes information like URL, session ID, etc.
+ * multiple classes. This includes information like URL, username, email, etc.
  *
  * If you guys believe an application singleton would be better, feel free to modify.
  *
@@ -12,31 +16,20 @@ import java.io.File;
  * https://www.geeksforgeeks.org/singleton-class-java/
  */
 public class Data {
-    private final String url = "https://vvander.me";
-    private final String sessionInfoFile = "sessionInfoFile";
-    private String username;
-    private String sessionId;
-    private String email;
+    private PersistentCookieStore persistentCookieStore;
 
-    public String getUsername(){return username;}
+    public void initializeCookies(Context context) {
+        persistentCookieStore = new PersistentCookieStore(context);
+        CookieHandler.setDefault(new CookieManager(persistentCookieStore, CookiePolicy.ACCEPT_ALL));
+    }
 
-    public String getSessionId() {return sessionId;}
-
-    public String getSessionInfoFile() {
-        return sessionInfoFile;
+    public void removeCookies() {
+        persistentCookieStore.removeAll();
     }
 
     public String getUrl() {
-        return url;
+        return "https://vvander.me";
     }
-
-    public String getEmail() {return email;}
-
-    public void setUsername(String username){this.username = username;}
-
-    public void setEmail(String email){this.email = email;}
-
-    public void setSessionId(String sessionId) {this.sessionId = sessionId;}
 
     private static final Data data = new Data();
 

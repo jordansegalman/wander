@@ -37,7 +37,6 @@ public class AppHome extends AppCompatActivity {
     private DrawerLayout mDrawerLayout;
     private String mActivityTitle;
 
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -54,14 +53,11 @@ public class AppHome extends AppCompatActivity {
 
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         getSupportActionBar().setHomeButtonEnabled(true);
-
-
-
     }
 
     private void addDrawerItems() {
-        //IMPORTANT: Currently where the nav bar links lead depends on the order of this list, if the order is
-        //changed be sure to update the values of the "position" variable below
+        // IMPORTANT: Currently where the nav bar links lead depends on the order of this list, if the order is
+        // changed be sure to update the values of the "position" variable below.
         String[] osArray = { "My Matches", "Profile", "Popular Locations", "History","Settings" ,"Map"};
         mAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, osArray);
         mDrawerList.setAdapter(mAdapter);
@@ -100,7 +96,7 @@ public class AppHome extends AppCompatActivity {
         };
 
         mDrawerToggle.setDrawerIndicatorEnabled(true);
-        mDrawerLayout.setDrawerListener(mDrawerToggle);
+        mDrawerLayout.addDrawerListener(mDrawerToggle);
     }
 
     @Override

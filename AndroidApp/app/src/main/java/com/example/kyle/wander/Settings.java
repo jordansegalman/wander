@@ -27,14 +27,15 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.net.CookieHandler;
+import java.net.CookieManager;
+import java.net.CookieStore;
 import java.util.HashMap;
 import java.util.Map;
 
 public class Settings extends AppCompatActivity {
-
     Switch locationSwitch;
     private RequestQueue requestQueue;
-
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -48,23 +49,19 @@ public class Settings extends AppCompatActivity {
         locationSwitch.setChecked(locationTracking);
 
         requestQueue = Volley.newRequestQueue(this);
-
-
     }
 
     public void locationToggle(View view){
         boolean value = locationSwitch.isChecked();
-        //TODO: turn off location services. "value" indicates whether it should be on(true) or off(false)
-        //This code is run every time the user hits the button on the settings page
-
         SharedPreferences sharedPref = getPreferences(Context.MODE_PRIVATE);
         SharedPreferences.Editor editor = sharedPref.edit();
         editor.putBoolean("tracking", value);
-        editor.commit();
-        if(value)
+        editor.apply();
+        if (value) {
             startService(new Intent(this, GpsCollection.class));
-        else
+        } else {
             stopService(new Intent(this, GpsCollection.class));
+        }
     }
 
     public void delete(View view){
@@ -88,32 +85,9 @@ public class Settings extends AppCompatActivity {
     }
 
     private void logOut() {
-        StringBuilder sb = new StringBuilder();
-        try {
-            FileInputStream fs = getBaseContext().openFileInput(Data.getInstance().getSessionInfoFile());
-            InputStreamReader ir = new InputStreamReader(fs);
-            BufferedReader br = new BufferedReader(ir);
-
-            String line;
-            while ((line = br.readLine()) != null) {
-                sb.append(line);
-            }
-        } catch (IOException e) {e.printStackTrace();}
-
-        //String username = Data.getInstance().getUsername();
-        String session_id = sb.toString();
-        Log.d("tag", session_id);
-        //Log.d("tag", username);
-
-        //stopService(new Intent(this, GpsCollection.class));
-
-        Map<String, String> params = new HashMap<String,String>();
-        //params.put("username", username);
-        params.put("session_id", session_id);
-
+        Intent intent = new Intent(Settings.this, Login.class);
         String url = Data.getInstance().getUrl() + "/logout";
-
-        JsonObjectRequest postRequest = new JsonObjectRequest(Request.Method.POST, url, new JSONObject(params),
+        JsonObjectRequest postRequest = new JsonObjectRequest(Request.Method.POST, url, null,
                 new Response.Listener<JSONObject>() {
                     @Override
                     public void onResponse(JSONObject response) {
@@ -121,21 +95,10 @@ public class Settings extends AppCompatActivity {
                         {
                             String res = response.getString("response");
                             if (res.equalsIgnoreCase("pass")) {
-                                try
-                                {
-                                    FileOutputStream fos = openFileOutput(Data.getInstance().getSessionInfoFile(), Context.MODE_PRIVATE);
-                                    String s = "";
-                                    fos.write(s.getBytes());
-                                    fos.close();
-                                } catch (IOException e) {e.printStackTrace();}
-
-
-                                Toast.makeText(getApplicationContext(), "Logged Out!", Toast.LENGTH_LONG).show();
-                                Intent intent = new Intent(Settings.this, Login.class);//Change myLocation to AppHome
+                                Toast.makeText(getApplicationContext(), "Logged out!", Toast.LENGTH_SHORT).show();
+                                Data.getInstance().removeCookies();
+                                Intent intent = new Intent(Settings.this, Login.class);
                                 startActivity(intent);
-                            }
-                            else {
-                                return;
                             }
                         } catch (JSONException j) {
                             j.printStackTrace();
@@ -156,10 +119,8 @@ public class Settings extends AppCompatActivity {
         requestQueue.add(postRequest);
     }
 
-
     @Override
     public void onBackPressed() {
         startActivity(new Intent(Settings.this, AppHome.class));
     }
-
 }

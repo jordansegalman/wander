@@ -6,86 +6,89 @@
     android:layout_height="match_parent"
     tools:context="com.example.kyle.wander.Login">
 
-    <android.support.design.widget.CoordinatorLayout
-        android:id="@+id/myCoordinatorLayout"
-        xmlns:android="http://schemas.android.com/apk/res/android"
+    <android.support.design.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
         xmlns:app="http://schemas.android.com/apk/res-auto"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:id="@+id/myCoordinatorLayout"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:padding="20dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
 
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="fill_parent"
             android:orientation="vertical"
-            android:paddingHorizontal="20dp"
             android:paddingBottom="10dp">
 
             <ImageView
-                android:layout_width="200dp"
+                android:layout_width="192dp"
                 android:layout_height="192dp"
                 android:layout_gravity="center_horizontal"
                 android:layout_weight="1"
-                android:src="@drawable/wander_logo_black" />
-
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="Sign In"
-                android:textColor="#000000"
-                android:textSize="30sp"
-                android:gravity="center"
-                android:paddingBottom="10dp"/>
+                android:contentDescription="Wander Logo"
+                android:src="@drawable/wander_logo" />
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="5dp">
 
-                <TextView
-                    android:layout_width="0dp"
-                    android:layout_height="50dp"
-                    android:layout_weight=".33"/>
+                <Space
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1" />
 
                 <ImageButton
-                    android:layout_width="50dp"
-                    android:background="@drawable/facebook_logo"
-                    android:layout_height="50dp"
-                    android:onClick="facebookButton"/>
-
-                <TextView
-                    android:layout_width="0dp"
-                    android:layout_height="50dp"
-                    android:layout_weight=".2"/>
-
-                <ImageButton
-                    android:layout_width="50dp"
+                    android:layout_width="64dp"
+                    android:layout_height="64dp"
+                    android:layout_weight="0"
                     android:background="@drawable/google_logo"
-                    android:layout_height="50dp"
-                    android:onClick="googleButton"/>
-                <TextView
-                    android:layout_width="0dp"
-                    android:layout_height="50dp"
-                    android:layout_weight=".33"/>
+                    android:contentDescription="Google Logo"
+                    android:onClick="googleButton" />
+
+                <Space
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1" />
+
+                <ImageButton
+                    android:layout_width="64dp"
+                    android:layout_height="64dp"
+                    android:layout_weight="0"
+                    android:background="@drawable/facebook_logo"
+                    android:contentDescription="Facebook Logo"
+                    android:onClick="facebookButton" />
+
+                <Space
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1" />
 
             </LinearLayout>
 
             <EditText
                 android:id="@+id/username"
                 android:layout_width="match_parent"
-                android:layout_height="56dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
                 android:backgroundTint="#000000"
-                android:hint="User Name"
+                android:hint="Username"
                 android:imeOptions="actionNext"
-                android:inputType="textFilter"
+                android:inputType="textNoSuggestions"
                 android:maxLines="1"
+                android:singleLine="false"
                 android:textColor="#000000"
                 android:textCursorDrawable="@null" />
 
             <EditText
                 android:id="@+id/password"
                 android:layout_width="match_parent"
-                android:layout_height="56dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
                 android:backgroundTint="#000000"
                 android:hint="Password"
                 android:imeOptions="actionDone"
@@ -101,6 +104,7 @@
                 android:layout_margin="0dp"
                 android:layout_weight="1"
                 android:clickable="true"
+                android:focusable="true"
                 android:onClick="forgotPassword"
                 android:padding="0dp"
                 android:text="Forgot your password?"
@@ -108,8 +112,9 @@
 
             <Button
                 android:layout_width="match_parent"
-                android:layout_height="38dp"
+                android:layout_height="wrap_content"
                 android:layout_weight="1"
+                android:backgroundTint="@color/colorAccent"
                 android:onClick="login"
                 android:text="Log In" />
 
@@ -118,7 +123,10 @@
                 android:layout_height="wrap_content"
                 android:layout_gravity="center"
                 android:layout_margin="0dp"
+                android:layout_weight="1"
                 android:clickable="true"
+                android:focusable="true"
+                android:gravity="center"
                 android:onClick="registerButton"
                 android:padding="0dp"
                 android:text="Don't have an account?"

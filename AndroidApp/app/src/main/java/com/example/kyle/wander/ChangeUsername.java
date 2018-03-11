@@ -1,7 +1,6 @@
 package com.example.kyle.wander;
 
 import android.content.Intent;
-import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -37,7 +36,6 @@ public class ChangeUsername extends AppCompatActivity {
         passwordEdit = (EditText)findViewById(R.id.password);
         usernameEdit = (EditText)findViewById(R.id.new_username);
         requestQueue = Volley.newRequestQueue(this);
-
     }
 
     public void done(View view){
@@ -47,13 +45,8 @@ public class ChangeUsername extends AppCompatActivity {
     }
 
     private void sendPOSTRequest(final String newUsername, String password) {
-        String username = Data.getInstance().getUsername();
-        String email = Data.getInstance().getEmail();
-
         Map<String, String> params = new HashMap<String,String>();
-        params.put("username", username);
         params.put("password", password);
-        params.put("email", email);
         params.put("newUsername", newUsername);
 
         String url = Data.getInstance().getUrl() + "/changeUsername";
@@ -66,15 +59,12 @@ public class ChangeUsername extends AppCompatActivity {
                         {
                             String res = response.getString("response");
                             if (res.equalsIgnoreCase("pass")) {
-                                Toast.makeText(getApplicationContext(), "Username changed!", Toast.LENGTH_LONG).show();
-                                String temp = newUsername;
-                                Data.getInstance().setUsername(temp);
-                                Intent intent = new Intent(ChangeUsername.this, Settings.class);//Change myLocation to AppHome
+                                Toast.makeText(getApplicationContext(), "Username changed!", Toast.LENGTH_SHORT).show();
+                                Intent intent = new Intent(ChangeUsername.this, Settings.class);
                                 startActivity(intent);
                             }
                             else {
-                                Toast.makeText(getApplicationContext(), "Username change failed!", Toast.LENGTH_LONG).show();
-                                return;
+                                Toast.makeText(getApplicationContext(), "Username change failed!", Toast.LENGTH_SHORT).show();
                             }
                         } catch (JSONException j) {
                             j.printStackTrace();
@@ -84,7 +74,7 @@ public class ChangeUsername extends AppCompatActivity {
                 new Response.ErrorListener() {
                     @Override
                     public void onErrorResponse(VolleyError error) {
-                        Toast.makeText(getApplicationContext(), "Username change failed!", Toast.LENGTH_LONG).show();
+                        Toast.makeText(getApplicationContext(), "Username change failed!", Toast.LENGTH_SHORT).show();
 
                         Log.d("Error: ", error.toString());
                     }

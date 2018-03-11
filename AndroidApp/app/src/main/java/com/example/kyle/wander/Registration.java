@@ -2,7 +2,6 @@ package com.example.kyle.wander;
 
 import android.content.Context;
 import android.content.Intent;
-import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -30,7 +29,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class Registration extends AppCompatActivity {
-
     private RequestQueue requestQueue;
     private String url;
 
@@ -54,21 +52,16 @@ public class Registration extends AppCompatActivity {
     }
 
     public void submit(View view){
-        InputMethodManager inputManager = (InputMethodManager)
-                getSystemService(Registration.INPUT_METHOD_SERVICE);
-
-        inputManager.hideSoftInputFromWindow(getCurrentFocus().getWindowToken(),
-                InputMethodManager.HIDE_NOT_ALWAYS);
+        InputMethodManager inputManager = (InputMethodManager) getSystemService(Registration.INPUT_METHOD_SERVICE);
+        inputManager.hideSoftInputFromWindow(getCurrentFocus().getWindowToken(), InputMethodManager.HIDE_NOT_ALWAYS);
 
         String email = emailText.getText().toString();
         String username = usernameText.getText().toString();
         String password = passwordText.getText().toString();
         String confirmPassword = confirmPasswordText.getText().toString();
 
-
         if(!password.equals(confirmPassword)){
-            Snackbar.make(findViewById(R.id.myCoordinatorLayout),
-                    "Passwords do not match", Snackbar.LENGTH_LONG).show(); // length indefinite before
+            Toast.makeText(getApplicationContext(), "Passwords do not match.", Toast.LENGTH_SHORT).show();
         } else {
             sendPOSTRequest(email, username, password);
         }
@@ -88,15 +81,12 @@ public class Registration extends AppCompatActivity {
                         {
                             String res = response.getString("response");
                             if (res.equalsIgnoreCase("pass")) {
-                                // still need a check to ensure response is good, but we need to implement json response first
-                                // https://developer.android.com/reference/android/content/Context.html
-                                Toast.makeText(getApplicationContext(), "Account successfully created!", Toast.LENGTH_LONG).show();
+                                Toast.makeText(getApplicationContext(), "Account successfully created!", Toast.LENGTH_SHORT).show();
                                 Intent intent = new Intent(Registration.this, Login.class);
                                 startActivity(intent);
                             }
                             else {
-                                Toast.makeText(getApplicationContext(), "Error creating account!", Toast.LENGTH_LONG).show();
-                                return;
+                                Toast.makeText(getApplicationContext(), "Registration failed!", Toast.LENGTH_SHORT).show();
                             }
                         } catch (JSONException j) {
                             j.printStackTrace();
@@ -107,7 +97,7 @@ public class Registration extends AppCompatActivity {
                 new Response.ErrorListener() {
                     @Override
                     public void onErrorResponse(VolleyError error) {
-                        Toast.makeText(getApplicationContext(), "Registration failed!", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(getApplicationContext(), "Error creating account!", Toast.LENGTH_SHORT).show();
                         Log.d("Error: ", error.toString());
                     }
                 }
@@ -118,5 +108,4 @@ public class Registration extends AppCompatActivity {
                 DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
         requestQueue.add(postRequest);
     }
-
 }

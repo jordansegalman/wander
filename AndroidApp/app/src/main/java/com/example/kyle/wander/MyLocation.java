@@ -30,7 +30,6 @@ import static android.Manifest.permission.ACCESS_FINE_LOCATION;
 
 public class MyLocation extends AppCompatActivity implements OnMapReadyCallback, ActivityCompat.OnRequestPermissionsResultCallback, GoogleMap.OnMyLocationButtonClickListener,
         GoogleMap.OnMyLocationClickListener, GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener, LocationListener {
-
     private int MY_PERMISSIONS_REQUEST_FINE_LOCATION = 0;
     private GoogleMap mMap;
     private Location mLastLocation;
@@ -50,7 +49,6 @@ public class MyLocation extends AppCompatActivity implements OnMapReadyCallback,
        // startLocationUpdates();
     }
 
-
     /**
      * Manipulates the map once available.
      * This callback is triggered when the map is ready to be used.
@@ -63,11 +61,10 @@ public class MyLocation extends AppCompatActivity implements OnMapReadyCallback,
     @Override
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
-        while (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
-                != PackageManager.PERMISSION_GRANTED)
+        while (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(this, new String[]{ACCESS_FINE_LOCATION}, 1);
+        }
         mMap.setMyLocationEnabled(true);
-        // }
         mMap.setOnMyLocationButtonClickListener(this);
         mMap.setOnMyLocationClickListener(this);
 
@@ -85,7 +82,6 @@ public class MyLocation extends AppCompatActivity implements OnMapReadyCallback,
         }
     }
 
-
     @Override
     public void onConnected(@Nullable Bundle bundle) {
 
@@ -93,13 +89,13 @@ public class MyLocation extends AppCompatActivity implements OnMapReadyCallback,
 
     @Override
     public boolean onMyLocationButtonClick() {
-        //Toast.makeText(this, "MyLocation button clicked", Toast.LENGTH_SHORT).show();
+        //Toast.makeText(getApplicationContext(), "MyLocation button clicked", Toast.LENGTH_SHORT).show();
         return false;
     }
 
     @Override
     public void onMyLocationClick(@NonNull Location location) {
-        //Toast.makeText(this, "Current location:\n" + location, Toast.LENGTH_LONG).show();
+        //Toast.makeText(getApplicationContext(), "Current location:\n" + location, Toast.LENGTH_SHORT).show();
     }
 
     @Override
@@ -109,7 +105,6 @@ public class MyLocation extends AppCompatActivity implements OnMapReadyCallback,
 
     @Override
     public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
-
 
     }
 
@@ -122,7 +117,6 @@ public class MyLocation extends AppCompatActivity implements OnMapReadyCallback,
 
     @Override
     protected void onStop(){
-
         if(mGoogleApiClient != null) {
             mGoogleApiClient.disconnect();
             //LocationServices.FusedLocationApi.removeLocationUpdates(mGoogleApiClient, this);
@@ -158,12 +152,10 @@ public class MyLocation extends AppCompatActivity implements OnMapReadyCallback,
 
     }
 
-
     public void requestPermission() {
         while (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
                 != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(this, new String[]{ACCESS_FINE_LOCATION}, 1);
         }
     }
-
 }

@@ -1,9 +1,5 @@
 package com.example.kyle.wander;
 
-/**
- * Created by Brandon on 2/21/2018.
- */
-
 import android.Manifest;
 import android.app.AlertDialog;
 import android.app.Dialog;
@@ -16,8 +12,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.widget.Toast;
 
 public abstract class PermissionUtils {
-    public static void requestPermission(AppCompatActivity activity, int requestId,
-                                         String permission, boolean finishActivity) {
+    public static void requestPermission(AppCompatActivity activity, int requestId, String permission, boolean finishActivity) {
         if (ActivityCompat.shouldShowRequestPermissionRationale(activity, permission)) {
             // Display a dialog with rationale.
             //PermissionUtils.RationaleDialog.newInstance(requestId, finishActivity)
@@ -25,9 +20,6 @@ public abstract class PermissionUtils {
         } else {
             // Location permission has not been granted yet, request it.
             ActivityCompat.requestPermissions(activity, new String[]{permission}, requestId);
-
         }
     }
-
 }
-

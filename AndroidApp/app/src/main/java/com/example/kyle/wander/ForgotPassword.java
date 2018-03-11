@@ -38,8 +38,13 @@ public class ForgotPassword extends AppCompatActivity {
         usernameEdit = (EditText)findViewById(R.id.username);
     }
 
-    private void sendPOSTRequest(String username, String email) {
+    public void done(View view) {
+        String email = emailEdit.getText().toString();
+        String username = usernameEdit.getText().toString();
+        sendPOSTRequest(username, email);
+    }
 
+    private void sendPOSTRequest(String username, String email) {
         Map<String, String> params = new HashMap<String,String>();
         params.put("username", username);
         params.put("email", email);
@@ -54,13 +59,12 @@ public class ForgotPassword extends AppCompatActivity {
                         {
                             String res = response.getString("response");
                             if (res.equalsIgnoreCase("pass")) {
-                                Toast.makeText(getApplicationContext(), "Password reset email sent!", Toast.LENGTH_LONG).show();
-                                Intent intent = new Intent(ForgotPassword.this, Login.class);//Change myLocation to AppHome
+                                Toast.makeText(getApplicationContext(), "Password reset email sent!", Toast.LENGTH_SHORT).show();
+                                Intent intent = new Intent(ForgotPassword.this, Login.class);
                                 startActivity(intent);
                             }
                             else {
-                                Toast.makeText(getApplicationContext(), "Password reset failed!", Toast.LENGTH_LONG).show();
-                                return;
+                                Toast.makeText(getApplicationContext(), "Password reset failed!", Toast.LENGTH_SHORT).show();
                             }
                         } catch (JSONException j) {
                             j.printStackTrace();
@@ -70,7 +74,7 @@ public class ForgotPassword extends AppCompatActivity {
                 new Response.ErrorListener() {
                     @Override
                     public void onErrorResponse(VolleyError error) {
-                        Toast.makeText(getApplicationContext(), "Password reset failed!", Toast.LENGTH_LONG).show();
+                        Toast.makeText(getApplicationContext(), "Password reset failed!", Toast.LENGTH_SHORT).show();
 
                         Log.d("Error: ", error.toString());
                     }
@@ -81,13 +85,5 @@ public class ForgotPassword extends AppCompatActivity {
                 DefaultRetryPolicy.DEFAULT_MAX_RETRIES,
                 DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
         requestQueue.add(postRequest);
-    }
-
-    public void done(View view) {
-        String email = emailEdit.getText().toString();
-        String username = usernameEdit.getText().toString();
-        Log.d("tag", email);
-        Log.d("tag", username);
-        sendPOSTRequest(username, email);
     }
 }

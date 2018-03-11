@@ -26,7 +26,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class Profile extends AppCompatActivity {
-
+    private static final String TAG = "Profile";
     private RequestQueue requestQueue;
     private TextView nameText;
     private TextView interestText;
@@ -46,8 +46,6 @@ public class Profile extends AppCompatActivity {
         setContentView(R.layout.activity_profile);
         requestQueue = Volley.newRequestQueue(this);
 
-
-        //TODO: Get profile info from server
         String name = "Name";
         String interests = "Interests";
         String about = "About";
@@ -68,7 +66,7 @@ public class Profile extends AppCompatActivity {
         emailText_input = (TextView)findViewById(R.id.email_text);
 
         if (getCallingActivity() != null) {
-            Log.d("TAG", getCallingActivity().getClassName());
+            Log.d(TAG, getCallingActivity().getClassName());
             if (getCallingActivity().getClassName().equalsIgnoreCase("com.example.kyle.wander.ProfileEdit")) {
                 Intent in = getIntent();
                 nameText_input.setText(in.getExtras().getString("name"));
@@ -85,7 +83,6 @@ public class Profile extends AppCompatActivity {
         //aboutText.setText(about);
         //locationText.setText(location);
         //emailText.setText(email);
-
     }
 
     public void linkedInProfile(View view) {
@@ -101,14 +98,9 @@ public class Profile extends AppCompatActivity {
     }
 
     private void sendPOSTRequest() {
-        String email = Data.getInstance().getEmail();
-
-        Map<String, String> params = new HashMap<String,String>();
-        params.put("email", email);
-
         String url = Data.getInstance().getUrl() + "/getProfile";
 
-        JsonObjectRequest postRequest = new JsonObjectRequest(Request.Method.POST, url, new JSONObject(params),
+        JsonObjectRequest postRequest = new JsonObjectRequest(Request.Method.POST, url, null,
                 new Response.Listener<JSONObject>() {
                     @Override
                     public void onResponse(JSONObject response) {
@@ -122,16 +114,14 @@ public class Profile extends AppCompatActivity {
                                 String e = response.getString("email");
                                 String location = response.getString("location");
                                 String about = response.getString("about");
+                                String name = first + " " + last;
 
-                                nameText_input.setText(first + " " + last);
+                                nameText_input.setText(name);
                                 locationText_input.setText(location);
                                 emailText_input.setText(e);
                                 aboutText_input.setText(about);
 
-                                Toast.makeText(getApplicationContext(), "Profile Updated!", Toast.LENGTH_LONG).show();
-                            }
-                            else {
-                                return;
+                                Toast.makeText(getApplicationContext(), "Profile Updated!", Toast.LENGTH_SHORT).show();
                             }
                         } catch (JSONException j) {
                             j.printStackTrace();
@@ -141,7 +131,7 @@ public class Profile extends AppCompatActivity {
                 new Response.ErrorListener() {
                     @Override
                     public void onErrorResponse(VolleyError error) {
-                        Toast.makeText(getApplicationContext(), "Nothing to Update!", Toast.LENGTH_LONG).show();
+                        Toast.makeText(getApplicationContext(), "No profile found!", Toast.LENGTH_SHORT).show();
 
                         Log.d("Error: ", error.toString());
                     }
@@ -169,7 +159,6 @@ public class Profile extends AppCompatActivity {
         i.putExtra("email", emailText_input.getText().toString());
         i.putExtra("name", nameText_input.getText().toString());
         startActivity(i);
-
 
         //startActivity(new Intent(Profile.this, ProfileEdit.class));
     }

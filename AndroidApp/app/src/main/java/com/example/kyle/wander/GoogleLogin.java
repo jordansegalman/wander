@@ -14,7 +14,6 @@ import com.google.android.gms.common.api.ApiException;
 import com.google.android.gms.tasks.Task;
 
 public class GoogleLogin extends AppCompatActivity {
-
     GoogleSignInClient mGoogleSignInClient;
 
     @Override

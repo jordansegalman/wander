@@ -1,7 +1,6 @@
 package com.example.kyle.wander;
 
 import android.content.Intent;
-import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -27,22 +26,17 @@ public class Delete extends AppCompatActivity {
     private RequestQueue requestQueue;
     EditText passwordEdit;
 
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_delete);
         requestQueue = Volley.newRequestQueue(this);
         passwordEdit = (EditText)findViewById(R.id.password);
-
-
     }
 
     public void delete(View view){
-        //TODO: delete account
         if (passwordEdit.getText().toString().length() == 0) {
-            Snackbar.make(findViewById(R.id.myCoordinatorLayout),
-                    "Please enter your password", Snackbar.LENGTH_LONG).show();
+            Toast.makeText(getApplicationContext(), "Please enter your password.", Toast.LENGTH_SHORT).show();
             return;
         }
         sendPOSTRequest(passwordEdit.getText().toString());
@@ -50,13 +44,8 @@ public class Delete extends AppCompatActivity {
     }
 
     private void sendPOSTRequest(String password) {
-        String username = Data.getInstance().getUsername();
-        String email = Data.getInstance().getEmail();
-
         Map<String, String> params = new HashMap<String,String>();
-        params.put("username", username);
         params.put("password", password);
-        params.put("email", email);
 
         String url = Data.getInstance().getUrl() + "/deleteAccount";
 
@@ -68,13 +57,13 @@ public class Delete extends AppCompatActivity {
                         {
                             String res = response.getString("response");
                             if (res.equalsIgnoreCase("pass")) {
-                                Toast.makeText(getApplicationContext(), "Accounted deleted!", Toast.LENGTH_LONG).show();
-                                Intent intent = new Intent(Delete.this, Login.class);//Change myLocation to AppHome
+                                Toast.makeText(getApplicationContext(), "Accounted deleted!", Toast.LENGTH_SHORT).show();
+                                Data.getInstance().removeCookies();
+                                Intent intent = new Intent(Delete.this, Login.class);
                                 startActivity(intent);
                             }
                             else {
-                                Toast.makeText(getApplicationContext(), "Account deletion failed!", Toast.LENGTH_LONG).show();
-                                return;
+                                Toast.makeText(getApplicationContext(), "Account deletion failed!", Toast.LENGTH_SHORT).show();
                             }
                         } catch (JSONException j) {
                             j.printStackTrace();
