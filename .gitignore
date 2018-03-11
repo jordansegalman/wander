@@ -1,4 +1,4 @@
-# Created by https://www.gitignore.io/api/android,androidstudio,jetbrains+all
+# Created by https://www.gitignore.io/api/vim,android,androidstudio,jetbrains+all
 
 ### Android ###
 # Built application files
@@ -212,4 +212,16 @@ cmake-build-debug/
 
 .idea/
 
-# End of https://www.gitignore.io/api/android,androidstudio,jetbrains+all
+### Vim ###
+# swap
+.sw[a-p]
+.*.sw[a-p]
+# session
+Session.vim
+# temporary
+.netrwhist
+# auto-generated tag files
+tags
+
+
+# End of https://www.gitignore.io/api/vim,android,androidstudio,jetbrains+all
