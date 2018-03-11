@@ -8,6 +8,7 @@ var fs = require('fs');
 var graphlib = require('graphlib');
 var schedule = require('node-schedule');
 var validator = require('validator');
+var admin = require('firebase-admin');
 
 // Load environment variables
 require('dotenv').config();
@@ -35,7 +36,7 @@ const lastName = "lastname";
 const loc = "location";
 const about = "about";
 
-// Need to change username and password for production
+// Constants used for MySQL
 const db_host = process.env.DB_HOST;
 const db_username = process.env.DB_USERNAME;
 const db_password = process.env.DB_PASSWORD;
@@ -56,6 +57,13 @@ const MATCH_NOTIFY_CRON = '0 20 * * * *';	// every day at 20:00
 
 // Constant used for password reset and session
 const crypto = require('crypto');
+
+// Setup Firebase
+var serviceAccount = require(process.env.FIREBASE_CREDENTIALS_JSON);
+admin.initializeApp({
+	credential: admin.credential.cert(serviceAccount),
+	databaseURL: process.env.FIREBASE_DATABASE_URL
+});
 
 // Setup SendGrid for transactional email
 const sgMail = require('@sendgrid/mail');
@@ -245,7 +253,7 @@ app.get('/confirmEmail', function(request, response) {
 
 	// Validate email
 	if (validateEmail(request.query.email)) {
-		var e = normalizeEmail(request.body.email);
+		var e = normalizeEmail(request.query.email);
 	} else {
 		return response.status(400).send("Invalid email.\n");
 	}
@@ -617,7 +625,7 @@ function login(u, p, request, response) {
 					request.session.username = u;
 					request.session.email = result[0].email;
 					console.log("User logged in.");
-					return response.status(200).send(JSON.stringify({"response":"pass", "email":request.session.email}));
+					return response.status(200).send(JSON.stringify({"response":"pass"}));
 				} else {
 					return response.status(400).send("Invalid username or password. Try again.\n");
 				}
