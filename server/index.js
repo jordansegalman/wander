@@ -35,6 +35,8 @@ const firstName = "firstname";
 const lastName = "lastname";
 const loc = "location";
 const about = "about";
+const picture = "picture";
+const interests = "interests";
 
 // Constants used for MySQL
 const db_host = process.env.DB_HOST;
@@ -482,6 +484,28 @@ app.post('/updateLinkedIn', function(request, response) {
 	updateLinkedInProfile(f, l, e, lo, a, response);
 });
 
+app.post('/updateProfile', function(request, response){
+	if (!request.body) return response.sendStatus(500);
+
+	// POST request must have 5 parameters
+	if (Object.keys(request.body).length != 5 || !request.body.name || !request.body.interests || !request.body.loc || !request.body.about || !request.body.picture) {
+		return response.status(400).send("Invalid POST request\n");
+	}
+
+	if (!request.session || !request.session.authenticated || request.session.autheticated === false) {
+		return response.status(400).send("User not logged in.\n");
+	}
+
+	var f = request.body.name;
+	var i = request.body.interests;
+	var e = request.session.email;
+	var lo = request.body.loc;
+	var a = request.body.about;
+	var p = request.body.picture;
+
+	updateProfile(f, i, e, lo, a, p, response);
+});
+
 // Called when a POST request is made to /getProfile
 app.post('/getProfile', function(request, response) {
 	// If the object request.body is null, respond with status 500 'Internal Server Error'
@@ -597,8 +621,13 @@ function register(u, p, e, response) {
 							sgMail.send(msg);
 							matchGraph.setNode(userID);
 							writeMatchGraph();
-							console.log("Account registered.");
-							return response.status(200).send(JSON.stringify({"response":"pass"}));
+							var sql = "INSERT INTO ?? SET ??=?";
+							var post = [db_profiles, email, e];
+							dbConnection.query(sql, post, function(err, result){
+								if (err) throw err;
+								return response.status(200).send(JSON.stringify({"response":"pass"}));
+								console.log("Account registered.");
+							});
 						});
 					}
 				});
@@ -1039,6 +1068,16 @@ function updateLinkedInProfile(f, l, e, lo, a, response) {
 	});
 }
 
+function updateProfile(f, i, e, lo, a, p, response) {
+	var sql = "UPDATE ?? SET ??=?, ??=?, ??=?, ??=?, ??=? WHERE ??=?";
+	var post = [db_profiles, about, a, firstName, f, interests, i, loc, lo, picture, p, email, e];
+	dbConnection.query(sql, post, function(err, result){
+		if (err) throw err;
+		console.log("Profile info updated.");
+		return response.status(200).send(JSON.stringify({"response":"pass"}));
+	});
+}
+
 // Gets LinkedIn profile information
 function getProfile(request, response) {
 	// Get profile for email and respond with profile data
@@ -1054,7 +1093,9 @@ function getProfile(request, response) {
 			var e = result[0].email;
 			var lo = result[0].location;
 			var a = result[0].about;
-			return response.status(200).send(JSON.stringify({"response":"pass", firstname:f, lastname:l, email:e, loc:lo, about:a}));
+			var p = result[0].picture;
+			var i = result[0].interests;
+			return response.status(200).send(JSON.stringify({"response":"pass", firstname:f, lastname:l, email:e, location:lo, about:a, interests: i, picture: p}));
 		}
 	});
 }
