@@ -18,11 +18,29 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent">
 
+
+        <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="fill_parent"
             android:gravity="top"
-            android:orientation="vertical">
+            android:orientation="vertical"
+            android:layout_above="@+id/button_layer">
+
+            <de.hdodenhof.circleimageview.CircleImageView
+                xmlns:app="http://schemas.android.com/apk/res-auto"
+                android:id="@+id/picture"
+                android:layout_width="96dp"
+                android:layout_height="96dp"
+                android:layout_gravity="center"
+                android:layout_marginBottom="10dp"
+                android:src="@drawable/default_profile"
+                android:contentDescription="Profile Picture"
+                app:civ_border_width="2dp"
+                app:civ_border_color="	#D3D3D3"/>
 
             <TextView
                 android:id="@+id/name"
@@ -30,18 +48,13 @@
                 android:layout_height="wrap_content"
                 android:gravity="center"
                 android:text="No Name"
+                android:inputType="none"
                 android:textColor="#000000"
                 android:textSize="25sp" />
 
-            <ImageView
-                android:id="@+id/picture"
-                android:layout_width="match_parent"
-                android:layout_height="89dp"
-                android:contentDescription="Profile Picture"
-                android:gravity="center" />
-
             <TextView
                 android:id="@+id/interests"
+                android:inputType="none"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="Interests:"
@@ -53,6 +66,10 @@
                 android:layout_width="fill_parent"
                 android:layout_height="wrap_content"
                 android:background="@android:color/transparent"
+                android:clickable="false"
+                android:cursorVisible="false"
+                android:focusable="false"
+                android:focusableInTouchMode="false"
                 android:text="No Interests"
                 android:textColor="#606060"
                 android:textSize="14sp" />
@@ -70,6 +87,10 @@
                 android:layout_width="fill_parent"
                 android:layout_height="wrap_content"
                 android:background="@android:color/transparent"
+                android:clickable="false"
+                android:cursorVisible="false"
+                android:focusable="false"
+                android:focusableInTouchMode="false"
                 android:text="No Information"
                 android:textColor="#606060"
                 android:textSize="14sp" />
@@ -87,6 +108,10 @@
                 android:layout_width="fill_parent"
                 android:layout_height="wrap_content"
                 android:background="@android:color/transparent"
+                android:clickable="false"
+                android:cursorVisible="false"
+                android:focusable="false"
+                android:focusableInTouchMode="false"
                 android:text="No Location"
                 android:textColor="#606060"
                 android:textSize="14sp" />
@@ -104,6 +129,10 @@
                 android:layout_width="fill_parent"
                 android:layout_height="wrap_content"
                 android:background="@android:color/transparent"
+                android:clickable="false"
+                android:cursorVisible="false"
+                android:focusable="false"
+                android:focusableInTouchMode="false"
                 android:text="No Email"
                 android:textColor="#606060"
                 android:textSize="14sp" />
@@ -113,6 +142,18 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_weight="1" />
+
+
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/button_layer"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:orientation="horizontal"
+            android:layout_alignParentBottom="true">
 
             <Button
                 android:layout_width="wrap_content"
@@ -140,8 +181,11 @@
                 android:backgroundTint="@color/colorAccent"
                 android:onClick="linkedInProfile"
                 android:text="Import LinkedIn Profile" />
-
         </LinearLayout>
+
+        </RelativeLayout>
+
+
 
     </android.support.design.widget.CoordinatorLayout>
 </android.support.constraint.ConstraintLayout>

@@ -1,9 +1,14 @@
 package com.example.kyle.wander;
 
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.drawable.BitmapDrawable;
+import android.media.Image;
 import android.net.Uri;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Base64;
 import android.util.Log;
 import android.view.View;
 import android.widget.EditText;
@@ -22,6 +27,7 @@ import com.android.volley.toolbox.Volley;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.ByteArrayOutputStream;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -33,6 +39,7 @@ public class Profile extends AppCompatActivity {
     private TextView aboutText;
     private TextView locationText;
     private TextView emailText;
+    private ImageView profilePicture;
 
     private TextView nameText_input;
     private TextView interestText_input;
@@ -52,7 +59,7 @@ public class Profile extends AppCompatActivity {
         String location = "Location";
         String email = "Email";
 
-        ImageView profilePicture = (ImageView)findViewById(R.id.picture);
+        profilePicture = (ImageView)findViewById(R.id.picture);
         nameText = (TextView)findViewById(R.id.name);
         interestText = (TextView)findViewById(R.id.interests);
         aboutText = (TextView)findViewById(R.id.about);
@@ -74,7 +81,16 @@ public class Profile extends AppCompatActivity {
                 aboutText_input.setText(in.getExtras().getString("about"));
                 emailText_input.setText(in.getExtras().getString("email"));
                 locationText_input.setText(in.getExtras().getString("location"));
+                byte[] decoded_string = Base64.decode(in.getExtras().getString("picture"), Base64.DEFAULT);
+                if (decoded_string == null)
+                {
+                    Log.d("ERROR MESSAGE", "ERROR!");
+                }
+                Bitmap decoded_byte = BitmapFactory.decodeByteArray(decoded_string, 0, decoded_string.length);
+                profilePicture.setImageBitmap(decoded_byte);
             }
+        } else {
+            sendPOSTRequest();
         }
 
         //profilePicture.setBackground();
@@ -110,18 +126,34 @@ public class Profile extends AppCompatActivity {
                             if (res.equalsIgnoreCase("pass")) {
 
                                 String first = response.getString("firstname");
-                                String last = response.getString("lastname");
+                                //String last = response.getString("lastname");
                                 String e = response.getString("email");
                                 String location = response.getString("location");
                                 String about = response.getString("about");
-                                String name = first + " " + last;
+                                String interests = response.getString("interests");
+                                String picture = response.getString("picture");
+
+                                Log.d("Raw string", picture);
+                                //String name = first + " " + last;
+                                String name = first;
 
                                 nameText_input.setText(name);
                                 locationText_input.setText(location);
                                 emailText_input.setText(e);
                                 aboutText_input.setText(about);
+                                interestText_input.setText(interests);
+                                if (picture != null) {
+                                    byte[] decoded_string = Base64.decode(picture.getBytes(), Base64.DEFAULT);
+                                    if (decoded_string == null)
+                                    {
+                                        Log.d("ERROR MESSAGE", "ERROR!");
+                                    }
+                                    Log.d("Decoded string", decoded_string.toString());
+                                    Bitmap decoded_byte = BitmapFactory.decodeByteArray(decoded_string, 0, decoded_string.length);
+                                    profilePicture.setImageBitmap(decoded_byte);
+                                }
 
-                                Toast.makeText(getApplicationContext(), "Profile Updated!", Toast.LENGTH_SHORT).show();
+                                //Toast.makeText(getApplicationContext(), "Profile Updated!", Toast.LENGTH_SHORT).show();
                             }
                         } catch (JSONException j) {
                             j.printStackTrace();
@@ -158,7 +190,18 @@ public class Profile extends AppCompatActivity {
         i.putExtra("interests", interestText_input.getText().toString());
         i.putExtra("email", emailText_input.getText().toString());
         i.putExtra("name", nameText_input.getText().toString());
+
+        BitmapDrawable drawable = (BitmapDrawable) profilePicture.getDrawable();
+        Bitmap bitmap = drawable.getBitmap();
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        bitmap.compress(Bitmap.CompressFormat.JPEG, 90, baos);
+        byte[] b = baos.toByteArray();
+        String encoded_picture = Base64.encodeToString(b, Base64.DEFAULT);
+
+        i.putExtra("picture", encoded_picture);
+
         startActivity(i);
+        this.finish();
 
         //startActivity(new Intent(Profile.this, ProfileEdit.class));
     }
