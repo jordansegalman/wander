@@ -37,6 +37,7 @@ const loc = "location";
 const about = "about";
 const picture = "picture";
 const interests = "interests";
+const registrationToken = "registrationToken";
 
 // Constants used for MySQL
 const db_host = process.env.DB_HOST;
@@ -46,6 +47,7 @@ const db_name = "wander";
 const db_accounts = "accounts";
 const db_profiles = "profiles";
 const db_locations = "locations";
+const db_firebase = "firebase";
 
 // Constant used for password hashing
 const saltRounds = 10;
@@ -96,30 +98,65 @@ var dbConnection = mysql.createConnection({
 	database: db_name
 });
 
-// Setup match graph
+// Setup server
 var matchGraph;
-if (fs.existsSync('matchGraph.json')) {
-	matchGraph = graphlib.json.read(JSON.parse(fs.readFileSync('matchGraph.json')));
-	console.log('Match graph read.');
-	createServer();
-} else {
-	createMatchGraph();
-}
+startServer();
 
 // Setup schedule for notifying users who have matched
 schedule.scheduleJob(MATCH_NOTIFY_CRON, function() {
 	notifyMatches();
 });
 
-// Create http server and listen on specified port
-function createServer() {
-	var httpServer = http.createServer(app);
-	httpServer.listen(port, (err) => {
-		if (err) {
-			return console.log('Server listen error!', err);
-		}
-		console.log(`Server listening on port ${port}.`);
-	});
+// Starts the server
+function startServer() {
+	if (fs.existsSync('matchGraph.json')) {
+		// Read existing match graph
+		matchGraph = graphlib.json.read(JSON.parse(fs.readFileSync('matchGraph.json')));
+		console.log('Match graph read.');
+		// Delete all Firebase registration tokens
+		var sql = "TRUNCATE TABLE ??";
+		var post = [db_firebase];
+		dbConnection.query(sql, post, function(err, result) {
+			if (err) throw err;
+			console.log('Firebase registration tokens deleted.');
+			// Start HTTP server
+			var httpServer = http.createServer(app);
+			httpServer.listen(port, (err) => {
+				if (err) {
+					return console.log('Server listen error!', err);
+				}
+				console.log('Server listening on port ' + port + '.');
+			});
+		});
+	} else {
+		// Create new match graph and insert all user IDs as nodes
+		matchGraph = new graphlib.Graph({ directed: true, multigraph: true, compound: false });
+		var sql = "SELECT ?? FROM ??";
+		var post = [uid, db_accounts];
+		dbConnection.query(sql, post, function(err, result) {
+			if (err) throw err;
+			for (var i = 0; i < result.length; i++) {
+				matchGraph.setNode(result[i].uid);
+			}
+			writeMatchGraph();
+			console.log('Match graph created.');
+			// Delete all Firebase registration tokens
+			var sql = "TRUNCATE TABLE ??";
+			var post = [db_firebase];
+			dbConnection.query(sql, post, function(err, result) {
+				if (err) throw err;
+				console.log('Firebase registration tokens deleted.');
+				// Start HTTP server
+				var httpServer = http.createServer(app);
+				httpServer.listen(port, (err) => {
+					if (err) {
+						return console.log('Server listen error!', err);
+					}
+					console.log('Server listening on port ' + port + '.');
+				});
+			});
+		});
+	}
 }
 
 // Serve 'website' directory
@@ -460,6 +497,26 @@ app.post('/resetPassword', function(request, response) {
 	resetPassword(token, newPassword, confirmPassword, response);
 });
 
+// Called when a POST request is made to /addFirebaseRegistrationToken
+app.post('/addFirebaseRegistrationToken', function(request, response) {
+	// If the object request.body is null, respond with status 500 'Internal Server Error'
+	if (!request.body) return response.sendStatus(500);
+
+	// POST request must have 1 parameter (firebaseRegistrationToken)
+	if (Object.keys(request.body).length != 1 || !request.body.firebaseRegistrationToken) {
+		return response.status(400).send("Invalid POST request\n");
+	}
+
+	// If session not authenticated
+	if (!request.session || !request.session.authenticated || request.session.authenticated === false) {
+		return response.status(400).send("User not logged in.\n");
+	}
+
+	var token = request.body.firebaseRegistrationToken;
+
+	addFirebaseRegistrationToken(token, request, response);
+});
+
 // Called when a GET request is made to /linkedInProfile
 app.get('/linkedInProfile', function(request, response) {
 	response.sendFile(__dirname + '/website/linkedInProfile.html');
@@ -666,6 +723,14 @@ function login(u, p, request, response) {
 
 // Verifies user is logged in and logs them out
 function logout(request, response) {
+	if (request.session.firebaseRegistrationToken) {
+		// Delete current Firebase registration token
+		var sql = "DELETE FROM ?? WHERE ??=?";
+		var post = [db_firebase, registrationToken, request.session.firebaseRegistrationToken];
+		dbConnection.query(sql, post, function(err, result){
+			if (err) throw err;
+		});
+	}
 	// Destroy the session
 	request.session.destroy(function(err) {
 		console.log("User logged out.");
@@ -699,6 +764,14 @@ function deleteAccount(p, request, response) {
 							var post = [db_locations, uid, request.session.uid];
 							dbConnection.query(sql, post, function(err, result){
 								if (err) throw err;
+								if (request.session.firebaseRegistrationToken) {
+									// Delete current Firebase registration token
+									var sql = "DELETE FROM ?? WHERE ??=?";
+									var post = [db_firebase, registrationToken, request.session.firebaseRegistrationToken];
+									dbConnection.query(sql, post, function(err, result){
+										if (err) throw err;
+									});
+								}
 								// Send account deletion notification email
 								const msg = {
 									to: request.session.email,
@@ -710,6 +783,7 @@ function deleteAccount(p, request, response) {
 								sgMail.send(msg);
 								matchGraph.removeNode(request.session.uid);
 								writeMatchGraph();
+								// Destroy the session
 								request.session.destroy(function(err) {
 									console.log("Account deleted.");
 									return response.status(200).send(JSON.stringify({"response":"pass"}));
@@ -1040,6 +1114,61 @@ function resetPassword(token, newPassword, confirmPassword, response) {
 	});
 }
 
+// Adds Firebase registration token for current session and user ID
+function addFirebaseRegistrationToken(token, request, response) {
+	if (request.session.firebaseRegistrationToken) {
+		// Delete current Firebase registration token
+		var sql = "DELETE FROM ?? WHERE ??=?";
+		var post = [db_firebase, registrationToken, request.session.firebaseRegistrationToken];
+		dbConnection.query(sql, post, function(err, result){
+			if (err) throw err;
+			if (result.affectedRows == 1) {
+				// Check if Firebase registration token already exists
+				var sql = "SELECT ?? FROM ?? WHERE ??=?";
+				var post = [registrationToken, db_firebase, uid, request.session.uid];
+				dbConnection.query(sql, post, function(err, result) {
+					if (err) throw err;
+					if (result.length != 0) {
+						return response.status(500).send("Firebase registration token already exists!\n");
+					} else {
+						// Add new Firebase registration token
+						var sql = "INSERT INTO ?? SET ??=?, ??=?";
+						var post = [db_firebase, registrationToken, token, uid, request.session.uid];
+						dbConnection.query(sql, post, function(err, result) {
+							if (err) throw err;
+							request.session.firebaseRegistrationToken = token;
+							console.log("Firebase registration token updated.");
+							return response.status(200).send(JSON.stringify({"response":"pass"}));
+						});
+					}
+				});
+			} else {
+				return response.status(500).send("Error updating Firebase registration token.\n");
+			}
+		});
+	} else {
+		// Check if Firebase registration token already exists
+		var sql = "SELECT ?? FROM ?? WHERE ??=?";
+		var post = [registrationToken, db_firebase, uid, request.session.uid];
+		dbConnection.query(sql, post, function(err, result) {
+			if (err) throw err;
+			if (result.length != 0) {
+				return response.status(500).send("Firebase registration token already exists!\n");
+			} else {
+				// Add new Firebase registration token
+				var sql = "INSERT INTO ?? SET ??=?, ??=?";
+				var post = [db_firebase, registrationToken, token, uid, request.session.uid];
+				dbConnection.query(sql, post, function(err, result) {
+					if (err) throw err;
+					request.session.firebaseRegistrationToken = token;
+					console.log("Firebase registration token added.");
+					return response.status(200).send(JSON.stringify({"response":"pass"}));
+				});
+			}
+		});
+	}
+}
+
 // Updates LinkedIn profile information
 function updateLinkedInProfile(f, l, e, lo, a, response) {
 	// Get profile for email
@@ -1203,23 +1332,6 @@ function findCrossedPaths(lat, lon, currentTime, request, response) {
 	});
 }
 
-// Creates a new match graph
-function createMatchGraph() {
-	// Create new match graph and insert all user IDs as nodes, then start server
-	matchGraph = new graphlib.Graph({ directed: true, multigraph: true, compound: false });
-	var sql = "SELECT ?? FROM ??";
-	var post = [uid, db_accounts];
-	dbConnection.query(sql, post, function(err, result) {
-		if (err) throw err;
-		for (var i = 0; i < result.length; i++) {
-			matchGraph.setNode(result[i].uid);
-		}
-		writeMatchGraph();
-		console.log('Match graph created.');
-		createServer();
-	});
-}
-
 // Notifies users who have matched
 function notifyMatches() {
 	// Notify all users that have new matches, then remove newMatch edges
@@ -1227,8 +1339,35 @@ function notifyMatches() {
 	var edgesToRemove = [];
 	for (var i = 0; i < matchGraph.edgeCount(); i++) {
 		if (edges[i].name === "newMatch") {
-			// Notify user ID edges[i].v matched with user ID edges[i].w
-			console.log('Notify User ID: ' + edges[i].v + ' Matched With User ID: ' + edges[i].w);
+			// Notify user ID edges[i].v of match with user ID edges[i].w
+			var sql = "SELECT ?? FROM ?? WHERE ??=?";
+			var post = [registrationToken, db_firebase, uid, edges[i].v];
+			dbConnection.query(sql, post, function(err, result) {
+				if (err) throw err;
+				if (result.length > 0) {
+					for (var j = 0; j < result.length; j++) {
+						var message = {
+							data: {
+								title: 'You have a new match!',
+								body: 'Tap to see who you matched with.',
+								uid: edges[i].w
+							},
+							token: result[j].registrationToken,
+							android: {
+								ttl: 3600000,
+								priority: 'high',
+							}
+						};
+						admin.messaging().send(message)
+							.then((response) => {
+								console.log('Successfully sent match notification.');
+							})
+						.catch((error) => {
+							console.log(error);
+						});
+					}
+				}
+			});
 			edgesToRemove.push([edges[i].v, edges[i].w]);
 		}
 	}
