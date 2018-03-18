@@ -83,7 +83,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_weight="0"
-                android:backgroundTint="#E53935"
+                android:backgroundTint="#DB3236"
                 android:onClick="delete"
                 android:text="Delete Account" />
 

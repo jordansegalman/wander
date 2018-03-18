@@ -44,7 +44,7 @@ public class Delete extends AppCompatActivity {
     }
 
     private void sendPOSTRequest(String password) {
-        Map<String, String> params = new HashMap<String,String>();
+        Map<String, String> params = new HashMap<>();
         params.put("password", password);
 
         String url = Data.getInstance().getUrl() + "/deleteAccount";
@@ -58,7 +58,8 @@ public class Delete extends AppCompatActivity {
                             String res = response.getString("response");
                             if (res.equalsIgnoreCase("pass")) {
                                 Toast.makeText(getApplicationContext(), "Accounted deleted!", Toast.LENGTH_SHORT).show();
-                                Data.getInstance().removeCookies();
+                                Data.getInstance().logout();
+                                Data.getInstance().removeAllCookies();
                                 Intent intent = new Intent(Delete.this, Login.class);
                                 startActivity(intent);
                             }
@@ -74,7 +75,6 @@ public class Delete extends AppCompatActivity {
                     @Override
                     public void onErrorResponse(VolleyError error) {
                         Toast.makeText(getApplicationContext(), "Account deletion failed!", Toast.LENGTH_SHORT).show();
-
                         Log.d("Error: ", error.toString());
                     }
                 }

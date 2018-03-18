@@ -21,18 +21,6 @@ import com.android.volley.toolbox.Volley;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.net.CookieHandler;
-import java.net.CookieManager;
-import java.net.CookieStore;
-import java.util.HashMap;
-import java.util.Map;
-
 public class Settings extends AppCompatActivity {
     Switch locationSwitch;
     private RequestQueue requestQueue;
@@ -85,7 +73,6 @@ public class Settings extends AppCompatActivity {
     }
 
     private void logOut() {
-        Intent intent = new Intent(Settings.this, Login.class);
         String url = Data.getInstance().getUrl() + "/logout";
         JsonObjectRequest postRequest = new JsonObjectRequest(Request.Method.POST, url, null,
                 new Response.Listener<JSONObject>() {
@@ -96,7 +83,8 @@ public class Settings extends AppCompatActivity {
                             String res = response.getString("response");
                             if (res.equalsIgnoreCase("pass")) {
                                 Toast.makeText(getApplicationContext(), "Logged out!", Toast.LENGTH_SHORT).show();
-                                Data.getInstance().removeCookies();
+                                Data.getInstance().logout();
+                                Data.getInstance().removeAllCookies();
                                 Intent intent = new Intent(Settings.this, Login.class);
                                 startActivity(intent);
                             }

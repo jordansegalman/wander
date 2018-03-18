@@ -2,6 +2,8 @@ package com.example.kyle.wander;
 
 import android.content.Context;
 
+import com.google.firebase.iid.FirebaseInstanceId;
+
 import java.net.CookieHandler;
 import java.net.CookieManager;
 import java.net.CookiePolicy;
@@ -16,19 +18,49 @@ import java.net.CookiePolicy;
  * https://www.geeksforgeeks.org/singleton-class-java/
  */
 public class Data {
+    private static final String url = "https://vvander.me";
+    private boolean loggedIn = false;
     private PersistentCookieStore persistentCookieStore;
+    private String firebaseRegistrationToken;
+
+    public void login() {
+        loggedIn = true;
+    }
+
+    public void logout() {
+        loggedIn = false;
+    }
+
+    public boolean getLoggedIn() {
+        return loggedIn;
+    }
 
     public void initializeCookies(Context context) {
         persistentCookieStore = new PersistentCookieStore(context);
         CookieHandler.setDefault(new CookieManager(persistentCookieStore, CookiePolicy.ACCEPT_ALL));
     }
 
-    public void removeCookies() {
+    public void removeAllCookies() {
         persistentCookieStore.removeAll();
     }
 
     public String getUrl() {
-        return "https://vvander.me";
+        return url;
+    }
+
+    public void initializeFirebaseRegistrationToken() {
+        String token = FirebaseInstanceId.getInstance().getToken();
+        if (token != null) {
+            setFirebaseRegistrationToken(token);
+        }
+    }
+
+    public void setFirebaseRegistrationToken(String token) {
+        firebaseRegistrationToken = token;
+    }
+
+    public String getFirebaseRegistrationToken() {
+        return firebaseRegistrationToken;
     }
 
     private static final Data data = new Data();
