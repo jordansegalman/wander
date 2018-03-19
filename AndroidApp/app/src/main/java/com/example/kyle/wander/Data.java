@@ -17,6 +17,7 @@ public class Data {
     private String username;
     private String sessionId;
     private String email;
+    private boolean valid = true;
 
     public String getUsername(){return username;}
 
@@ -31,6 +32,10 @@ public class Data {
     }
 
     public String getEmail() {return email;}
+
+    public boolean getValidity(){return valid;}
+
+    public void setValidity(boolean valid){this.valid = valid;}
 
     public void setUsername(String username){this.username = username;}
 
