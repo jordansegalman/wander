@@ -608,6 +608,36 @@ app.post('/updateLocation', function(request, response){
 	updateLocation(lat, lon, request, response);
 });
 
+// Called when a POST request is made to /approveUser
+app.post('/approveUser', function(request, response){
+	// If the object request.body is null, respond with status 500 'Internal Server Error'
+	if (!request.body) return response.sendStatus(500);
+
+	// POST request must have 1 parameter (uid)
+	if (Object.keys(request.body).length != 1 || !request.body.uid) {
+		return response.status(400).send("Invalid POST request\n");
+	}
+
+	// If session not authenticated
+	if (!request.session || !request.session.authenticated || request.session.authenticated === false) {
+		return response.status(400).send("User not logged in.\n");
+	}
+
+	// Validate uid
+	if (validateUid(request.body.uid)) {
+		var uid = request.body.uid;
+	} else {
+		return response.status(400).send("Invalid user ID.\n");
+	}
+
+	approveUser(uid, request, response);
+});
+
+// Validates a user ID
+function validateUid(uid) {
+	return !validator.isEmpty(uid) && validator.isHexadecimal(uid) && validator.isLength(uid, {min: 16, max: 16});
+}
+
 // Validates a username
 function validateUsername(username) {
 	return !validator.isEmpty(username) && validator.isAlphanumeric(username) && validator.isLength(username, {min: 4, max: 24});
@@ -1309,7 +1339,7 @@ function findCrossedPaths(lat, lon, currentTime, request, response) {
 							matchGraph.setEdge(uidOther, request.session.uid, currentTime, "lastTime");
 							console.log('Users crossed paths again.');
 							if (matchGraph.edge(request.session.uid, uidOther, "timesCrossed") >= MATCH_THRESHOLD && matchGraph.edge(uidOther, request.session.uid, "timesCrossed") >= MATCH_THRESHOLD && !matchGraph.hasEdge(request.session.uid, uidOther, "matched") && !matchGraph.hasEdge(uidOther, request.session.uid, "matched")) {
-								// If crossed greater than or equal to match threshold times, create matched, approved, unmatched, blocked, and newMatch edges
+								// If crossed greater than or equal to match threshold times and not already matched, create matched, approved, unmatched, blocked, and newMatch edges
 								matchGraph.setEdge(request.session.uid, uidOther, true, "matched");
 								matchGraph.setEdge(uidOther, request.session.uid, true, "matched");
 								matchGraph.setEdge(request.session.uid, uidOther, false, "approved");
@@ -1321,6 +1351,64 @@ function findCrossedPaths(lat, lon, currentTime, request, response) {
 								matchGraph.setEdge(request.session.uid, uidOther, true, "newMatch");
 								matchGraph.setEdge(uidOther, request.session.uid, true, "newMatch");
 								console.log('Users matched.');
+							} else if (matchGraph.edge(request.session.uid, uidOther, "timesCrossed") >= MATCH_THRESHOLD && matchGraph.edge(uidOther, request.session.uid, "timesCrossed") >= MATCH_THRESHOLD && matchGraph.hasEdge(request.session.uid, uidOther, "matched") && matchGraph.hasEdge(uidOther, request.session.uid, "matched")) {
+								// If crossed and already matched, notify users
+								var sql = "SELECT ?? FROM ?? WHERE ??=?";
+								var post = [registrationToken, db_firebase, uid, request.session.uid];
+								dbConnection.query(sql, post, function(err, result) {
+									if (err) throw err;
+									if (result.length > 0) {
+										for (var i = 0; i < result.length; i++) {
+											var message = {
+												data: {
+													title: 'You just crossed paths with one of your matches!',
+													body: 'Tap to see who you crossed paths with.',
+													uid: uidOther
+												},
+												token: result[i].registrationToken,
+												android: {
+													ttl: 3600000,
+													priority: 'high',
+												}
+											};
+											admin.messaging().send(message)
+												.then((response) => {
+													console.log('Successfully sent existing match crossed paths notification.');
+												})
+											.catch((error) => {
+												console.log(error);
+											});
+										}
+									}
+								});
+								var sql = "SELECT ?? FROM ?? WHERE ??=?";
+								var post = [registrationToken, db_firebase, uid, uidOther];
+								dbConnection.query(sql, post, function(err, result) {
+									if (err) throw err;
+									if (result.length > 0) {
+										for (var i = 0; i < result.length; i++) {
+											var message = {
+												data: {
+													title: 'You just crossed paths with one of your matches!',
+													body: 'Tap to see who you crossed paths with.',
+													uid: request.session.uid
+												},
+												token: result[i].registrationToken,
+												android: {
+													ttl: 3600000,
+													priority: 'high',
+												}
+											};
+											admin.messaging().send(message)
+												.then((response) => {
+													console.log('Successfully sent existing match crossed paths notification.');
+												})
+											.catch((error) => {
+												console.log(error);
+											});
+										}
+									}
+								});
 							}
 						}
 					}
@@ -1376,6 +1464,13 @@ function notifyMatches() {
 	}
 	writeMatchGraph();
 	console.log('Matches notified.');
+}
+
+// Approves the user with the given user ID
+function approveUser(uid, request, response) {
+	matchGraph.setEdge(request.session.uid, uid, true, "approved");
+	writeMatchGraph();
+	console.log('User approved.');
 }
 
 // Writes the match graph to a file
