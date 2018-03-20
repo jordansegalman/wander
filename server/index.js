@@ -38,6 +38,8 @@ const about = "about";
 const picture = "picture";
 const interests = "interests";
 const registrationToken = "registrationToken";
+const googleID = "googleID";
+const facebookID = "facebookID";
 
 // Constants used for MySQL
 const db_host = process.env.DB_HOST;
@@ -203,7 +205,7 @@ app.post('/login', function(request, response) {
 	}
 
 	// If session already authenticated
-	if (request.session && request.session.authenticated && request.session.authenticated === true) {
+	if (request.session && ((request.session.authenticated && request.session.authenticated === true) || (request.session.googleAuthenticated && request.session.googleAuthenticated === true) || (request.session.facebookAuthenticated && request.session.facebookAuthenticated === true))) {
 		return response.status(400).send("User already logged in.\n");
 	}
 
@@ -222,6 +224,58 @@ app.post('/login', function(request, response) {
 	login(u, p, request, response);
 });
 
+// Called when a POST request is made to /googleLogin
+app.post('/googleLogin', function(request, response) {
+	// If the object request.body is null, respond with status 500 'Internal Server Error'
+	if (!request.body) return response.sendStatus(500);
+
+	// POST request must have 2 parameters (googleID and email)
+	if (Object.keys(request.body).length != 2 || !request.body.googleID || !request.body.email) {
+		return response.status(400).send("Invalid POST request\n");
+	}
+
+	// If session already authenticated
+	if (request.session && ((request.session.authenticated && request.session.authenticated === true) || (request.session.googleAuthenticated && request.session.googleAuthenticated === true) || (request.session.facebookAuthenticated && request.session.facebookAuthenticated === true))) {
+		return response.status(400).send("User already logged in.\n");
+	}
+
+	var id = request.body.googleID;
+	// Validate email
+	if (validateEmail(request.body.email)) {
+		var e = normalizeEmail(request.body.email);
+	} else {
+		return response.status(400).send("Email must be valid and have a minimum length of 3 characters and a maximum length of 255 characters.\n");
+	}
+
+	googleLogin(id, e, request, response);
+});
+
+// Called when a POST request is made to /facebookLogin
+app.post('/facebookLogin', function(request, response) {
+	// If the object request.body is null, respond with status 500 'Internal Server Error'
+	if (!request.body) return response.sendStatus(500);
+
+	// POST request must have 2 parameters (facebookID and email)
+	if (Object.keys(request.body).length != 2 || !request.body.facebookID || !request.body.email) {
+		return response.status(400).send("Invalid POST request\n");
+	}
+
+	// If session already authenticated
+	if (request.session && ((request.session.authenticated && request.session.authenticated === true) || (request.session.googleAuthenticated && request.session.googleAuthenticated === true) || (request.session.facebookAuthenticated && request.session.facebookAuthenticated === true))) {
+		return response.status(400).send("User already logged in.\n");
+	}
+
+	var id = request.body.facebookID;
+	// Validate email
+	if (validateEmail(request.body.email)) {
+		var e = normalizeEmail(request.body.email);
+	} else {
+		return response.status(400).send("Email must be valid and have a minimum length of 3 characters and a maximum length of 255 characters.\n");
+	}
+
+	facebookLogin(id, e, request, response);
+});
+
 // Called when a POST request is made to /logout
 app.post('/logout', function(request, response) {
 	// If the object request.body is null, respond with status 500 'Internal Server Error'
@@ -233,7 +287,7 @@ app.post('/logout', function(request, response) {
 	}
 
 	// If session not authenticated
-	if (!request.session || !request.session.authenticated || request.session.authenticated === false) {
+	if (!request.session || ((!request.session.authenticated || request.session.authenticated === false) && (!request.session.googleAuthenticated || request.session.googleAuthenticated === false) && (!request.session.facebookAuthenticated || request.session.facebookAuthenticated === false))) {
 		return response.status(400).send("User not logged in.\n");
 	}
 
@@ -251,7 +305,7 @@ app.post('/verifySession', function(request, response) {
 	}
 
 	// If session not authenticated
-	if (!request.session || !request.session.authenticated || request.session.authenticated === false) {
+	if (!request.session || ((!request.session.authenticated || request.session.authenticated === false) && (!request.session.googleAuthenticated || request.session.googleAuthenticated === false) && (!request.session.facebookAuthenticated || request.session.facebookAuthenticated === false))) {
 		return response.status(400).send(JSON.stringify({"response":"fail"}));
 	}
 
@@ -281,6 +335,42 @@ app.post('/deleteAccount', function(request, response) {
 	}
 
 	deleteAccount(p, request, response);
+});
+
+// Called when a POST request is made to /googleDeleteAccount
+app.post('/googleDeleteAccount', function(request, response) {
+	// If the object request.body is null, respond with status 500 'Internal Server Error'
+	if (!request.body) return response.sendStatus(500);
+
+	// POST request must have 0 parameters
+	if (Object.keys(request.body).length != 0) {
+		return response.status(400).send("Invalid POST request\n");
+	}
+
+	// If session not authenticated
+	if (!request.session || !request.session.googleAuthenticated || request.session.googleAuthenticated === false) {
+		return response.status(400).send("User not logged in.\n");
+	}
+
+	googleDeleteAccount(request, response);
+});
+
+// Called when a POST request is made to /facebookDeleteAccount
+app.post('/facebookDeleteAccount', function(request, response) {
+	// If the object request.body is null, respond with status 500 'Internal Server Error'
+	if (!request.body) return response.sendStatus(500);
+
+	// POST request must have 0 parameters
+	if (Object.keys(request.body).length != 0) {
+		return response.status(400).send("Invalid POST request\n");
+	}
+
+	// If session not authenticated
+	if (!request.session || !request.session.facebookAuthenticated || request.session.facebookAuthenticated === false) {
+		return response.status(400).send("User not logged in.\n");
+	}
+
+	facebookDeleteAccount(request, response);
 });
 
 // Called when a GET request is made to /confirmEmail
@@ -412,7 +502,7 @@ app.post('/changeCrossRadius', function(request, response) {
 	}
 
 	// If session not authenticated
-	if (!request.session || !request.session.authenticated || request.session.authenticated === false) {
+	if (!request.session || ((!request.session.authenticated || request.session.authenticated === false) && (!request.session.googleAuthenticated || request.session.googleAuthenticated === false) && (!request.session.facebookAuthenticated || request.session.facebookAuthenticated === false))) {
 		return response.status(400).send("User not logged in.\n");
 	}
 
@@ -508,7 +598,7 @@ app.post('/addFirebaseRegistrationToken', function(request, response) {
 	}
 
 	// If session not authenticated
-	if (!request.session || !request.session.authenticated || request.session.authenticated === false) {
+	if (!request.session || ((!request.session.authenticated || request.session.authenticated === false) && (!request.session.googleAuthenticated || request.session.googleAuthenticated === false) && (!request.session.facebookAuthenticated || request.session.facebookAuthenticated === false))) {
 		return response.status(400).send("User not logged in.\n");
 	}
 
@@ -551,7 +641,8 @@ app.post('/updateProfile', function(request, response){
 		return response.status(400).send("Invalid POST request\n");
 	}
 
-	if (!request.session || !request.session.authenticated || request.session.autheticated === false) {
+	// If session not authenticated
+	if (!request.session || ((!request.session.authenticated || request.session.authenticated === false) && (!request.session.googleAuthenticated || request.session.googleAuthenticated === false) && (!request.session.facebookAuthenticated || request.session.facebookAuthenticated === false))) {
 		return response.status(400).send("User not logged in.\n");
 	}
 
@@ -575,7 +666,7 @@ app.post('/getProfile', function(request, response) {
 	}
 
 	// If session not authenticated
-	if (!request.session || !request.session.authenticated || request.session.authenticated === false) {
+	if (!request.session || ((!request.session.authenticated || request.session.authenticated === false) && (!request.session.googleAuthenticated || request.session.googleAuthenticated === false) && (!request.session.facebookAuthenticated || request.session.facebookAuthenticated === false))) {
 		return response.status(400).send("User not logged in.\n");
 	}
 
@@ -593,7 +684,7 @@ app.post('/updateLocation', function(request, response){
 	}
 
 	// If session not authenticated
-	if (!request.session || !request.session.authenticated || request.session.authenticated === false) {
+	if (!request.session || ((!request.session.authenticated || request.session.authenticated === false) && (!request.session.googleAuthenticated || request.session.googleAuthenticated === false) && (!request.session.facebookAuthenticated || request.session.facebookAuthenticated === false))) {
 		return response.status(400).send("User not logged in.\n");
 	}
 
@@ -619,7 +710,7 @@ app.post('/approveUser', function(request, response){
 	}
 
 	// If session not authenticated
-	if (!request.session || !request.session.authenticated || request.session.authenticated === false) {
+	if (!request.session || ((!request.session.authenticated || request.session.authenticated === false) && (!request.session.googleAuthenticated || request.session.googleAuthenticated === false) && (!request.session.facebookAuthenticated || request.session.facebookAuthenticated === false))) {
 		return response.status(400).send("User not logged in.\n");
 	}
 
@@ -751,6 +842,130 @@ function login(u, p, request, response) {
 	});
 }
 
+// Logs a user in with Google
+function googleLogin(id, e, request, response) {
+	// Check if account exists for Google account
+	var sql = "SELECT * FROM ?? WHERE ??=?";
+	var post = [db_accounts, googleID, id];
+	dbConnection.query(sql, post, function(err, result) {
+		if (err) throw err;
+		if (result.length == 0) {
+			// Check if email already exists
+			var sql = "SELECT * FROM ?? WHERE ??=?";
+			var post = [db_accounts, email, e];
+			dbConnection.query(sql, post, function(err, result) {
+				if (err) throw err;
+				if (result.length != 0) {
+					return response.status(400).send("Email already exists!\n");
+				} else {
+					var userID = crypto.randomBytes(8).toString('hex');
+					// Check if user ID already exists
+					var sql = "SELECT ?? FROM ?? WHERE ??=?";
+					var post = [uid, db_accounts, uid, userID];
+					dbConnection.query(sql, post, function(err, result) {
+						if (err) throw err;
+						if (result.length != 0) {
+							return response.status(500).send("User ID collision!\n");
+						} else {
+							var sql = "INSERT INTO ?? SET ?";
+							var post = {uid: userID, email: e, googleID: id, crossRadius: DEFAULT_CROSS_RADIUS};
+							dbConnection.query(sql, [db_accounts, post], function(err, result) {
+								if (err) throw err;
+								// Send registration confirm email
+								const msg = {
+									to: e,
+									from: 'support@vvander.me',
+									subject: 'Welcome to Wander!',
+									text: 'You have registered for a Wander account with your Google account. Click the following link to confirm your email: https://vvander.me/confirmEmail?email=' + e,
+									html: '<strong>You have registered for a Wander account with your Google account. Click the following link to confirm your email: https://vvander.me/confirmEmail?email=' + e + '</strong>',
+								};
+								sgMail.send(msg);
+								matchGraph.setNode(userID);
+								writeMatchGraph();
+								request.session.googleAuthenticated = true;
+								request.session.uid = userID;
+								request.session.email = e;
+								console.log("Account created and logged in with Google.");
+								return response.status(200).send(JSON.stringify({"response":"pass"}));
+							});
+						}
+					});
+				}
+			});
+		} else if (result.length == 1) {
+			request.session.googleAuthenticated = true;
+			request.session.uid = result[0].uid;
+			request.session.email = result[0].email;
+			console.log("User logged in with Google.");
+			return response.status(200).send(JSON.stringify({"response":"pass"}));
+		} else {
+			return response.status(500).send("Error with Google login.\n");
+		}
+	});
+}
+
+// Logs a user in with Facebook
+function facebookLogin(id, e, request, response) {
+	// Check if account exists for Facebook account
+	var sql = "SELECT * FROM ?? WHERE ??=?";
+	var post = [db_accounts, facebookID, id];
+	dbConnection.query(sql, post, function(err, result) {
+		if (err) throw err;
+		if (result.length == 0) {
+			// Check if email already exists
+			var sql = "SELECT * FROM ?? WHERE ??=?";
+			var post = [db_accounts, email, e];
+			dbConnection.query(sql, post, function(err, result) {
+				if (err) throw err;
+				if (result.length != 0) {
+					return response.status(400).send("Email already exists!\n");
+				} else {
+					var userID = crypto.randomBytes(8).toString('hex');
+					// Check if user ID already exists
+					var sql = "SELECT ?? FROM ?? WHERE ??=?";
+					var post = [uid, db_accounts, uid, userID];
+					dbConnection.query(sql, post, function(err, result) {
+						if (err) throw err;
+						if (result.length != 0) {
+							return response.status(500).send("User ID collision!\n");
+						} else {
+							var sql = "INSERT INTO ?? SET ?";
+							var post = {uid: userID, email: e, facebookID: id, crossRadius: DEFAULT_CROSS_RADIUS};
+							dbConnection.query(sql, [db_accounts, post], function(err, result) {
+								if (err) throw err;
+								// Send registration confirm email
+								const msg = {
+									to: e,
+									from: 'support@vvander.me',
+									subject: 'Welcome to Wander!',
+									text: 'You have registered for a Wander account with your Facebook account. Click the following link to confirm your email: https://vvander.me/confirmEmail?email=' + e,
+									html: '<strong>You have registered for a Wander account with your Facebook account. Click the following link to confirm your email: https://vvander.me/confirmEmail?email=' + e + '</strong>',
+								};
+								sgMail.send(msg);
+								matchGraph.setNode(userID);
+								writeMatchGraph();
+								request.session.facebookAuthenticated = true;
+								request.session.uid = userID;
+								request.session.email = e;
+								console.log("Account created and logged in with Facebook.");
+								return response.status(200).send(JSON.stringify({"response":"pass"}));
+							});
+						}
+					});
+				}
+			});
+		} else if (result.length == 1) {
+			request.session.facebookAuthenticated = true;
+			request.session.uid = result[0].uid;
+			request.session.email = result[0].email;
+			console.log("User logged in with Facebook.");
+			return response.status(200).send(JSON.stringify({"response":"pass"}));
+		} else {
+			return response.status(500).send("Error with Facebook login.\n");
+		}
+	});
+}
+
 // Verifies user is logged in and logs them out
 function logout(request, response) {
 	if (request.session.firebaseRegistrationToken) {
@@ -826,6 +1041,120 @@ function deleteAccount(p, request, response) {
 							return response.status(500).send("Failed to delete account.\n");
 						}
 					});
+				}
+			});
+		}
+	});
+}
+
+// Deletes an account created with Google
+function googleDeleteAccount(request, response) {
+	// Check that account exists
+	var sql = "SELECT * FROM ?? WHERE ??=?";
+	var post = [db_accounts, uid, request.session.uid];
+	dbConnection.query(sql, post, function(err, result) {
+		if (err) throw err;
+		if (result.length != 1) {
+			return response.status(500).send("User ID not found.\n");
+		} else {
+			// Delete account for user ID
+			var sql = "DELETE FROM ?? WHERE ??=?";
+			var post = [db_accounts, uid, request.session.uid];
+			dbConnection.query(sql, post, function(err, result) {
+				if (err) throw err;
+				if (result.affectedRows == 1) {
+					// Delete location data for user ID
+					var sql = "DELETE FROM ?? WHERE ??=?";
+					var post = [db_locations, uid, request.session.uid];
+					dbConnection.query(sql, post, function(err, result){
+						if (err) throw err;
+						if (request.session.firebaseRegistrationToken) {
+							// Delete current Firebase registration token
+							var sql = "DELETE FROM ?? WHERE ??=?";
+							var post = [db_firebase, registrationToken, request.session.firebaseRegistrationToken];
+							dbConnection.query(sql, post, function(err, result){
+								if (err) throw err;
+							});
+						}
+						// Send account deletion notification email
+						const msg = {
+							to: request.session.email,
+							from: 'support@vvander.me',
+							subject: 'Wander Account Deleted',
+							text: 'You have successfully deleted your Wander account which was created with your Google account. We are sorry to see you go.',
+							html: '<strong>You have successfully deleted your Wander account which was created with your Google account. We are sorry to see you go.</strong>',
+						};
+						sgMail.send(msg);
+						matchGraph.removeNode(request.session.uid);
+						writeMatchGraph();
+						// Destroy the session
+						request.session.destroy(function(err) {
+							console.log("Wander account created with Google account deleted.");
+							return response.status(200).send(JSON.stringify({"response":"pass"}));
+						});
+					});
+				} else if (result.affectedRows > 1) {
+					// For testing purposes only
+					return reponse.status(500).send("Error deleted multiple accounts.\n");
+				} else if (result.affectedRows == 0) {
+					return response.status(500).send("Failed to delete account.\n");
+				}
+			});
+		}
+	});
+}
+
+// Deletes an account created with Facebook
+function facebookDeleteAccount(request, response) {
+	// Check that account exists
+	var sql = "SELECT * FROM ?? WHERE ??=?";
+	var post = [db_accounts, uid, request.session.uid];
+	dbConnection.query(sql, post, function(err, result) {
+		if (err) throw err;
+		if (result.length != 1) {
+			return response.status(500).send("User ID not found.\n");
+		} else {
+			// Delete account for user ID
+			var sql = "DELETE FROM ?? WHERE ??=?";
+			var post = [db_accounts, uid, request.session.uid];
+			dbConnection.query(sql, post, function(err, result) {
+				if (err) throw err;
+				if (result.affectedRows == 1) {
+					// Delete location data for user ID
+					var sql = "DELETE FROM ?? WHERE ??=?";
+					var post = [db_locations, uid, request.session.uid];
+					dbConnection.query(sql, post, function(err, result){
+						if (err) throw err;
+						if (request.session.firebaseRegistrationToken) {
+							// Delete current Firebase registration token
+							var sql = "DELETE FROM ?? WHERE ??=?";
+							var post = [db_firebase, registrationToken, request.session.firebaseRegistrationToken];
+							dbConnection.query(sql, post, function(err, result){
+								if (err) throw err;
+							});
+						}
+						// Send account deletion notification email
+						const msg = {
+							to: request.session.email,
+							from: 'support@vvander.me',
+							subject: 'Wander Account Deleted',
+							text: 'You have successfully deleted your Wander account which was created with your Facebook account. We are sorry to see you go.',
+							html: '<strong>You have successfully deleted your Wander account which was created with your Facebook account. We are sorry to see you go.</strong>',
+						};
+						sgMail.send(msg);
+						matchGraph.removeNode(request.session.uid);
+						writeMatchGraph();
+						// Destroy the session
+						request.session.destroy(function(err) {
+							console.log("Wander account created with Facebook account deleted.");
+							return response.status(200).send(JSON.stringify({"response":"pass"}));
+						});
+					});
+				} else if (result.affectedRows > 1) {
+					// For testing purposes only
+					return reponse.status(500).send("Error deleted multiple accounts.\n");
+				} else if (result.affectedRows == 0) {
+					return response.status(500).send("Failed to delete account.\n");
 				}
 			});
 		}
@@ -956,6 +1285,7 @@ function changeEmail(p, n, request, response) {
 				if (result.length != 1) {
 					return response.status(500).send("User ID not found.\n");
 				} else {
+					// Compare sent password hash to account password hash
 					bcrypt.compare(p, result[0].password, function(err, res) {
 						if (res !== true) {
 							return response.status(400).send("Invalid password. Try again.\n");
@@ -1217,8 +1547,8 @@ function updateLinkedInProfile(f, l, e, lo, a, response) {
 			});
 		} else {
 			// Update profile if already exists for email
-			var sql = "UPDATE ?? SET ??=?, ??=?, ??=?, ??=? WHERE ??=?";
-			var post = [db_profiles, firstName, f, lastName, l, email, e, loc, lo, about, a];
+			var sql = "UPDATE ?? SET ??=?, ??=?, ??=?, ??=?, ??=? WHERE ??=?";
+			var post = [db_profiles, firstName, f, lastName, l, email, e, loc, lo, about, a, email, e];
 			dbConnection.query(sql, post, function(err, result) {
 				if (err) throw err;
 				console.log("LinkedIn profile updated."); 
