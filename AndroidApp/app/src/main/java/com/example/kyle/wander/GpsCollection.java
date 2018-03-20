@@ -64,7 +64,9 @@ public class GpsCollection extends Service {
         public void onLocationChanged(Location location) {
             Log.e(TAG, "onLocationChanged: " + location);
             mLastLocation.set(location);
-            pushToDatabase(location);
+            if (Data.getInstance().getValidity()) {
+                pushToDatabase(location);
+            }
         }
 
         @Override
