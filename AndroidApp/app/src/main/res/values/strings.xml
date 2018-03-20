@@ -19,4 +19,14 @@
     <string name="login">Login</string>
     <string name="google_logo">Google Logo</string>
     <string name="facebook_logo">Facebook Logo</string>
+    <string name="interests_prompt">Select or type in your interests</string>>
+    <string-array name="interests_array">
+        <item>Select an interest</item>
+        <item>Reading</item>
+        <item>Hiking</item>
+        <item>Eating</item>
+        <item>Sleeping</item>
+        <item>Video Games</item>
+        <item>Sports</item>
+    </string-array>
 </resources>

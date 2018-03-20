@@ -51,6 +51,7 @@ public class Profile extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_profile);
+
         requestQueue = Volley.newRequestQueue(this);
 
         String name = "Name";
@@ -92,6 +93,13 @@ public class Profile extends AppCompatActivity {
         } else {
             sendPOSTRequest();
         }
+
+        nameText_input.setVisibility(View.VISIBLE);
+        interestText_input.setVisibility(View.VISIBLE);
+        aboutText_input.setVisibility(View.VISIBLE);
+        locationText_input.setVisibility(View.VISIBLE);
+        emailText_input.setVisibility(View.VISIBLE);
+        profilePicture.setVisibility(View.VISIBLE);
 
         //profilePicture.setBackground();
         //nameText.setText(name);

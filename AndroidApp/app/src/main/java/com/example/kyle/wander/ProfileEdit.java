@@ -10,7 +10,9 @@ import android.os.Bundle;
 import android.util.Base64;
 import android.util.Log;
 import android.view.View;
+import android.widget.AdapterView;
 import android.widget.EditText;
+import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -42,6 +44,7 @@ public class ProfileEdit extends AppCompatActivity {
     private EditText etEmail;
     private TextView etName;
     private CircleImageView civPicture;
+    private Spinner spinner;
     private RequestQueue requestQueue;
 
     private final int FINISHED = 1;
@@ -58,6 +61,22 @@ public class ProfileEdit extends AppCompatActivity {
         etLocation = (EditText) findViewById(R.id.location_text);
         etEmail = (EditText) findViewById(R.id.email_text);
         etName = findViewById(R.id.name);
+        spinner = (Spinner)findViewById(R.id.spinner);
+        spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> adapterView, View view, int position, long id) {
+                Object item = adapterView.getItemAtPosition(position);
+                if (item != null && !item.toString().equals("Select an interest")) {
+                    etInterests.setText(item.toString());
+                }
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> adapterView) {
+
+            }
+        });
+
         civPicture = findViewById(R.id.picture);
 
         Intent in = getIntent();

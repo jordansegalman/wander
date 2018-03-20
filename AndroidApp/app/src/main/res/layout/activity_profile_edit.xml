@@ -64,6 +64,13 @@
                 android:textColor="#606060"
                 android:textSize="14sp" />
 
+            <Spinner
+                android:id="@+id/spinner"
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:entries="@array/interests_array"
+                android:prompt="@string/interests_prompt"/>
+
             <TextView
                 android:id="@+id/about"
                 android:layout_width="match_parent"
