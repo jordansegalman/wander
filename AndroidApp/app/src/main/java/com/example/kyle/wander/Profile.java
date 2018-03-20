@@ -133,10 +133,10 @@ public class Profile extends AppCompatActivity {
                             String res = response.getString("response");
                             if (res.equalsIgnoreCase("pass")) {
 
-                                String first = response.getString("firstname");
-                                //String last = response.getString("lastname");
-                                String e = response.getString("email");
-                                String location = response.getString("location");
+                                String first = response.getString("firstName");
+                                //String last = response.getString("lastName");
+                                //String e = response.getString("email");
+                                String location = response.getString("loc");
                                 String about = response.getString("about");
                                 String interests = response.getString("interests");
                                 String picture = response.getString("picture");
@@ -147,7 +147,7 @@ public class Profile extends AppCompatActivity {
 
                                 nameText_input.setText(name);
                                 locationText_input.setText(location);
-                                emailText_input.setText(e);
+                                //emailText_input.setText(e);
                                 aboutText_input.setText(about);
                                 interestText_input.setText(interests);
                                 if (picture != null) {

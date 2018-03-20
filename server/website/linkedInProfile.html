@@ -18,39 +18,39 @@
 			IN.Event.on(IN, "auth", obtainUserData);
 		}
 
-		// Use the API call wrapper to request the member's profile data
+		// API call wrapper to request LinkedIn profile data
 		function obtainUserData() {
 			IN.API.Profile("me").fields("id", "first-name", "last-name", "headline", "location", "picture-url", "public-profile-url", "email-address").result(displayProfileData).error(onError);
 		}
 
-		// Handle the successful return from the API call
+		// Handle successful return from API call
 		function displayProfileData(data){
 			var user = data.values[0];
 			document.getElementById("picture").innerHTML = '<img src="'+user.pictureUrl+'" />';
 			document.getElementById("name").innerHTML = user.firstName+' '+user.lastName;
-			document.getElementById("intro").innerHTML = user.headline;
+			document.getElementById("about").innerHTML = user.headline;
 			document.getElementById("email").innerHTML = user.emailAddress;
 			document.getElementById("location").innerHTML = user.location.name;
-			document.getElementById("link").innerHTML = '<a href="'+user.publicProfileUrl+'" target="_blank">View User Profile</a>';
+			document.getElementById("link").innerHTML = '<a href="'+user.publicProfileUrl+'" target="_blank">View LinkedIn Profile</a>';
 			document.getElementById('profileData').style.display = 'block';
 
 			var locat = user.location;
 			var xhr = new XMLHttpRequest();
 			xhr.open('POST', "https://vvander.me/updateLinkedIn", true);
 			xhr.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
-			xhr.send(JSON.stringify({firstname: user.firstName, lastname: user.lastName, email: user.emailAddress, loc: locat.name, about: user.headline}));
+			xhr.send(JSON.stringify({email: user.emailAddress, firstName: user.firstName, lastName: user.lastName, loc: locat.name, about: user.headline}));
 			xhr.onloadend = function () {
-				alert("Profile Info sent to Wander!");
-				console.log("Done!");
+				alert("LinkedIn profile data sent to Wander!");
+				console.log("LinkedIn profile data sent to Wander!");
 			}
 		}
 
-		// Handle an error response from the API call
+		// Handle error response from API call
 		function onError(error) {
 			console.log(error);
 		}
 
-		// Destroy the session of LinkedIn
+		// Destroy LinkedIn session
 		function logout(){
 			IN.User.logout(deleteData);
 		}
@@ -73,7 +73,7 @@
 					<div id="picture"></div>
 					<div class="info">
 						<p id="name"></p>
-						<p id="intro"></p>
+						<p id="about"></p>
 						<p id="email"></p>
 						<p id="location"></p>
 						<p id="link"></p>

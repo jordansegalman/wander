@@ -151,10 +151,10 @@ public class ProfileEdit extends AppCompatActivity {
         String url = Data.getInstance().getUrl() + "/updateProfile";
         Map<String, String> params = new HashMap<String,String>();
         params.put("name", etName.getText().toString());
-        params.put("interests", etInterests.getText().toString());
         //params.put("email", etEmail.getText().toString());
         params.put("loc", etLocation.getText().toString());
         params.put("about", etAbout.getText().toString());
+        params.put("interests", etInterests.getText().toString());
         params.put("picture", encoded_picture);
 
         JsonObjectRequest postRequest = new JsonObjectRequest(Request.Method.POST, url, new JSONObject(params),
