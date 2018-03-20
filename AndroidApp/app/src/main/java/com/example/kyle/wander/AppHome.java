@@ -88,18 +88,22 @@ public class AppHome extends AppCompatActivity implements GoogleApiClient.Connec
     private void addDrawerItems() {
         // IMPORTANT: Currently where the nav bar links lead depends on the order of this list, if the order is
         // changed be sure to update the values of the "position" variable below.
-        String[] osArray = { "My Matches", "Profile", "Popular Locations", "History","Settings" ,"Map"};
+        String[] osArray = { "My Matches", "Profile", "Popular Locations", "History", "Settings", "Map"};
         mAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, osArray);
         mDrawerList.setAdapter(mAdapter);
 
         mDrawerList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                if(position == 1){
+                if (position == 0) {
+                    startActivity(new Intent(AppHome.this, MyMatches.class));
+                }
+
+                if (position == 1) {
                     startActivity(new Intent(AppHome.this, Profile.class));
                 }
 
-                if(position == 4){
+                if (position == 4) {
                     startActivity(new Intent(AppHome.this, Settings.class));
                 }
 

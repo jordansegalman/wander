@@ -30,14 +30,7 @@
         <activity android:name=".AppHome" />
         <activity android:name=".Profile" />
         <activity android:name=".ProfileEdit" />
-        <!--
-             The API key for Google Maps-based APIs is defined as a string resource.
-             (See the file "res/values/google_maps_api.xml").
-             Note that the API key is linked to the encryption key used to sign the APK.
-             You need a different API key for each encryption key, including the release key that is used to
-             sign the APK for publishing.
-             You can define the keys for the debug and release targets in src/debug/ and src/release/.
-        -->
+
         <meta-data
             android:name="com.google.android.geo.API_KEY"
             android:value="@string/google_maps_key" />
@@ -63,6 +56,7 @@
         <activity android:name=".ChangeUsername" />
         <activity android:name=".ForgotPassword" />
         <activity android:name=".ChangePassword" />
+        <activity android:name=".MyMatches" />
 
         <meta-data
             android:name="com.facebook.sdk.ApplicationId"
@@ -77,10 +71,8 @@
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
-
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
-
                 <data android:scheme="@string/fb_login_protocol_scheme" />
             </intent-filter>
         </activity>

@@ -57,7 +57,7 @@ public class Delete extends AppCompatActivity {
                         {
                             String res = response.getString("response");
                             if (res.equalsIgnoreCase("pass")) {
-                                Toast.makeText(getApplicationContext(), "Accounted deleted!", Toast.LENGTH_SHORT).show();
+                                Toast.makeText(getApplicationContext(), "Account deleted!", Toast.LENGTH_SHORT).show();
                                 Data.getInstance().logout();
                                 Data.getInstance().removeAllCookies();
                                 Intent intent = new Intent(Delete.this, Login.class);
