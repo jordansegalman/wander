@@ -560,8 +560,9 @@ app.post('/updateProfile', function(request, response){
 	var l = request.body.loc;
 	var a = request.body.about;
 	var p = request.body.picture;
+	var e = request.session.email;
 
-	updateProfile(n, i, l, a, p, response);
+	updateProfile(n, i, l, a, p, e, response);
 });
 
 // Called when a POST request is made to /getProfile
@@ -1199,7 +1200,7 @@ function updateLinkedInProfile(f, l, e, lo, a, response) {
 }
 
 // Updates profile info
-function updateProfile(n, i, l, a, p, response) {
+function updateProfile(n, i, l, a, p, e, response) {
 	var sql = "UPDATE ?? SET ??=?, ??=?, ??=?, ??=?, ??=? WHERE ??=?";
 	var post = [db_profiles, firstName, n, interests, i, loc, l, about, a, picture, p, email, e];
 	dbConnection.query(sql, post, function(err, result){
