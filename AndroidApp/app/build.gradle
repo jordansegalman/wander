@@ -7,7 +7,7 @@ android {
     buildToolsVersion "27.0.3"
     defaultConfig {
         multiDexEnabled true
-        applicationId "com.example.kyle.wander"
+        applicationId "me.vvander.wander"
         minSdkVersion 26
         targetSdkVersion 26
         versionCode 1

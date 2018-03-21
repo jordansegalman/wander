@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.example.kyle.wander">
+    package="me.vvander.wander">
 
     <permission
-        android:name="com.example.kyle.wander.permission.MAPS_RECEIVE"
+        android:name="me.vvander.wander.permission.MAPS_RECEIVE"
         android:protectionLevel="signature" />
 
     <uses-permission android:name="android.permission.MAPS_RECEIVE" />
@@ -18,45 +18,45 @@
         android:label="@string/app_name"
         android:roundIcon="@mipmap/wander_launcher_round"
         android:theme="@style/AppTheme">
-        <activity android:name=".Login">
+        <activity android:name="me.vvander.wander.Login">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".Registration" />
-        <activity android:name=".FacebookLogin" />
-        <activity android:name=".GoogleLogin" />
-        <activity android:name=".AppHome" />
-        <activity android:name=".Profile" />
-        <activity android:name=".ProfileEdit" />
+        <activity android:name="me.vvander.wander.Registration" />
+        <activity android:name="me.vvander.wander.FacebookLogin" />
+        <activity android:name="me.vvander.wander.GoogleLogin" />
+        <activity android:name="me.vvander.wander.AppHome" />
+        <activity android:name="me.vvander.wander.Profile" />
+        <activity android:name="me.vvander.wander.ProfileEdit" />
 
         <meta-data
             android:name="com.google.android.geo.API_KEY"
             android:value="@string/google_maps_key" />
 
-        <activity android:name=".MyLocation" />
+        <activity android:name="me.vvander.wander.MyLocation" />
 
-        <service android:name=".GpsCollection" />
-        <service android:name=".ActivityRecognizedService" />
-        <service android:name=".WanderFirebaseInstanceIdService">
+        <service android:name="me.vvander.wander.GpsCollection" />
+        <service android:name="me.vvander.wander.ActivityRecognizedService" />
+        <service android:name="me.vvander.wander.WanderFirebaseInstanceIdService">
             <intent-filter>
                 <action android:name="com.google.firebase.INSTANCE_ID_EVENT" />
             </intent-filter>
         </service>
-        <service android:name=".WanderFirebaseMessagingService">
+        <service android:name="me.vvander.wander.WanderFirebaseMessagingService">
             <intent-filter>
                 <action android:name="com.google.firebase.MESSAGING_EVENT" />
             </intent-filter>
         </service>
 
-        <activity android:name=".Delete" />
-        <activity android:name=".Settings" />
-        <activity android:name=".ChangeEmail" />
-        <activity android:name=".ChangeUsername" />
-        <activity android:name=".ForgotPassword" />
-        <activity android:name=".ChangePassword" />
-        <activity android:name=".MyMatches" />
+        <activity android:name="me.vvander.wander.Delete" />
+        <activity android:name="me.vvander.wander.Settings" />
+        <activity android:name="me.vvander.wander.ChangeEmail" />
+        <activity android:name="me.vvander.wander.ChangeUsername" />
+        <activity android:name="me.vvander.wander.ForgotPassword" />
+        <activity android:name="me.vvander.wander.ChangePassword" />
+        <activity android:name="me.vvander.wander.MyMatches" />
 
         <meta-data
             android:name="com.facebook.sdk.ApplicationId"
