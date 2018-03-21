@@ -92,13 +92,14 @@ public class ProfileEdit extends AppCompatActivity {
         etName.setText(name);
         etEmail.setText(email);
 
-        byte[] decoded_string = Base64.decode(picture, Base64.DEFAULT);
-        if (decoded_string == null)
-        {
-            Log.d("ERROR MESSAGE", "ERROR!");
+        if (picture != null) {
+            byte[] decoded_string = Base64.decode(picture, Base64.DEFAULT);
+            if (decoded_string == null) {
+                Log.d("ERROR MESSAGE", "ERROR!");
+            }
+            Bitmap decoded_byte = BitmapFactory.decodeByteArray(decoded_string, 0, decoded_string.length);
+            civPicture.setImageBitmap(decoded_byte);
         }
-        Bitmap decoded_byte = BitmapFactory.decodeByteArray(decoded_string, 0, decoded_string.length);
-        civPicture.setImageBitmap(decoded_byte);
     }
 
     public void selectImage(View view) {

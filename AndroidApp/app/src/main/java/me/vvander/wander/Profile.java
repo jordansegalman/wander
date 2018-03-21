@@ -156,6 +156,9 @@ public class Profile extends AppCompatActivity {
                                     Log.d("Decoded string", decoded_string.toString());
                                     Bitmap decoded_byte = BitmapFactory.decodeByteArray(decoded_string, 0, decoded_string.length);
                                     profilePicture.setImageBitmap(decoded_byte);
+                                } else {
+                                    Bitmap icon = BitmapFactory.decodeResource(getResources(), R.drawable.profile);
+                                    profilePicture.setImageBitmap(icon);
                                 }
 
                                 //Toast.makeText(getApplicationContext(), "Profile Updated!", Toast.LENGTH_SHORT).show();
