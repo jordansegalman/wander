@@ -1051,29 +1051,35 @@ function deleteAccount(p, request, response) {
 							var post = [db_locations, uid, request.session.uid];
 							dbConnection.query(sql, post, function(err, result){
 								if (err) throw err;
-								if (request.session.firebaseRegistrationToken) {
-									// Delete current Firebase registration token
-									var sql = "DELETE FROM ?? WHERE ??=?";
-									var post = [db_firebase, registrationToken, request.session.firebaseRegistrationToken];
-									dbConnection.query(sql, post, function(err, result){
-										if (err) throw err;
+								// Delete profile for user ID
+								var sql = "DELETE FROM ?? WHERE ??=?";
+								var post = [db_profiles, uid, request.session.uid];
+								dbConnection.query(sql, post, function(err, result){
+									if (err) throw err;
+									if (request.session.firebaseRegistrationToken) {
+										// Delete current Firebase registration token
+										var sql = "DELETE FROM ?? WHERE ??=?";
+										var post = [db_firebase, registrationToken, request.session.firebaseRegistrationToken];
+										dbConnection.query(sql, post, function(err, result){
+											if (err) throw err;
+										});
+									}
+									// Send account deletion notification email
+									const msg = {
+										to: request.session.email,
+										from: 'support@vvander.me',
+										subject: 'Wander Account Deleted',
+										text: 'Hey ' + request.session.username + '! You have successfully deleted your Wander account. We are sorry to see you go.',
+										html: '<strong>Hey ' + request.session.username + '! You have successfully deleted your Wander account. We are sorry to see you go.</strong>',
+									};
+									sgMail.send(msg);
+									matchGraph.removeNode(request.session.uid);
+									writeMatchGraph();
+									// Destroy the session
+									request.session.destroy(function(err) {
+										console.log("Account deleted.");
+										return response.status(200).send(JSON.stringify({"response":"pass"}));
 									});
-								}
-								// Send account deletion notification email
-								const msg = {
-									to: request.session.email,
-									from: 'support@vvander.me',
-									subject: 'Wander Account Deleted',
-									text: 'Hey ' + request.session.username + '! You have successfully deleted your Wander account. We are sorry to see you go.',
-									html: '<strong>Hey ' + request.session.username + '! You have successfully deleted your Wander account. We are sorry to see you go.</strong>',
-								};
-								sgMail.send(msg);
-								matchGraph.removeNode(request.session.uid);
-								writeMatchGraph();
-								// Destroy the session
-								request.session.destroy(function(err) {
-									console.log("Account deleted.");
-									return response.status(200).send(JSON.stringify({"response":"pass"}));
 								});
 							});
 						} else if (result.affectedRows > 1) {
@@ -1110,29 +1116,35 @@ function googleDeleteAccount(request, response) {
 					var post = [db_locations, uid, request.session.uid];
 					dbConnection.query(sql, post, function(err, result){
 						if (err) throw err;
-						if (request.session.firebaseRegistrationToken) {
-							// Delete current Firebase registration token
-							var sql = "DELETE FROM ?? WHERE ??=?";
-							var post = [db_firebase, registrationToken, request.session.firebaseRegistrationToken];
-							dbConnection.query(sql, post, function(err, result){
-								if (err) throw err;
+						// Delete profile for user ID
+						var sql = "DELETE FROM ?? WHERE ??=?";
+						var post = [db_profiles, uid, request.session.uid];
+						dbConnection.query(sql, post, function(err, result){
+							if (err) throw err;
+							if (request.session.firebaseRegistrationToken) {
+								// Delete current Firebase registration token
+								var sql = "DELETE FROM ?? WHERE ??=?";
+								var post = [db_firebase, registrationToken, request.session.firebaseRegistrationToken];
+								dbConnection.query(sql, post, function(err, result){
+									if (err) throw err;
+								});
+							}
+							// Send account deletion notification email
+							const msg = {
+								to: request.session.email,
+								from: 'support@vvander.me',
+								subject: 'Wander Account Deleted',
+								text: 'You have successfully deleted your Wander account which was created with your Google account. We are sorry to see you go.',
+								html: '<strong>You have successfully deleted your Wander account which was created with your Google account. We are sorry to see you go.</strong>',
+							};
+							sgMail.send(msg);
+							matchGraph.removeNode(request.session.uid);
+							writeMatchGraph();
+							// Destroy the session
+							request.session.destroy(function(err) {
+								console.log("Wander account created with Google account deleted.");
+								return response.status(200).send(JSON.stringify({"response":"pass"}));
 							});
-						}
-						// Send account deletion notification email
-						const msg = {
-							to: request.session.email,
-							from: 'support@vvander.me',
-							subject: 'Wander Account Deleted',
-							text: 'You have successfully deleted your Wander account which was created with your Google account. We are sorry to see you go.',
-							html: '<strong>You have successfully deleted your Wander account which was created with your Google account. We are sorry to see you go.</strong>',
-						};
-						sgMail.send(msg);
-						matchGraph.removeNode(request.session.uid);
-						writeMatchGraph();
-						// Destroy the session
-						request.session.destroy(function(err) {
-							console.log("Wander account created with Google account deleted.");
-							return response.status(200).send(JSON.stringify({"response":"pass"}));
 						});
 					});
 				} else if (result.affectedRows > 1) {
@@ -1167,29 +1179,35 @@ function facebookDeleteAccount(request, response) {
 					var post = [db_locations, uid, request.session.uid];
 					dbConnection.query(sql, post, function(err, result){
 						if (err) throw err;
-						if (request.session.firebaseRegistrationToken) {
-							// Delete current Firebase registration token
-							var sql = "DELETE FROM ?? WHERE ??=?";
-							var post = [db_firebase, registrationToken, request.session.firebaseRegistrationToken];
-							dbConnection.query(sql, post, function(err, result){
-								if (err) throw err;
+						// Delete profile for user ID
+						var sql = "DELETE FROM ?? WHERE ??=?";
+						var post = [db_profiles, uid, request.session.uid];
+						dbConnection.query(sql, post, function(err, result){
+							if (err) throw err;
+							if (request.session.firebaseRegistrationToken) {
+								// Delete current Firebase registration token
+								var sql = "DELETE FROM ?? WHERE ??=?";
+								var post = [db_firebase, registrationToken, request.session.firebaseRegistrationToken];
+								dbConnection.query(sql, post, function(err, result){
+									if (err) throw err;
+								});
+							}
+							// Send account deletion notification email
+							const msg = {
+								to: request.session.email,
+								from: 'support@vvander.me',
+								subject: 'Wander Account Deleted',
+								text: 'You have successfully deleted your Wander account which was created with your Facebook account. We are sorry to see you go.',
+								html: '<strong>You have successfully deleted your Wander account which was created with your Facebook account. We are sorry to see you go.</strong>',
+							};
+							sgMail.send(msg);
+							matchGraph.removeNode(request.session.uid);
+							writeMatchGraph();
+							// Destroy the session
+							request.session.destroy(function(err) {
+								console.log("Wander account created with Facebook account deleted.");
+								return response.status(200).send(JSON.stringify({"response":"pass"}));
 							});
-						}
-						// Send account deletion notification email
-						const msg = {
-							to: request.session.email,
-							from: 'support@vvander.me',
-							subject: 'Wander Account Deleted',
-							text: 'You have successfully deleted your Wander account which was created with your Facebook account. We are sorry to see you go.',
-							html: '<strong>You have successfully deleted your Wander account which was created with your Facebook account. We are sorry to see you go.</strong>',
-						};
-						sgMail.send(msg);
-						matchGraph.removeNode(request.session.uid);
-						writeMatchGraph();
-						// Destroy the session
-						request.session.destroy(function(err) {
-							console.log("Wander account created with Facebook account deleted.");
-							return response.status(200).send(JSON.stringify({"response":"pass"}));
 						});
 					});
 				} else if (result.affectedRows > 1) {
