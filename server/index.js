@@ -724,6 +724,21 @@ app.post('/approveUser', function(request, response){
 	approveUser(uid, request, response);
 });
 
+app.post('/getLocationForHeatmap', function(request, response){
+	if (!request.body) return response.send(500);
+	
+	// POST request must have 0 parameters
+	if (Object.keys(request.body).length != 0) {
+		return response.status(400).send("Invalid POST request\n");
+	}
+
+	// If session not autheticated
+	if (!request.session || !request.session.authenticated || request.session.autheticated === false) {
+		return response.status(400).send("User not logged in.\n");
+	}
+	getLocationForHeatmap(request, response);
+});
+
 // Validates a user ID
 function validateUid(uid) {
 	return !validator.isEmpty(uid) && validator.isHexadecimal(uid) && validator.isLength(uid, {min: 16, max: 16});
@@ -1860,6 +1875,25 @@ function approveUser(uid, request, response) {
 	matchGraph.setEdge(request.session.uid, uid, true, "approved");
 	writeMatchGraph();
 	console.log('User approved.');
+}
+
+function getLocationForHeatmap(request, response) {
+	var sql = "SELECT ??,?? FROM ?? WHERE ??=?";
+	var post = [longitude, latitude, db_locations, uid, request.session.uid];
+	dbConnection.query(sql, post, function(err, result){
+		var object = {};
+		var key = "Location";
+		object[key] = [];
+
+		for (var i = 0; i < result.length; i++) {
+			var lat = result[i].latitude;
+			var lon = result[i].longitude;
+			var data = {latitude: lat, longitude: lon};
+			object[key].push(data);
+		}
+		Console.log("User location for heatmap sent.");
+		return response.status(200).send(JSON.stringify(object));
+	});
 }
 
 // Writes the match graph to a file
