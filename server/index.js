@@ -739,6 +739,22 @@ app.post('/getLocationForHeatmap', function(request, response){
 	getLocationForHeatmap(request, response);
 });
 
+app.post('/getAllLocationsForHeatmap', function(request, response){
+	if (!request.body) return response.send(500);
+	
+	// POST request must have 0 parameters
+	if (Object.keys(request.body).length != 0) {
+		return response.status(400).send("Invalid POST request\n");
+	}
+
+	// If session not autheticated
+	if (!request.session || !request.session.authenticated || request.session.autheticated === false) {
+		return response.status(400).send("User not logged in.\n");
+	}
+	getAllLocationsForHeatmap(request, response);
+
+});
+
 // Validates a user ID
 function validateUid(uid) {
 	return !validator.isEmpty(uid) && validator.isHexadecimal(uid) && validator.isLength(uid, {min: 16, max: 16});
@@ -1891,9 +1907,29 @@ function getLocationForHeatmap(request, response) {
 			var data = {latitude: lat, longitude: lon};
 			object[key].push(data);
 		}
-		Console.log("User location for heatmap sent.");
+		console.log("User location for heatmap sent.");
 		return response.status(200).send(JSON.stringify(object));
 	});
+}
+
+function getAllLocationsForHeatmap(request, response) {
+	var sql = "SELECT ??,?? FROM ??";
+	var post = [longitude, latitude, db_locations];
+	dbConnection.query(sql, post, function(err, result){
+		var object = {};
+		var key = "Location";
+		object[key] = [];
+
+		for (var i = 0; i < result.length; i++) {
+			var lat = result[i].latitude;
+			var lon = result[i].longitude;
+			var data = {latitude: lat, longitude: lon};
+			object[key].push(data);
+		}
+		console.log("All location for heatmap sent.");
+		return response.status(200).send(JSON.stringify(object));
+	});
+	
 }
 
 // Writes the match graph to a file
