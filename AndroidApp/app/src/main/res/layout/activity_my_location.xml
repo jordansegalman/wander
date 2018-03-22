@@ -27,6 +27,24 @@
         android:text="Display Heatmap"
         android:textColor="#0645AD" />
 
+
+    <TextView
+        android:id="@+id/all_heatmap_toggle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignBaseline="@+id/heatmap_toggle"
+        android:layout_alignBottom="@+id/heatmap_toggle"
+        android:layout_gravity="center"
+        android:layout_marginStart="15dp"
+        android:layout_toEndOf="@+id/heatmap_toggle"
+        android:layout_weight="1"
+        android:clickable="true"
+        android:focusable="true"
+        android:gravity="center"
+        android:onClick="displayHeatmapAll"
+        android:padding="0dp"
+        android:text="Display Popular Locations"
+        android:textColor="#0645AD" />
     <!--
     <Button
         android:layout_width="match_parent"
