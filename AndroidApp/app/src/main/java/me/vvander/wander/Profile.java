@@ -70,7 +70,9 @@ public class Profile extends AppCompatActivity {
         locationText_input = (TextView)findViewById(R.id.location_text);
         emailText_input = (TextView)findViewById(R.id.email_text);
 
+
         if (getCallingActivity() != null) {
+            Log.d("This is the callingactivity", getCallingActivity().getClassName());
             Log.d(TAG, getCallingActivity().getClassName());
             if (getCallingActivity().getClassName().equalsIgnoreCase("me.vvander.wander.ProfileEdit")) {
                 Intent in = getIntent();
@@ -79,13 +81,17 @@ public class Profile extends AppCompatActivity {
                 aboutText_input.setText(in.getExtras().getString("about"));
                 emailText_input.setText(in.getExtras().getString("email"));
                 locationText_input.setText(in.getExtras().getString("location"));
-                byte[] decoded_string = Base64.decode(in.getExtras().getString("picture"), Base64.DEFAULT);
-                if (decoded_string == null)
-                {
-                    Log.d("ERROR MESSAGE", "ERROR!");
+                if (in.getExtras().getString("picture") != null) {
+                    byte[] decoded_string = Base64.decode(in.getExtras().getString("picture"), Base64.DEFAULT);
+                    if (decoded_string == null) {
+                        Log.d("ERROR MESSAGE", "ERROR!");
+                    }
+                    Bitmap decoded_byte = BitmapFactory.decodeByteArray(decoded_string, 0, decoded_string.length);
+                    profilePicture.setImageBitmap(decoded_byte);
+                } else {
+                    Bitmap icon = BitmapFactory.decodeResource(getResources(), R.drawable.profile);
+                    profilePicture.setImageBitmap(icon);
                 }
-                Bitmap decoded_byte = BitmapFactory.decodeByteArray(decoded_string, 0, decoded_string.length);
-                profilePicture.setImageBitmap(decoded_byte);
             }
         } else {
             sendPOSTRequest();
@@ -147,7 +153,7 @@ public class Profile extends AppCompatActivity {
                                 //emailText_input.setText(e);
                                 aboutText_input.setText(about);
                                 interestText_input.setText(interests);
-                                if (picture != null) {
+                                if (picture != null && !picture.equalsIgnoreCase("null")) {
                                     byte[] decoded_string = Base64.decode(picture.getBytes(), Base64.DEFAULT);
                                     if (decoded_string == null)
                                     {
@@ -156,6 +162,9 @@ public class Profile extends AppCompatActivity {
                                     Log.d("Decoded string", decoded_string.toString());
                                     Bitmap decoded_byte = BitmapFactory.decodeByteArray(decoded_string, 0, decoded_string.length);
                                     profilePicture.setImageBitmap(decoded_byte);
+                                } else {
+                                    Bitmap icon = BitmapFactory.decodeResource(getResources(), R.drawable.profile);
+                                    profilePicture.setImageBitmap(icon);
                                 }
 
                                 //Toast.makeText(getApplicationContext(), "Profile Updated!", Toast.LENGTH_SHORT).show();
@@ -197,13 +206,16 @@ public class Profile extends AppCompatActivity {
         i.putExtra("name", nameText_input.getText().toString());
 
         BitmapDrawable drawable = (BitmapDrawable) profilePicture.getDrawable();
-        Bitmap bitmap = drawable.getBitmap();
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        bitmap.compress(Bitmap.CompressFormat.JPEG, 90, baos);
-        byte[] b = baos.toByteArray();
-        String encoded_picture = Base64.encodeToString(b, Base64.DEFAULT);
+        if (drawable != null) {
+            Bitmap bitmap = drawable.getBitmap();
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            bitmap.compress(Bitmap.CompressFormat.JPEG, 90, baos);
+            byte[] b = baos.toByteArray();
+            String encoded_picture = Base64.encodeToString(b, Base64.DEFAULT);
 
-        i.putExtra("picture", encoded_picture);
+            i.putExtra("picture", encoded_picture);
+        }
+
 
         startActivity(i);
         this.finish();

@@ -2,6 +2,7 @@ package me.vvander.wander;
 
 import android.Manifest;
 import android.content.Context;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.location.Criteria;
 import android.location.Location;
@@ -12,8 +13,20 @@ import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
+import android.view.View;
+import android.widget.TextView;
+import android.widget.Toast;
 
 import me.vvander.wander.R;
+
+import com.android.volley.DefaultRetryPolicy;
+import com.android.volley.Request;
+import com.android.volley.RequestQueue;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
+import com.android.volley.toolbox.JsonObjectRequest;
+import com.android.volley.toolbox.Volley;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.LocationListener;
@@ -25,6 +38,19 @@ import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.TileOverlay;
+import com.google.android.gms.maps.model.TileOverlayOptions;
+import com.google.android.gms.maps.model.TileProvider;
+import com.google.maps.android.heatmaps.HeatmapTileProvider;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.lang.reflect.Array;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 
 import static android.Manifest.permission.ACCESS_FINE_LOCATION;
 
@@ -35,15 +61,25 @@ public class MyLocation extends AppCompatActivity implements OnMapReadyCallback,
     private Location mLastLocation;
     private LocationRequest mLocationRequest;
     private GoogleApiClient mGoogleApiClient;
+    private RequestQueue requestQueue;
+    private ArrayList<LatLng> listPersonal;
+    private ArrayList<LatLng> listAll;
+    private TileOverlay overlayPersonal;
+    private TileOverlay overlayAll;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_my_location);
+        requestQueue = Volley.newRequestQueue(this);
+        listPersonal = new ArrayList<LatLng>();
+        listAll = new ArrayList<LatLng>();
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
+        getHeatmapData();
        // buildGoogleApiClient();
         //createLocationRequest();
        // startLocationUpdates();
@@ -150,6 +186,111 @@ public class MyLocation extends AppCompatActivity implements OnMapReadyCallback,
                 .addOnConnectionFailedListener(this)
                 .addApi(LocationServices.API).build();
 
+    }
+
+    private void getHeatmapData() {
+        Map<String, String> params = new HashMap<String,String>();
+        String url = Data.getInstance().getUrl() + "/getLocationForHeatmap";
+        JsonObjectRequest postRequest = new JsonObjectRequest(Request.Method.POST, url, new JSONObject(params),
+                new Response.Listener<JSONObject>() {
+                    @Override
+                    public void onResponse(JSONObject response) {
+                        try
+                        {
+
+                            JSONArray array = response.getJSONArray("Location");
+                            int length = array.length();
+                            for (int i = 0; i < length; i++) {
+                                JSONObject object = array.getJSONObject(i);
+                                double lat = Double.parseDouble(String.valueOf(object.get("latitude")));
+                                double lon = Double.parseDouble(String.valueOf(object.get("longitude")));
+                                listPersonal.add(new LatLng(lat, lon));
+                                Log.d("This is the Location", "Lat: " + lat + ", Lon: " + lon);
+                            }
+
+                        } catch (JSONException j) {
+                            j.printStackTrace();
+                        }
+                    }
+                },
+                new Response.ErrorListener() {
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+                        Toast.makeText(getApplicationContext(), "Heatmap data point retrieval failed", Toast.LENGTH_SHORT).show();
+                        Log.d("Error: ", error.toString());
+                    }
+                }
+        );
+
+        url = Data.getInstance().getUrl() + "/getAllLocationsForHeatmap";
+        JsonObjectRequest postRequest2 = new JsonObjectRequest(Request.Method.POST, url, new JSONObject(params),
+                new Response.Listener<JSONObject>() {
+                    @Override
+                    public void onResponse(JSONObject response) {
+                        try
+                        {
+
+                            JSONArray array = response.getJSONArray("Location");
+                            int length = array.length();
+                            for (int i = 0; i < length; i++) {
+                                JSONObject object = array.getJSONObject(i);
+                                double lat = Double.parseDouble(String.valueOf(object.get("latitude")));
+                                double lon = Double.parseDouble(String.valueOf(object.get("longitude")));
+                                listAll.add(new LatLng(lat, lon));
+                                Log.d("This is the Location", "Lat: " + lat + ", Lon: " + lon);
+                            }
+
+                        } catch (JSONException j) {
+                            j.printStackTrace();
+                        }
+                    }
+                },
+                new Response.ErrorListener() {
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+                        Toast.makeText(getApplicationContext(), "Heatmap data point retrieval failed", Toast.LENGTH_SHORT).show();
+                        Log.d("Error: ", error.toString());
+                    }
+                }
+        );
+        postRequest.setRetryPolicy(new DefaultRetryPolicy(
+                0,
+                DefaultRetryPolicy.DEFAULT_MAX_RETRIES,
+                DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
+        requestQueue.add(postRequest);
+        requestQueue.add(postRequest2);
+    }
+
+    public void displayHeatmap(View view) {
+        TextView heatmap = (TextView)findViewById(R.id.heatmap_toggle);
+        if (overlayPersonal == null && heatmap.getText().toString().equals("Display Heatmap")) {
+            Toast.makeText(getApplicationContext(), "Displaying Heatmap", Toast.LENGTH_SHORT).show();
+            HeatmapTileProvider provider = new HeatmapTileProvider.Builder().data(listPersonal).build();
+            overlayPersonal = mMap.addTileOverlay(new TileOverlayOptions().tileProvider(provider));
+            heatmap.setText("Remove Heatmap");
+        } else if (heatmap.getText().toString().equals("Display Heatmap")) {
+            heatmap.setText("Remove Heatmap");
+            overlayPersonal.setVisible(true);
+        } else if (heatmap.getText().toString().equals("Remove Heatmap")) {
+            heatmap.setText("Display Heatmap");
+            overlayPersonal.setVisible(false);
+        }
+    }
+
+    public void displayHeatmapAll(View view) {
+        TextView heatmap = (TextView)findViewById(R.id.all_heatmap_toggle);
+        if (overlayAll == null && heatmap.getText().toString().equals("Display Popular Locations")) {
+            Toast.makeText(getApplicationContext(), "Displaying Popular Locations", Toast.LENGTH_SHORT).show();
+            HeatmapTileProvider provider = new HeatmapTileProvider.Builder().data(listAll).build();
+            overlayAll = mMap.addTileOverlay(new TileOverlayOptions().tileProvider(provider));
+            heatmap.setText("Remove Popular Locations");
+        } else if (heatmap.getText().toString().equals("Display Popular Locations")) {
+            heatmap.setText("Remove Popular Locations");
+            overlayAll.setVisible(true);
+        } else if (heatmap.getText().toString().equals("Remove Popular Locations")) {
+            heatmap.setText("Display Popular Locations");
+            overlayAll.setVisible(false);
+        }
     }
 
     public void requestPermission() {
