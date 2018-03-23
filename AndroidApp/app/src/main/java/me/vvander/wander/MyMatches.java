@@ -44,7 +44,7 @@ public class MyMatches extends AppCompatActivity {
         }
 
         ArrayAdapter<String> adapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, listItems);
-        matchListView = (ListView) findViewById(R.id.scheduleList);
+        matchListView = (ListView) findViewById(R.id.matchesList);
         matchListView.setAdapter(adapter);
     }
 }
