@@ -1,14 +1,13 @@
 package me.vvander.wander;
 
 import android.app.Service;
+import android.content.Context;
 import android.content.Intent;
 import android.location.Location;
 import android.location.LocationManager;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.util.Log;
-
-import android.content.Context;
 
 import com.android.volley.DefaultRetryPolicy;
 import com.android.volley.Request;
@@ -19,6 +18,7 @@ import com.android.volley.toolbox.Volley;
 
 import org.json.JSONException;
 import org.json.JSONObject;
+
 import java.util.HashMap;
 import java.util.Map;
 

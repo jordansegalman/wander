@@ -1,9 +1,7 @@
 package me.vvander.wander;
 
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-
-import me.vvander.wander.R;
+import android.support.v7.app.AppCompatActivity;
 
 public class MyMatches extends AppCompatActivity {
     @Override

@@ -8,8 +8,6 @@ import android.text.format.DateFormat;
 import android.widget.Button;
 import android.widget.TimePicker;
 
-import me.vvander.wander.R;
-
 import java.util.Calendar;
 
 public class TimePickerFragment extends DialogFragment implements TimePickerDialog.OnTimeSetListener {

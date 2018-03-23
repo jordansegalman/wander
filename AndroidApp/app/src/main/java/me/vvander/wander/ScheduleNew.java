@@ -2,12 +2,10 @@ package me.vvander.wander;
 
 import android.app.DialogFragment;
 import android.content.Intent;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.widget.EditText;
-
-import me.vvander.wander.R;
 
 import java.io.File;
 import java.io.FileInputStream;
