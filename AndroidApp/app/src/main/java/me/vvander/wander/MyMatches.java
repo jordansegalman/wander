@@ -1,7 +1,10 @@
 package me.vvander.wander;
 
+import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.view.View;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
 
@@ -43,8 +46,17 @@ public class MyMatches extends AppCompatActivity {
             }
         }
 
-        ArrayAdapter<String> adapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, listItems);
+        ArrayAdapter<String> adapter = new ArrayAdapter<String>(this, R.layout.image_list,  listItems);
         matchListView = (ListView) findViewById(R.id.matchesList);
         matchListView.setAdapter(adapter);
+
+        matchListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                /*TODO: when a user clicks on a match in the list this is triggered. The value of position is equal
+                to the index of the corresponding matchData in matchList*/
+
+            }
+        });
     }
 }
