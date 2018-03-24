@@ -732,7 +732,7 @@ app.post('/approveUser', function(request, response){
 
 app.post('/getLocationForHeatmap', function(request, response){
 	if (!request.body) return response.send(500);
-	
+
 	// POST request must have 0 parameters
 	if (Object.keys(request.body).length != 0) {
 		return response.status(400).send("Invalid POST request\n");
@@ -890,26 +890,33 @@ function googleLogin(id, e, request, response) {
 						if (result.length != 0) {
 							return response.status(500).send("User ID collision!\n");
 						} else {
+							// Create account in accounts table
 							var sql = "INSERT INTO ?? SET ?";
 							var post = {uid: userID, email: e, googleID: id, crossRadius: DEFAULT_CROSS_RADIUS};
 							dbConnection.query(sql, [db_accounts, post], function(err, result) {
 								if (err) throw err;
-								// Send registration confirm email
-								const msg = {
-									to: e,
-									from: 'support@vvander.me',
-									subject: 'Welcome to Wander!',
-									text: 'You have registered for a Wander account with your Google account. Click the following link to confirm your email: https://vvander.me/confirmEmail?email=' + e,
-									html: '<strong>You have registered for a Wander account with your Google account. Click the following link to confirm your email: https://vvander.me/confirmEmail?email=' + e + '</strong>',
-								};
-								sgMail.send(msg);
-								matchGraph.setNode(userID);
-								writeMatchGraph();
-								request.session.googleAuthenticated = true;
-								request.session.uid = userID;
-								request.session.email = e;
-								console.log("Account created and logged in with Google.");
-								return response.status(200).send(JSON.stringify({"response":"pass"}));
+								// Create profile in profiles table
+								var sql = "INSERT INTO ?? SET ??=?, ??=?";
+								var post = [db_profiles, uid, userID, email, e];
+								dbConnection.query(sql, post, function(err, result){
+									if (err) throw err;
+									// Send registration confirm email
+									const msg = {
+										to: e,
+										from: 'support@vvander.me',
+										subject: 'Welcome to Wander!',
+										text: 'You have registered for a Wander account with your Google account. Click the following link to confirm your email: https://vvander.me/confirmEmail?email=' + e,
+										html: '<strong>You have registered for a Wander account with your Google account. Click the following link to confirm your email: https://vvander.me/confirmEmail?email=' + e + '</strong>',
+									};
+									sgMail.send(msg);
+									matchGraph.setNode(userID);
+									writeMatchGraph();
+									request.session.googleAuthenticated = true;
+									request.session.uid = userID;
+									request.session.email = e;
+									console.log("Account created and logged in with Google.");
+									return response.status(200).send(JSON.stringify({"response":"pass"}));
+								});
 							});
 						}
 					});
@@ -972,26 +979,33 @@ function facebookLogin(id, e, request, response) {
 						if (result.length != 0) {
 							return response.status(500).send("User ID collision!\n");
 						} else {
+							// Create account in accounts table
 							var sql = "INSERT INTO ?? SET ?";
 							var post = {uid: userID, email: e, facebookID: id, crossRadius: DEFAULT_CROSS_RADIUS};
 							dbConnection.query(sql, [db_accounts, post], function(err, result) {
 								if (err) throw err;
-								// Send registration confirm email
-								const msg = {
-									to: e,
-									from: 'support@vvander.me',
-									subject: 'Welcome to Wander!',
-									text: 'You have registered for a Wander account with your Facebook account. Click the following link to confirm your email: https://vvander.me/confirmEmail?email=' + e,
-									html: '<strong>You have registered for a Wander account with your Facebook account. Click the following link to confirm your email: https://vvander.me/confirmEmail?email=' + e + '</strong>',
-								};
-								sgMail.send(msg);
-								matchGraph.setNode(userID);
-								writeMatchGraph();
-								request.session.facebookAuthenticated = true;
-								request.session.uid = userID;
-								request.session.email = e;
-								console.log("Account created and logged in with Facebook.");
-								return response.status(200).send(JSON.stringify({"response":"pass"}));
+								// Create profile in profiles table
+								var sql = "INSERT INTO ?? SET ??=?, ??=?";
+								var post = [db_profiles, uid, userID, email, e];
+								dbConnection.query(sql, post, function(err, result){
+									if (err) throw err;
+									// Send registration confirm email
+									const msg = {
+										to: e,
+										from: 'support@vvander.me',
+										subject: 'Welcome to Wander!',
+										text: 'You have registered for a Wander account with your Facebook account. Click the following link to confirm your email: https://vvander.me/confirmEmail?email=' + e,
+										html: '<strong>You have registered for a Wander account with your Facebook account. Click the following link to confirm your email: https://vvander.me/confirmEmail?email=' + e + '</strong>',
+									};
+									sgMail.send(msg);
+									matchGraph.setNode(userID);
+									writeMatchGraph();
+									request.session.facebookAuthenticated = true;
+									request.session.uid = userID;
+									request.session.email = e;
+									console.log("Account created and logged in with Facebook.");
+									return response.status(200).send(JSON.stringify({"response":"pass"}));
+								});
 							});
 						}
 					});
@@ -1572,7 +1586,7 @@ function addFirebaseRegistrationToken(token, request, response) {
 			if (result.affectedRows == 1) {
 				// Check if Firebase registration token already exists
 				var sql = "SELECT ?? FROM ?? WHERE ??=?";
-				var post = [registrationToken, db_firebase, uid, request.session.uid];
+				var post = [registrationToken, db_firebase, registrationToken, token];
 				dbConnection.query(sql, post, function(err, result) {
 					if (err) throw err;
 					if (result.length != 0) {
@@ -1596,7 +1610,7 @@ function addFirebaseRegistrationToken(token, request, response) {
 	} else {
 		// Check if Firebase registration token already exists
 		var sql = "SELECT ?? FROM ?? WHERE ??=?";
-		var post = [registrationToken, db_firebase, uid, request.session.uid];
+		var post = [registrationToken, db_firebase, registrationToken, token];
 		dbConnection.query(sql, post, function(err, result) {
 			if (err) throw err;
 			if (result.length != 0) {
