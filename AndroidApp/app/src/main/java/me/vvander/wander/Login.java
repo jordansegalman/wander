@@ -1,5 +1,7 @@
 package me.vvander.wander;
 
+import android.app.Dialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.app.ActivityCompat;
@@ -17,6 +19,8 @@ import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.Volley;
+import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.GoogleApiAvailability;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -28,6 +32,7 @@ import static android.Manifest.permission.ACCESS_FINE_LOCATION;
 
 public class Login extends AppCompatActivity {
     private static final String TAG = Login.class.getSimpleName();
+    private static final int GOOGLE_PLAY_SERVICES_REQUEST_CODE = 9999;
     private RequestQueue requestQueue;
 
     EditText usernameText;
@@ -37,6 +42,8 @@ public class Login extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
+
+        checkGooglePlayServices();
 
         Data.getInstance().initializeCookies(getApplicationContext());
         Data.getInstance().initializeFirebaseRegistrationToken();
@@ -49,6 +56,25 @@ public class Login extends AppCompatActivity {
         requestQueue = Volley.newRequestQueue(this);
 
         checkSession();
+    }
+
+    private void checkGooglePlayServices() {
+        GoogleApiAvailability googleApiAvailability = GoogleApiAvailability.getInstance();
+        int status = googleApiAvailability.isGooglePlayServicesAvailable(this);
+        if (status != ConnectionResult.SUCCESS) {
+            if (googleApiAvailability.isUserResolvableError(status)) {
+                Dialog errorDialog = googleApiAvailability.getErrorDialog(this, status, GOOGLE_PLAY_SERVICES_REQUEST_CODE);
+                errorDialog.setOnDismissListener(new DialogInterface.OnDismissListener() {
+                    @Override
+                    public void onDismiss(DialogInterface dialog) {
+                        finish();
+                    }
+                });
+                errorDialog.show();
+            } else {
+                finish();
+            }
+        }
     }
 
     public void login(View view){
@@ -70,7 +96,7 @@ public class Login extends AppCompatActivity {
         attemptLogin(username, password);
     }
 
-    public void checkSession() {
+    private void checkSession() {
         String url = Data.getInstance().getUrl() + "/verifySession";
         JsonObjectRequest postRequest = new JsonObjectRequest(Request.Method.POST, url, null,
                 new Response.Listener<JSONObject>() {
@@ -167,7 +193,7 @@ public class Login extends AppCompatActivity {
         requestQueue.add(postRequest);
     }
 
-    public void sendFirebaseRegistrationTokenToServer() {
+    private void sendFirebaseRegistrationTokenToServer() {
         if ((Data.getInstance().getLoggedIn() || Data.getInstance().getLoggedInGoogle() || Data.getInstance().getLoggedInFacebook()) && Data.getInstance().getFirebaseRegistrationToken() != null) {
             Map<String, String> params = new HashMap<>();
             params.put("firebaseRegistrationToken", Data.getInstance().getFirebaseRegistrationToken());
