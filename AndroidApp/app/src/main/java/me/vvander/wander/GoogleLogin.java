@@ -128,7 +128,7 @@ public class GoogleLogin extends AppCompatActivity {
     }
 
     public void sendFirebaseRegistrationTokenToServer() {
-        if (Data.getInstance().getLoggedIn() && Data.getInstance().getFirebaseRegistrationToken() != null) {
+        if (Data.getInstance().getLoggedInGoogle() && Data.getInstance().getFirebaseRegistrationToken() != null) {
             Map<String, String> params = new HashMap<>();
             params.put("firebaseRegistrationToken", Data.getInstance().getFirebaseRegistrationToken());
 

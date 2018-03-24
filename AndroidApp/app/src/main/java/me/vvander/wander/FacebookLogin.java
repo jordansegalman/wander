@@ -143,7 +143,7 @@ public class FacebookLogin extends AppCompatActivity {
     }
 
     public void sendFirebaseRegistrationTokenToServer() {
-        if (Data.getInstance().getLoggedIn() && Data.getInstance().getFirebaseRegistrationToken() != null) {
+        if (Data.getInstance().getLoggedInFacebook() && Data.getInstance().getFirebaseRegistrationToken() != null) {
             Map<String, String> params = new HashMap<>();
             params.put("firebaseRegistrationToken", Data.getInstance().getFirebaseRegistrationToken());
 

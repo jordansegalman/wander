@@ -61,15 +61,21 @@ public class Settings extends AppCompatActivity {
     }
 
     public void changeEmail(View view){
-        startActivity(new Intent(Settings.this, ChangeEmail.class));
+        if (Data.getInstance().getLoggedIn() && !Data.getInstance().getLoggedInGoogle() && !Data.getInstance().getLoggedInFacebook()) {
+            startActivity(new Intent(Settings.this, ChangeEmail.class));
+        }
     }
 
     public void changePassword(View view){
-        startActivity(new Intent(Settings.this, ChangePassword.class));
+        if (Data.getInstance().getLoggedIn() && !Data.getInstance().getLoggedInGoogle() && !Data.getInstance().getLoggedInFacebook()) {
+            startActivity(new Intent(Settings.this, ChangePassword.class));
+        }
     }
 
     public void changeUsername(View view) {
-        startActivity(new Intent(Settings.this, ChangeUsername.class));
+        if (Data.getInstance().getLoggedIn() && !Data.getInstance().getLoggedInGoogle() && !Data.getInstance().getLoggedInFacebook()) {
+            startActivity(new Intent(Settings.this, ChangeUsername.class));
+        }
     }
 
     private void logOut() {

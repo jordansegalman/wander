@@ -41,6 +41,7 @@ public class ChangeUsername extends AppCompatActivity {
     public void done(View view){
         String password = passwordEdit.getText().toString();
         String newUsername = usernameEdit.getText().toString();
+
         sendPOSTRequest(newUsername, password);
     }
 

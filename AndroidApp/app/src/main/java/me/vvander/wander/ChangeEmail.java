@@ -45,7 +45,6 @@ public class ChangeEmail extends AppCompatActivity {
         String password = passwordEdit.getText().toString();
 
         sendPOSTRequest(newEmail, password);
-        //startActivity(new Intent(ChangeEmail.this, Settings.class));
     }
 
     private void sendPOSTRequest(String newEmail, String password) {

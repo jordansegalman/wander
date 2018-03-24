@@ -81,14 +81,20 @@ public class Login extends AppCompatActivity {
                             String res = response.getString("response");
                             if (res.equalsIgnoreCase("pass")) {
                                 Data.getInstance().login();
+                                sendFirebaseRegistrationTokenToServer();
+                                startGPSService();
                                 Intent intent = new Intent(Login.this, AppHome.class);
                                 startActivity(intent);
                             } else if (res.equalsIgnoreCase("google")) {
                                 Data.getInstance().loginGoogle();
+                                sendFirebaseRegistrationTokenToServer();
+                                startGPSService();
                                 Intent intent = new Intent(Login.this, AppHome.class);
                                 startActivity(intent);
                             } else if (res.equalsIgnoreCase("facebook")) {
                                 Data.getInstance().loginFacebook();
+                                sendFirebaseRegistrationTokenToServer();
+                                startGPSService();
                                 Intent intent = new Intent(Login.this, AppHome.class);
                                 startActivity(intent);
                             }
@@ -162,7 +168,7 @@ public class Login extends AppCompatActivity {
     }
 
     public void sendFirebaseRegistrationTokenToServer() {
-        if (Data.getInstance().getLoggedIn() && Data.getInstance().getFirebaseRegistrationToken() != null) {
+        if ((Data.getInstance().getLoggedIn() || Data.getInstance().getLoggedInGoogle() || Data.getInstance().getLoggedInFacebook()) && Data.getInstance().getFirebaseRegistrationToken() != null) {
             Map<String, String> params = new HashMap<>();
             params.put("firebaseRegistrationToken", Data.getInstance().getFirebaseRegistrationToken());
 

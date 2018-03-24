@@ -34,13 +34,16 @@ public class Delete extends AppCompatActivity {
         passwordEdit = (EditText)findViewById(R.id.password);
     }
 
-    public void delete(View view){
-        if (passwordEdit.getText().toString().length() == 0) {
-            Toast.makeText(getApplicationContext(), "Please enter your password.", Toast.LENGTH_SHORT).show();
-            return;
+    public void delete(View view) {
+        if (Data.getInstance().getLoggedIn() && !Data.getInstance().getLoggedInGoogle() && !Data.getInstance().getLoggedInFacebook()) {
+            if (passwordEdit.getText().toString().length() == 0) {
+                Toast.makeText(getApplicationContext(), "Please enter your password.", Toast.LENGTH_SHORT).show();
+                return;
+            }
+            sendPOSTRequest(passwordEdit.getText().toString());
+        } else if (!Data.getInstance().getLoggedIn() && (Data.getInstance().getLoggedInGoogle() || Data.getInstance().getLoggedInFacebook())) {
+            sendPOSTRequest(null);
         }
-        sendPOSTRequest(passwordEdit.getText().toString());
-        //startActivity(new Intent(Delete.this, Login.class));
     }
 
     private void sendPOSTRequest(String password) {

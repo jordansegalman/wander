@@ -41,16 +41,14 @@ public class ChangePassword extends AppCompatActivity {
     }
 
     public void done(View view){
+        String oldPassword = oldPasswordEdit.getText().toString();
         String password = passwordEdit.getText().toString();
         String confirmPassword = confirmEdit.getText().toString();
-        String oldPassword = oldPasswordEdit.getText().toString();
-
 
         if(!password.equals(confirmPassword)){
             Toast.makeText(getApplicationContext(), "Passwords do not match.", Toast.LENGTH_SHORT).show();
         } else {
             sendPOSTRequest(oldPassword, password);
-            //startActivity(new Intent(ChangePassword.this, Settings.class));
         }
     }
 

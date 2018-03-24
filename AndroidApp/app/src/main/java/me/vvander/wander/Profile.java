@@ -88,7 +88,7 @@ public class Profile extends AppCompatActivity {
                     Bitmap decoded_byte = BitmapFactory.decodeByteArray(decoded_string, 0, decoded_string.length);
                     profilePicture.setImageBitmap(decoded_byte);
                 } else {
-                    Bitmap icon = BitmapFactory.decodeResource(getResources(), R.drawable.profile);
+                    Bitmap icon = BitmapFactory.decodeResource(getResources(), R.drawable.default_profile);
                     profilePicture.setImageBitmap(icon);
                 }
             }
@@ -162,7 +162,7 @@ public class Profile extends AppCompatActivity {
                                     Bitmap decoded_byte = BitmapFactory.decodeByteArray(decoded_string, 0, decoded_string.length);
                                     profilePicture.setImageBitmap(decoded_byte);
                                 } else {
-                                    Bitmap icon = BitmapFactory.decodeResource(getResources(), R.drawable.profile);
+                                    Bitmap icon = BitmapFactory.decodeResource(getResources(), R.drawable.default_profile);
                                     profilePicture.setImageBitmap(icon);
                                 }
 
