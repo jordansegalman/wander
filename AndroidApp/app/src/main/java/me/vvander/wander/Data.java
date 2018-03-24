@@ -11,6 +11,8 @@ import java.net.CookiePolicy;
 public class Data {
     private static final String url = "https://vvander.me";
     private boolean loggedIn = false;
+    private boolean loggedInGoogle = false;
+    private boolean loggedInFacebook = false;
     private PersistentCookieStore persistentCookieStore;
     private String firebaseRegistrationToken;
     private boolean valid = true;
@@ -25,6 +27,30 @@ public class Data {
 
     public boolean getLoggedIn() {
         return loggedIn;
+    }
+
+    public void loginGoogle() {
+        loggedInGoogle = true;
+    }
+
+    public void logoutGoogle() {
+        loggedInGoogle = false;
+    }
+
+    public boolean getLoggedInGoogle() {
+        return loggedInGoogle;
+    }
+
+    public void loginFacebook() {
+        loggedInFacebook = true;
+    }
+
+    public void logoutFacebook() {
+        loggedInFacebook = false;
+    }
+
+    public boolean getLoggedInFacebook() {
+        return loggedInFacebook;
     }
 
     public void initializeCookies(Context context) {

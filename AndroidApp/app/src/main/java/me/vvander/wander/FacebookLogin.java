@@ -63,6 +63,18 @@ public class FacebookLogin extends AppCompatActivity {
         LoginManager.getInstance().logInWithReadPermissions(FacebookLogin.this, Arrays.asList("public_profile", "email"));
     }
 
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        callbackManager.onActivityResult(requestCode, resultCode, data);
+        super.onActivityResult(requestCode, resultCode, data);
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        LoginManager.getInstance().logOut();
+    }
+
     private void getFacebookInfo(AccessToken accessToken) {
         GraphRequest request = GraphRequest.newMeRequest(accessToken,
                 new GraphRequest.GraphJSONObjectCallback() {
@@ -97,7 +109,7 @@ public class FacebookLogin extends AppCompatActivity {
                             String res = response.getString("response");
                             if (res.equalsIgnoreCase("pass")) {
                                 Toast.makeText(getApplicationContext(), "Facebook login successful!", Toast.LENGTH_SHORT).show();
-                                Data.getInstance().login();
+                                Data.getInstance().loginFacebook();
                                 sendFirebaseRegistrationTokenToServer();
                                 startGPSService();
                                 Intent intent = new Intent(FacebookLogin.this, AppHome.class);
@@ -170,17 +182,5 @@ public class FacebookLogin extends AppCompatActivity {
 
     private void startGPSService() {
         startService(new Intent(this, GpsCollection.class));
-    }
-
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        callbackManager.onActivityResult(requestCode, resultCode, data);
-        super.onActivityResult(requestCode, resultCode, data);
-    }
-
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        LoginManager.getInstance().logOut();
     }
 }

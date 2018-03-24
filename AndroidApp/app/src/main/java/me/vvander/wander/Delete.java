@@ -44,46 +44,118 @@ public class Delete extends AppCompatActivity {
     }
 
     private void sendPOSTRequest(String password) {
-        Map<String, String> params = new HashMap<>();
-        params.put("password", password);
+        if (Data.getInstance().getLoggedIn()) {
+            Map<String, String> params = new HashMap<>();
+            params.put("password", password);
 
-        String url = Data.getInstance().getUrl() + "/deleteAccount";
+            String url = Data.getInstance().getUrl() + "/deleteAccount";
 
-        JsonObjectRequest postRequest = new JsonObjectRequest(Request.Method.POST, url, new JSONObject(params),
-                new Response.Listener<JSONObject>() {
-                    @Override
-                    public void onResponse(JSONObject response) {
-                        try
-                        {
-                            String res = response.getString("response");
-                            if (res.equalsIgnoreCase("pass")) {
-                                Toast.makeText(getApplicationContext(), "Account deleted!", Toast.LENGTH_SHORT).show();
-                                Data.getInstance().logout();
-                                Data.getInstance().removeAllCookies();
-                                Intent intent = new Intent(Delete.this, Login.class);
-                                startActivity(intent);
+            JsonObjectRequest postRequest = new JsonObjectRequest(Request.Method.POST, url, new JSONObject(params),
+                    new Response.Listener<JSONObject>() {
+                        @Override
+                        public void onResponse(JSONObject response) {
+                            try {
+                                String res = response.getString("response");
+                                if (res.equalsIgnoreCase("pass")) {
+                                    Toast.makeText(getApplicationContext(), "Account deleted!", Toast.LENGTH_SHORT).show();
+                                    Data.getInstance().logout();
+                                    Data.getInstance().removeAllCookies();
+                                    Intent intent = new Intent(Delete.this, Login.class);
+                                    startActivity(intent);
+                                } else {
+                                    Toast.makeText(getApplicationContext(), "Account deletion failed!", Toast.LENGTH_SHORT).show();
+                                }
+                            } catch (JSONException j) {
+                                j.printStackTrace();
                             }
-                            else {
-                                Toast.makeText(getApplicationContext(), "Account deletion failed!", Toast.LENGTH_SHORT).show();
-                            }
-                        } catch (JSONException j) {
-                            j.printStackTrace();
+                        }
+                    },
+                    new Response.ErrorListener() {
+                        @Override
+                        public void onErrorResponse(VolleyError error) {
+                            Toast.makeText(getApplicationContext(), "Account deletion failed!", Toast.LENGTH_SHORT).show();
+                            Log.d("Error: ", error.toString());
                         }
                     }
-                },
-                new Response.ErrorListener() {
-                    @Override
-                    public void onErrorResponse(VolleyError error) {
-                        Toast.makeText(getApplicationContext(), "Account deletion failed!", Toast.LENGTH_SHORT).show();
-                        Log.d("Error: ", error.toString());
+            );
+            postRequest.setRetryPolicy(new DefaultRetryPolicy(
+                    0,
+                    DefaultRetryPolicy.DEFAULT_MAX_RETRIES,
+                    DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
+            requestQueue.add(postRequest);
+        } else if (Data.getInstance().getLoggedInGoogle()) {
+            String url = Data.getInstance().getUrl() + "/googleDeleteAccount";
+
+            JsonObjectRequest postRequest = new JsonObjectRequest(Request.Method.POST, url, null,
+                    new Response.Listener<JSONObject>() {
+                        @Override
+                        public void onResponse(JSONObject response) {
+                            try {
+                                String res = response.getString("response");
+                                if (res.equalsIgnoreCase("pass")) {
+                                    Toast.makeText(getApplicationContext(), "Account deleted!", Toast.LENGTH_SHORT).show();
+                                    Data.getInstance().logoutGoogle();
+                                    Data.getInstance().removeAllCookies();
+                                    Intent intent = new Intent(Delete.this, Login.class);
+                                    startActivity(intent);
+                                } else {
+                                    Toast.makeText(getApplicationContext(), "Account deletion failed!", Toast.LENGTH_SHORT).show();
+                                }
+                            } catch (JSONException j) {
+                                j.printStackTrace();
+                            }
+                        }
+                    },
+                    new Response.ErrorListener() {
+                        @Override
+                        public void onErrorResponse(VolleyError error) {
+                            Toast.makeText(getApplicationContext(), "Account deletion failed!", Toast.LENGTH_SHORT).show();
+                            Log.d("Error: ", error.toString());
+                        }
                     }
-                }
-        );
-        postRequest.setRetryPolicy(new DefaultRetryPolicy(
-                0,
-                DefaultRetryPolicy.DEFAULT_MAX_RETRIES,
-                DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
-        requestQueue.add(postRequest);
+            );
+            postRequest.setRetryPolicy(new DefaultRetryPolicy(
+                    0,
+                    DefaultRetryPolicy.DEFAULT_MAX_RETRIES,
+                    DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
+            requestQueue.add(postRequest);
+        } else if (Data.getInstance().getLoggedInFacebook()) {
+            String url = Data.getInstance().getUrl() + "/facebookDeleteAccount";
+
+            JsonObjectRequest postRequest = new JsonObjectRequest(Request.Method.POST, url, null,
+                    new Response.Listener<JSONObject>() {
+                        @Override
+                        public void onResponse(JSONObject response) {
+                            try {
+                                String res = response.getString("response");
+                                if (res.equalsIgnoreCase("pass")) {
+                                    Toast.makeText(getApplicationContext(), "Account deleted!", Toast.LENGTH_SHORT).show();
+                                    Data.getInstance().logoutFacebook();
+                                    Data.getInstance().removeAllCookies();
+                                    Intent intent = new Intent(Delete.this, Login.class);
+                                    startActivity(intent);
+                                } else {
+                                    Toast.makeText(getApplicationContext(), "Account deletion failed!", Toast.LENGTH_SHORT).show();
+                                }
+                            } catch (JSONException j) {
+                                j.printStackTrace();
+                            }
+                        }
+                    },
+                    new Response.ErrorListener() {
+                        @Override
+                        public void onErrorResponse(VolleyError error) {
+                            Toast.makeText(getApplicationContext(), "Account deletion failed!", Toast.LENGTH_SHORT).show();
+                            Log.d("Error: ", error.toString());
+                        }
+                    }
+            );
+            postRequest.setRetryPolicy(new DefaultRetryPolicy(
+                    0,
+                    DefaultRetryPolicy.DEFAULT_MAX_RETRIES,
+                    DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
+            requestQueue.add(postRequest);
+        }
     }
 
     public void back(View view){

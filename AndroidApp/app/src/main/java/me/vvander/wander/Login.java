@@ -83,6 +83,14 @@ public class Login extends AppCompatActivity {
                                 Data.getInstance().login();
                                 Intent intent = new Intent(Login.this, AppHome.class);
                                 startActivity(intent);
+                            } else if (res.equalsIgnoreCase("google")) {
+                                Data.getInstance().loginGoogle();
+                                Intent intent = new Intent(Login.this, AppHome.class);
+                                startActivity(intent);
+                            } else if (res.equalsIgnoreCase("facebook")) {
+                                Data.getInstance().loginFacebook();
+                                Intent intent = new Intent(Login.this, AppHome.class);
+                                startActivity(intent);
                             }
                         } catch (JSONException j) {
                             j.printStackTrace();

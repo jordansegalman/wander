@@ -94,7 +94,7 @@ public class GoogleLogin extends AppCompatActivity {
                             String res = response.getString("response");
                             if (res.equalsIgnoreCase("pass")) {
                                 Toast.makeText(getApplicationContext(), "Google login successful!", Toast.LENGTH_SHORT).show();
-                                Data.getInstance().login();
+                                Data.getInstance().loginGoogle();
                                 sendFirebaseRegistrationTokenToServer();
                                 startGPSService();
                                 Intent intent = new Intent(GoogleLogin.this, AppHome.class);

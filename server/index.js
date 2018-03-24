@@ -309,7 +309,13 @@ app.post('/verifySession', function(request, response) {
 		return response.status(400).send(JSON.stringify({"response":"fail"}));
 	}
 
-	return response.status(200).send(JSON.stringify({"response":"pass"}));
+	if (request.session && request.session.googleAuthenticated && request.session.googleAuthenticated === true) {
+		return response.status(200).send(JSON.stringify({"response":"google"}));
+	} else if (request.session && request.session.facebookAuthenticated && request.session.facebookAuthenticated === true) {
+		return response.status(200).send(JSON.stringify({"response":"facebook"}));
+	} else {
+		return response.status(200).send(JSON.stringify({"response":"pass"}));
+	}
 });
 
 // Called when a POST request is made to /deleteAccount
