@@ -16,7 +16,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-public class PersistentCookieStore implements CookieStore {
+class PersistentCookieStore implements CookieStore {
     private static final String TAG = PersistentCookieStore.class.getSimpleName();
     private static final String SP_COOKIE_STORE = "persistentCookieStore";
     private static final String SP_KEY_DELIMITER = "|";
@@ -24,9 +24,25 @@ public class PersistentCookieStore implements CookieStore {
     private SharedPreferences sharedPreferences;
     private Map<URI, Set<HttpCookie>> allCookies;
 
-    public PersistentCookieStore(Context context) {
+    PersistentCookieStore(Context context) {
         sharedPreferences = context.getSharedPreferences(SP_COOKIE_STORE, Context.MODE_PRIVATE);
         loadAllFromPersistence();
+    }
+
+    private static URI cookieUri(URI uri, HttpCookie cookie) {
+        URI cookieUri = uri;
+        if (cookie.getDomain() != null) {
+            String domain = cookie.getDomain();
+            if (domain.charAt(0) == '.') {
+                domain = domain.substring(1);
+            }
+            try {
+                cookieUri = new URI(uri.getScheme() == null ? "http" : uri.getScheme(), domain, cookie.getPath() == null ? "/" : cookie.getPath(), null);
+            } catch (URISyntaxException e) {
+                Log.w(TAG, e);
+            }
+        }
+        return cookieUri;
     }
 
     private void loadAllFromPersistence() {
@@ -63,22 +79,6 @@ public class PersistentCookieStore implements CookieStore {
         saveToPersistence(uri, cookie);
     }
 
-    private static URI cookieUri(URI uri, HttpCookie cookie) {
-        URI cookieUri = uri;
-        if (cookie.getDomain() != null) {
-            String domain = cookie.getDomain();
-            if (domain.charAt(0) == '.') {
-                domain = domain.substring(1);
-            }
-            try {
-                cookieUri = new URI(uri.getScheme() == null ? "http" : uri.getScheme(), domain, cookie.getPath() == null ? "/" : cookie.getPath(), null);
-            } catch (URISyntaxException e) {
-                Log.w(TAG, e);
-            }
-        }
-        return cookieUri;
-    }
-
     private void saveToPersistence(URI uri, HttpCookie cookie) {
         SharedPreferences.Editor editor = sharedPreferences.edit();
         editor.putString(uri.toString() + SP_KEY_DELIMITER + cookie.getName(), new SerializableHttpCookie().encode(cookie));
@@ -110,7 +110,7 @@ public class PersistentCookieStore implements CookieStore {
         }
         if (!targetCookies.isEmpty()) {
             List<HttpCookie> cookiesToRemoveFromPersistence = new ArrayList<>();
-            for (Iterator<HttpCookie> it = targetCookies.iterator(); it.hasNext();) {
+            for (Iterator<HttpCookie> it = targetCookies.iterator(); it.hasNext(); ) {
                 HttpCookie currentCookie = it.next();
                 if (currentCookie.hasExpired()) {
                     cookiesToRemoveFromPersistence.add(currentCookie);

@@ -1,8 +1,8 @@
 package me.vvander.wander;
 
 import android.content.Intent;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
 import android.widget.EditText;
@@ -15,7 +15,6 @@ import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.Volley;
-import me.vvander.wander.R;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -24,10 +23,10 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class ForgotPassword extends AppCompatActivity {
-    private RequestQueue requestQueue;
-
+    private static final String TAG = ForgotPassword.class.getSimpleName();
     EditText emailEdit;
     EditText usernameEdit;
+    private RequestQueue requestQueue;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -35,8 +34,8 @@ public class ForgotPassword extends AppCompatActivity {
         setContentView(R.layout.activity_forgot_password);
         requestQueue = Volley.newRequestQueue(this);
 
-        emailEdit = (EditText)findViewById(R.id.email);
-        usernameEdit = (EditText)findViewById(R.id.username);
+        emailEdit = findViewById(R.id.email);
+        usernameEdit = findViewById(R.id.username);
     }
 
     public void done(View view) {
@@ -46,7 +45,7 @@ public class ForgotPassword extends AppCompatActivity {
     }
 
     private void sendPOSTRequest(String username, String email) {
-        Map<String, String> params = new HashMap<String,String>();
+        Map<String, String> params = new HashMap<>();
         params.put("username", username);
         params.put("email", email);
 
@@ -56,15 +55,13 @@ public class ForgotPassword extends AppCompatActivity {
                 new Response.Listener<JSONObject>() {
                     @Override
                     public void onResponse(JSONObject response) {
-                        try
-                        {
+                        try {
                             String res = response.getString("response");
                             if (res.equalsIgnoreCase("pass")) {
                                 Toast.makeText(getApplicationContext(), "Password reset email sent!", Toast.LENGTH_SHORT).show();
                                 Intent intent = new Intent(ForgotPassword.this, Login.class);
                                 startActivity(intent);
-                            }
-                            else {
+                            } else {
                                 Toast.makeText(getApplicationContext(), "Password reset failed!", Toast.LENGTH_SHORT).show();
                             }
                         } catch (JSONException j) {
@@ -76,8 +73,7 @@ public class ForgotPassword extends AppCompatActivity {
                     @Override
                     public void onErrorResponse(VolleyError error) {
                         Toast.makeText(getApplicationContext(), "Password reset failed!", Toast.LENGTH_SHORT).show();
-
-                        Log.d("Error: ", error.toString());
+                        Log.d(TAG, error.toString());
                     }
                 }
         );

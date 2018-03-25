@@ -1,8 +1,8 @@
 package me.vvander.wander;
 
 import android.content.Intent;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
 import android.widget.EditText;
@@ -15,7 +15,6 @@ import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.Volley;
-import me.vvander.wander.R;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -24,35 +23,32 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class ChangeEmail extends AppCompatActivity {
-    private RequestQueue requestQueue;
-
+    private static final String TAG = ChangeEmail.class.getSimpleName();
     EditText emailEdit;
-    EditText newEmailEdit;
     EditText passwordEdit;
+    private RequestQueue requestQueue;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_change_email);
 
-        emailEdit = (EditText)findViewById(R.id.current_email);
-        newEmailEdit = (EditText)findViewById(R.id.new_email);
-        passwordEdit = (EditText)findViewById(R.id.password);
+        emailEdit = findViewById(R.id.new_email);
+        passwordEdit = findViewById(R.id.password);
         requestQueue = Volley.newRequestQueue(this);
     }
 
-    public void done(View view){
-        String newEmail = newEmailEdit.getText().toString();
+    public void done(View view) {
+        String newEmail = emailEdit.getText().toString();
         String password = passwordEdit.getText().toString();
 
         sendPOSTRequest(newEmail, password);
-        //startActivity(new Intent(ChangeEmail.this, Settings.class));
     }
 
     private void sendPOSTRequest(String newEmail, String password) {
-        Map<String, String> params = new HashMap<String,String>();
-        params.put("password", password);
+        Map<String, String> params = new HashMap<>();
         params.put("newEmail", newEmail);
+        params.put("password", password);
 
         String url = Data.getInstance().getUrl() + "/changeEmail";
 
@@ -60,15 +56,13 @@ public class ChangeEmail extends AppCompatActivity {
                 new Response.Listener<JSONObject>() {
                     @Override
                     public void onResponse(JSONObject response) {
-                        try
-                        {
+                        try {
                             String res = response.getString("response");
                             if (res.equalsIgnoreCase("pass")) {
                                 Toast.makeText(getApplicationContext(), "Email changed!", Toast.LENGTH_SHORT).show();
                                 Intent intent = new Intent(ChangeEmail.this, Settings.class);
                                 startActivity(intent);
-                            }
-                            else {
+                            } else {
                                 Toast.makeText(getApplicationContext(), "Email change failed!", Toast.LENGTH_SHORT).show();
                             }
                         } catch (JSONException j) {
@@ -80,8 +74,7 @@ public class ChangeEmail extends AppCompatActivity {
                     @Override
                     public void onErrorResponse(VolleyError error) {
                         Toast.makeText(getApplicationContext(), "Email change failed!", Toast.LENGTH_SHORT).show();
-
-                        Log.d("Error: ", error.toString());
+                        Log.d(TAG, error.toString());
                     }
                 }
         );
