@@ -108,6 +108,10 @@ public class Settings extends AppCompatActivity {
         requestQueue.add(postRequest);
     }
 
+    public void setSchedule(View view){
+        startActivity(new Intent(Settings.this, Schedule.class));
+    }
+
     @Override
     public void onBackPressed() {
         startActivity(new Intent(Settings.this, AppHome.class));

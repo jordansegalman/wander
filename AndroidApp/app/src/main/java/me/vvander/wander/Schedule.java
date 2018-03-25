@@ -4,6 +4,7 @@ import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
 
@@ -63,6 +64,16 @@ public class Schedule extends AppCompatActivity {
         adapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, listItems);
         scheduleListView = (ListView) findViewById(R.id.scheduleList);
         scheduleListView.setAdapter(adapter);
+
+        scheduleListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                Intent edit = new Intent(Schedule.this, ScheduleEdit.class);
+                edit.putExtra("Position", position);
+                startActivity(edit);
+
+            }
+        });
     }
 
     public void newSchedule(View view){

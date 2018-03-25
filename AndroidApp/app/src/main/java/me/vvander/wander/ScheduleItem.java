@@ -11,8 +11,13 @@ public class ScheduleItem implements Serializable{
     private int endMinute;
     private boolean[] repeatDays = new boolean[7]; //Starts with sunday
 
-    public ScheduleItem(String name){
+    public ScheduleItem(String name, int startHour, int startMinute, int endHour, int endMinute, boolean[] repeatDays){
         this.name = name;
+        this.startHour = startHour;
+        this. startMinute = startMinute;
+        this.endHour = endHour;
+        this.endMinute = endMinute;
+        this.repeatDays = repeatDays;
     }
 
     public void SetName(String name){this.name = name;}

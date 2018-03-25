@@ -51,6 +51,12 @@
             <Button
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:onClick="setSchedule"
+                android:text="Set Schedule" />
+
+            <Button
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
                 android:onClick="changeEmail"
                 android:text="Change Email" />
 

@@ -30,6 +30,9 @@
         <activity android:name="me.vvander.wander.AppHome" />
         <activity android:name="me.vvander.wander.Profile" />
         <activity android:name="me.vvander.wander.ProfileEdit" />
+        <activity android:name="me.vvander.wander.Schedule" />
+        <activity android:name="me.vvander.wander.ScheduleEdit" />
+        <activity android:name="me.vvander.wander.ScheduleNew" />
 
         <meta-data
             android:name="com.google.android.geo.API_KEY"
