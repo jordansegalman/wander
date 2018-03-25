@@ -748,7 +748,9 @@ app.post('/approveUser', function(request, response){
 	approveUser(uid, request, response);
 });
 
+// Called when a POST request is made to /getLocationForHeatmap
 app.post('/getLocationForHeatmap', function(request, response){
+	// If the object request.body is null, respond with status 500 'Internal Server Error'
 	if (!request.body) return response.send(500);
 
 	// POST request must have 0 parameters
@@ -760,7 +762,26 @@ app.post('/getLocationForHeatmap', function(request, response){
 	if (!request.session || !request.session.authenticated || request.session.autheticated === false) {
 		return response.status(400).send("User not logged in.\n");
 	}
+
 	getLocationForHeatmap(request, response);
+});
+
+// Called when a POST request is made to /getAllLocationsForHeatmap
+app.post('/getAllLocationsForHeatmap', function(request, response){
+	// If the object request.body is null, respond with status 500 'Internal Server Error'
+	if (!request.body) return response.send(500);
+
+	// POST request must have 0 parameters
+	if (Object.keys(request.body).length != 0) {
+		return response.status(400).send("Invalid POST request\n");
+	}
+
+	// If session not autheticated
+	if (!request.session || !request.session.authenticated || request.session.autheticated === false) {
+		return response.status(400).send("User not logged in.\n");
+	}
+
+	getAllLocationsForHeatmap(request, response);
 });
 
 // Called when a POST request is made to /getAllMatches
@@ -1867,9 +1888,9 @@ function findCrossedPaths(lat, lon, currentTime, request, response) {
 												.then((response) => {
 													console.log('Successfully sent existing match crossed paths notification.');
 												})
-											.catch((error) => {
-												console.log(error);
-											});
+												.catch((error) => {
+													console.log(error);
+												});
 										}
 									}
 								});
@@ -1895,9 +1916,9 @@ function findCrossedPaths(lat, lon, currentTime, request, response) {
 												.then((response) => {
 													console.log('Successfully sent existing match crossed paths notification.');
 												})
-											.catch((error) => {
-												console.log(error);
-											});
+												.catch((error) => {
+													console.log(error);
+												});
 										}
 									}
 								});
@@ -1951,9 +1972,9 @@ function notifyMatches() {
 							.then((response) => {
 								console.log('Successfully sent match notification.');
 							})
-						.catch((error) => {
-							console.log(error);
-						});
+							.catch((error) => {
+								console.log(error);
+							});
 					}
 				}
 			});
@@ -1974,6 +1995,7 @@ function approveUser(uid, request, response) {
 	console.log('User approved.');
 }
 
+// Gets all location coordinates for user ID for heatmap generation
 function getLocationForHeatmap(request, response) {
 	var sql = "SELECT ??,?? FROM ?? WHERE ??=?";
 	var post = [longitude, latitude, db_locations, uid, request.session.uid];
@@ -1981,14 +2003,32 @@ function getLocationForHeatmap(request, response) {
 		var object = {};
 		var key = "Location";
 		object[key] = [];
-
 		for (var i = 0; i < result.length; i++) {
 			var lat = result[i].latitude;
 			var lon = result[i].longitude;
 			var data = {latitude: lat, longitude: lon};
 			object[key].push(data);
 		}
-		Console.log("User location for heatmap sent.");
+		console.log("User location for heatmap sent.");
+		return response.status(200).send(JSON.stringify(object));
+	});
+}
+
+// Gets all location coordinates for all users for heatmap generation
+function getAllLocationsForHeatmap(request, response) {
+	var sql = "SELECT ??,?? FROM ??";
+	var post = [longitude, latitude, db_locations];
+	dbConnection.query(sql, post, function(err, result){
+		var object = {};
+		var key = "Location";
+		object[key] = [];
+		for (var i = 0; i < result.length; i++) {
+			var lat = result[i].latitude;
+			var lon = result[i].longitude;
+			var data = {latitude: lat, longitude: lon};
+			object[key].push(data);
+		}
+		console.log("All locations for heatmap sent.");
 		return response.status(200).send(JSON.stringify(object));
 	});
 }
