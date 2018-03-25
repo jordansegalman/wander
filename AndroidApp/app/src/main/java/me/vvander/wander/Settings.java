@@ -22,6 +22,8 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 public class Settings extends AppCompatActivity {
+    private static final String TAG = Settings.class.getSimpleName();
+    private static final String SP_LOCATION = "locationSwitch";
     Switch locationSwitch;
     private RequestQueue requestQueue;
 
@@ -30,43 +32,36 @@ public class Settings extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_settings);
 
-        SharedPreferences sharedPref = getPreferences(Context.MODE_PRIVATE);
-        boolean locationTracking = sharedPref.getBoolean("tracking", true);
-
-        locationSwitch = (Switch) findViewById(R.id.tracking);
-        locationSwitch.setChecked(locationTracking);
+        locationSwitch = findViewById(R.id.tracking);
+        locationSwitch.setChecked(Data.getInstance().getManualLocationSwitch());
 
         requestQueue = Volley.newRequestQueue(this);
     }
 
-    public void locationToggle(View view){
+    public void locationToggle(View view) {
         boolean value = locationSwitch.isChecked();
-        SharedPreferences sharedPref = getPreferences(Context.MODE_PRIVATE);
-        SharedPreferences.Editor editor = sharedPref.edit();
-        editor.putBoolean("tracking", value);
+        Data.getInstance().setManualLocationSwitch(value);
+        SharedPreferences sharedPreferences = getSharedPreferences(SP_LOCATION, Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+        editor.putBoolean("manualLocationSwitch", value);
         editor.apply();
-        if (value) {
-            startService(new Intent(this, GpsCollection.class));
-        } else {
-            stopService(new Intent(this, GpsCollection.class));
-        }
     }
 
-    public void delete(View view){
+    public void delete(View view) {
         startActivity(new Intent(Settings.this, Delete.class));
     }
 
     public void logout(View view) {
-        logOut();
+        attemptLogout();
     }
 
-    public void changeEmail(View view){
+    public void changeEmail(View view) {
         if (Data.getInstance().getLoggedIn() && !Data.getInstance().getLoggedInGoogle() && !Data.getInstance().getLoggedInFacebook()) {
             startActivity(new Intent(Settings.this, ChangeEmail.class));
         }
     }
 
-    public void changePassword(View view){
+    public void changePassword(View view) {
         if (Data.getInstance().getLoggedIn() && !Data.getInstance().getLoggedInGoogle() && !Data.getInstance().getLoggedInFacebook()) {
             startActivity(new Intent(Settings.this, ChangePassword.class));
         }
@@ -78,17 +73,17 @@ public class Settings extends AppCompatActivity {
         }
     }
 
-    private void logOut() {
+    private void attemptLogout() {
         String url = Data.getInstance().getUrl() + "/logout";
         JsonObjectRequest postRequest = new JsonObjectRequest(Request.Method.POST, url, null,
                 new Response.Listener<JSONObject>() {
                     @Override
                     public void onResponse(JSONObject response) {
-                        try
-                        {
+                        try {
                             String res = response.getString("response");
                             if (res.equalsIgnoreCase("pass")) {
                                 Toast.makeText(getApplicationContext(), "Logged out!", Toast.LENGTH_SHORT).show();
+                                resetManualLocationSwitch();
                                 Data.getInstance().logout();
                                 Data.getInstance().removeAllCookies();
                                 Intent intent = new Intent(Settings.this, Login.class);
@@ -102,7 +97,7 @@ public class Settings extends AppCompatActivity {
                 new Response.ErrorListener() {
                     @Override
                     public void onErrorResponse(VolleyError error) {
-                        Log.d("Error: ", error.toString());
+                        Log.d(TAG, error.toString());
                     }
                 }
         );
@@ -111,6 +106,12 @@ public class Settings extends AppCompatActivity {
                 DefaultRetryPolicy.DEFAULT_MAX_RETRIES,
                 DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
         requestQueue.add(postRequest);
+    }
+
+    private void resetManualLocationSwitch() {
+        Data.getInstance().setManualLocationSwitch(true);
+        SharedPreferences sharedPreferences = getSharedPreferences(SP_LOCATION, Context.MODE_PRIVATE);
+        sharedPreferences.edit().clear().apply();
     }
 
     @Override

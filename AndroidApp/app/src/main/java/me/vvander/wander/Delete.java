@@ -1,6 +1,8 @@
 package me.vvander.wander;
 
+import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
@@ -23,15 +25,17 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class Delete extends AppCompatActivity {
-    private RequestQueue requestQueue;
+    private static final String TAG = Delete.class.getSimpleName();
+    private static final String SP_LOCATION = "locationSwitch";
     EditText passwordEdit;
+    private RequestQueue requestQueue;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_delete);
         requestQueue = Volley.newRequestQueue(this);
-        passwordEdit = (EditText)findViewById(R.id.password);
+        passwordEdit = findViewById(R.id.password);
     }
 
     public void delete(View view) {
@@ -61,6 +65,7 @@ public class Delete extends AppCompatActivity {
                                 String res = response.getString("response");
                                 if (res.equalsIgnoreCase("pass")) {
                                     Toast.makeText(getApplicationContext(), "Account deleted!", Toast.LENGTH_SHORT).show();
+                                    resetManualLocationSwitch();
                                     Data.getInstance().logout();
                                     Data.getInstance().removeAllCookies();
                                     Intent intent = new Intent(Delete.this, Login.class);
@@ -77,7 +82,7 @@ public class Delete extends AppCompatActivity {
                         @Override
                         public void onErrorResponse(VolleyError error) {
                             Toast.makeText(getApplicationContext(), "Account deletion failed!", Toast.LENGTH_SHORT).show();
-                            Log.d("Error: ", error.toString());
+                            Log.d(TAG, error.toString());
                         }
                     }
             );
@@ -97,6 +102,7 @@ public class Delete extends AppCompatActivity {
                                 String res = response.getString("response");
                                 if (res.equalsIgnoreCase("pass")) {
                                     Toast.makeText(getApplicationContext(), "Account deleted!", Toast.LENGTH_SHORT).show();
+                                    resetManualLocationSwitch();
                                     Data.getInstance().logoutGoogle();
                                     Data.getInstance().removeAllCookies();
                                     Intent intent = new Intent(Delete.this, Login.class);
@@ -113,7 +119,7 @@ public class Delete extends AppCompatActivity {
                         @Override
                         public void onErrorResponse(VolleyError error) {
                             Toast.makeText(getApplicationContext(), "Account deletion failed!", Toast.LENGTH_SHORT).show();
-                            Log.d("Error: ", error.toString());
+                            Log.d(TAG, error.toString());
                         }
                     }
             );
@@ -133,6 +139,7 @@ public class Delete extends AppCompatActivity {
                                 String res = response.getString("response");
                                 if (res.equalsIgnoreCase("pass")) {
                                     Toast.makeText(getApplicationContext(), "Account deleted!", Toast.LENGTH_SHORT).show();
+                                    resetManualLocationSwitch();
                                     Data.getInstance().logoutFacebook();
                                     Data.getInstance().removeAllCookies();
                                     Intent intent = new Intent(Delete.this, Login.class);
@@ -149,7 +156,7 @@ public class Delete extends AppCompatActivity {
                         @Override
                         public void onErrorResponse(VolleyError error) {
                             Toast.makeText(getApplicationContext(), "Account deletion failed!", Toast.LENGTH_SHORT).show();
-                            Log.d("Error: ", error.toString());
+                            Log.d(TAG, error.toString());
                         }
                     }
             );
@@ -161,7 +168,13 @@ public class Delete extends AppCompatActivity {
         }
     }
 
-    public void back(View view){
+    private void resetManualLocationSwitch() {
+        Data.getInstance().setManualLocationSwitch(true);
+        SharedPreferences sharedPreferences = getSharedPreferences(SP_LOCATION, Context.MODE_PRIVATE);
+        sharedPreferences.edit().clear().apply();
+    }
+
+    public void back(View view) {
         startActivity(new Intent(Delete.this, Settings.class));
     }
 }

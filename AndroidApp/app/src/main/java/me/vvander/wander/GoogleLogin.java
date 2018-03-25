@@ -29,8 +29,8 @@ import java.util.Map;
 public class GoogleLogin extends AppCompatActivity {
     private static final String TAG = GoogleLogin.class.getSimpleName();
     private static final int RC_SIGN_IN = 0;
-    private RequestQueue requestQueue;
     GoogleSignInClient mGoogleSignInClient;
+    private RequestQueue requestQueue;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -96,11 +96,10 @@ public class GoogleLogin extends AppCompatActivity {
                                 Toast.makeText(getApplicationContext(), "Google login successful!", Toast.LENGTH_SHORT).show();
                                 Data.getInstance().loginGoogle();
                                 sendFirebaseRegistrationTokenToServer();
-                                startGPSService();
+                                startLocationCollectionService();
                                 Intent intent = new Intent(GoogleLogin.this, AppHome.class);
                                 startActivity(intent);
-                            }
-                            else {
+                            } else {
                                 Toast.makeText(getApplicationContext(), "Google login failed!", Toast.LENGTH_SHORT).show();
                                 Intent intent = new Intent(GoogleLogin.this, Login.class);
                                 startActivity(intent);
@@ -165,7 +164,7 @@ public class GoogleLogin extends AppCompatActivity {
         }
     }
 
-    private void startGPSService() {
-        startService(new Intent(this, GpsCollection.class));
+    private void startLocationCollectionService() {
+        startService(new Intent(this, LocationCollectionService.class));
     }
 }

@@ -23,39 +23,39 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class ChangePassword extends AppCompatActivity {
-    private RequestQueue requestQueue;
-
+    private static final String TAG = ChangePassword.class.getSimpleName();
     EditText oldPasswordEdit;
-    EditText passwordEdit;
-    EditText confirmEdit;
+    EditText newPasswordEdit;
+    EditText confirmPasswordEdit;
+    private RequestQueue requestQueue;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_change_password);
 
-        passwordEdit = (EditText)findViewById(R.id.password);
-        oldPasswordEdit = (EditText)findViewById(R.id.old_password);
-        confirmEdit = (EditText)findViewById(R.id.confirm);
+        oldPasswordEdit = findViewById(R.id.old_password);
+        newPasswordEdit = findViewById(R.id.password);
+        confirmPasswordEdit = findViewById(R.id.confirm);
         requestQueue = Volley.newRequestQueue(this);
     }
 
-    public void done(View view){
+    public void done(View view) {
         String oldPassword = oldPasswordEdit.getText().toString();
-        String password = passwordEdit.getText().toString();
-        String confirmPassword = confirmEdit.getText().toString();
+        String newPassword = newPasswordEdit.getText().toString();
+        String confirmPassword = confirmPasswordEdit.getText().toString();
 
-        if(!password.equals(confirmPassword)){
+        if (!newPassword.equals(confirmPassword)) {
             Toast.makeText(getApplicationContext(), "Passwords do not match.", Toast.LENGTH_SHORT).show();
         } else {
-            sendPOSTRequest(oldPassword, password);
+            sendPOSTRequest(newPassword, oldPassword);
         }
     }
 
-    private void sendPOSTRequest(String password, String newPassword) {
-        Map<String, String> params = new HashMap<String,String>();
-        params.put("password", password);
+    private void sendPOSTRequest(String newPassword, String password) {
+        Map<String, String> params = new HashMap<>();
         params.put("newPassword", newPassword);
+        params.put("password", password);
 
         String url = Data.getInstance().getUrl() + "/changePassword";
 
@@ -63,15 +63,13 @@ public class ChangePassword extends AppCompatActivity {
                 new Response.Listener<JSONObject>() {
                     @Override
                     public void onResponse(JSONObject response) {
-                        try
-                        {
+                        try {
                             String res = response.getString("response");
                             if (res.equalsIgnoreCase("pass")) {
                                 Toast.makeText(getApplicationContext(), "Password changed!", Toast.LENGTH_SHORT).show();
                                 Intent intent = new Intent(ChangePassword.this, Settings.class);
                                 startActivity(intent);
-                            }
-                            else {
+                            } else {
                                 Toast.makeText(getApplicationContext(), "Password change failed!", Toast.LENGTH_SHORT).show();
                             }
                         } catch (JSONException j) {
@@ -83,8 +81,7 @@ public class ChangePassword extends AppCompatActivity {
                     @Override
                     public void onErrorResponse(VolleyError error) {
                         Toast.makeText(getApplicationContext(), "Password change failed!", Toast.LENGTH_SHORT).show();
-
-                        Log.d("Error: ", error.toString());
+                        Log.d(TAG, error.toString());
                     }
                 }
         );

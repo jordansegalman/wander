@@ -1,14 +1,15 @@
 package me.vvander.wander;
 
 import android.app.Dialog;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
-import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 import android.widget.Toast;
 
@@ -33,10 +34,10 @@ import static android.Manifest.permission.ACCESS_FINE_LOCATION;
 public class Login extends AppCompatActivity {
     private static final String TAG = Login.class.getSimpleName();
     private static final int GOOGLE_PLAY_SERVICES_REQUEST_CODE = 9999;
-    private RequestQueue requestQueue;
-
+    private static final String SP_LOCATION = "locationSwitch";
     EditText usernameText;
     EditText passwordText;
+    private RequestQueue requestQueue;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -45,13 +46,15 @@ public class Login extends AppCompatActivity {
 
         checkGooglePlayServices();
 
+        initializeManualLocationSwitch();
+
         Data.getInstance().initializeCookies(getApplicationContext());
         Data.getInstance().initializeFirebaseRegistrationToken();
 
         ActivityCompat.requestPermissions(this, new String[]{ACCESS_FINE_LOCATION}, 1);
 
-        usernameText = (EditText) findViewById(R.id.username);
-        passwordText = (EditText) findViewById(R.id.password);
+        usernameText = findViewById(R.id.username);
+        passwordText = findViewById(R.id.password);
 
         requestQueue = Volley.newRequestQueue(this);
 
@@ -77,22 +80,18 @@ public class Login extends AppCompatActivity {
         }
     }
 
-    public void login(View view){
-        InputMethodManager inputManager = (InputMethodManager) getSystemService(INPUT_METHOD_SERVICE);
-        inputManager.hideSoftInputFromWindow(getCurrentFocus().getWindowToken(), InputMethodManager.HIDE_NOT_ALWAYS);
+    private void initializeManualLocationSwitch() {
+        SharedPreferences sharedPreferences = getSharedPreferences(SP_LOCATION, Context.MODE_PRIVATE);
+        Data.getInstance().setManualLocationSwitch(sharedPreferences.getBoolean("manualLocationSwitch", true));
+    }
 
-        //NEXT TWO LINES ARE FOR TESTING ONLY
-        //Intent intent = new Intent(Login.this, MyLocation.class);
-        //startActivity(intent);
-        //END OF TESTING
-
+    public void login(View view) {
         String username = usernameText.getText().toString();
         String password = passwordText.getText().toString();
         if (username.length() == 0 || password.length() == 0) {
             Toast.makeText(getApplicationContext(), "Please enter a username and password.", Toast.LENGTH_SHORT).show();
             return;
         }
-
         attemptLogin(username, password);
     }
 
@@ -102,25 +101,24 @@ public class Login extends AppCompatActivity {
                 new Response.Listener<JSONObject>() {
                     @Override
                     public void onResponse(JSONObject response) {
-                        try
-                        {
+                        try {
                             String res = response.getString("response");
                             if (res.equalsIgnoreCase("pass")) {
                                 Data.getInstance().login();
                                 sendFirebaseRegistrationTokenToServer();
-                                startGPSService();
+                                startLocationCollectionService();
                                 Intent intent = new Intent(Login.this, AppHome.class);
                                 startActivity(intent);
                             } else if (res.equalsIgnoreCase("google")) {
                                 Data.getInstance().loginGoogle();
                                 sendFirebaseRegistrationTokenToServer();
-                                startGPSService();
+                                startLocationCollectionService();
                                 Intent intent = new Intent(Login.this, AppHome.class);
                                 startActivity(intent);
                             } else if (res.equalsIgnoreCase("facebook")) {
                                 Data.getInstance().loginFacebook();
                                 sendFirebaseRegistrationTokenToServer();
-                                startGPSService();
+                                startLocationCollectionService();
                                 Intent intent = new Intent(Login.this, AppHome.class);
                                 startActivity(intent);
                             }
@@ -148,26 +146,21 @@ public class Login extends AppCompatActivity {
         params.put("username", username);
         params.put("password", password);
 
-        //FOLLOWING LINE IS FOR TESTING ONLY
-        //startActivity(new Intent(Login.this, AppHome.class));
-
         String url = Data.getInstance().getUrl() + "/login";
         JsonObjectRequest postRequest = new JsonObjectRequest(Request.Method.POST, url, new JSONObject(params),
                 new Response.Listener<JSONObject>() {
                     @Override
                     public void onResponse(JSONObject response) {
-                        try
-                        {
+                        try {
                             String res = response.getString("response");
                             if (res.equalsIgnoreCase("pass")) {
                                 Toast.makeText(getApplicationContext(), "Login successful!", Toast.LENGTH_SHORT).show();
                                 Data.getInstance().login();
                                 sendFirebaseRegistrationTokenToServer();
-                                startGPSService();
+                                startLocationCollectionService();
                                 Intent intent = new Intent(Login.this, AppHome.class);
                                 startActivity(intent);
-                            }
-                            else {
+                            } else {
                                 Toast.makeText(getApplicationContext(), "Login failed!", Toast.LENGTH_SHORT).show();
                             }
                         } catch (JSONException j) {
@@ -231,23 +224,23 @@ public class Login extends AppCompatActivity {
         }
     }
 
-    private void startGPSService() {
-        startService(new Intent(this, GpsCollection.class));
+    private void startLocationCollectionService() {
+        startService(new Intent(this, LocationCollectionService.class));
     }
 
     public void forgotPassword(View view) {
         startActivity(new Intent(Login.this, ForgotPassword.class));
     }
 
-    public void facebookButton(View view){
+    public void facebookButton(View view) {
         startActivity(new Intent(Login.this, FacebookLogin.class));
     }
 
-    public void googleButton(View view){
+    public void googleButton(View view) {
         startActivity(new Intent(Login.this, GoogleLogin.class));
     }
 
-    public void registerButton(View view){
+    public void registerButton(View view) {
         startActivity(new Intent(Login.this, Registration.class));
     }
 }

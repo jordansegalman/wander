@@ -10,88 +10,105 @@ import java.net.CookiePolicy;
 
 public class Data {
     private static final String url = "https://vvander.me";
+    private static final Data data = new Data();
     private boolean loggedIn = false;
     private boolean loggedInGoogle = false;
     private boolean loggedInFacebook = false;
     private PersistentCookieStore persistentCookieStore;
     private String firebaseRegistrationToken;
-    private boolean valid = true;
+    private boolean manualLocationSwitch = true;
+    private boolean scheduleLocationSwitch = true;
+    private boolean activityRecognitionLocationSwitch = false;
 
-    public void login() {
+    static Data getInstance() {
+        return data;
+    }
+
+    String getUrl() {
+        return url;
+    }
+
+    void login() {
         loggedIn = true;
     }
 
-    public void logout() {
+    void logout() {
         loggedIn = false;
     }
 
-    public boolean getLoggedIn() {
+    boolean getLoggedIn() {
         return loggedIn;
     }
 
-    public void loginGoogle() {
+    void loginGoogle() {
         loggedInGoogle = true;
     }
 
-    public void logoutGoogle() {
+    void logoutGoogle() {
         loggedInGoogle = false;
     }
 
-    public boolean getLoggedInGoogle() {
+    boolean getLoggedInGoogle() {
         return loggedInGoogle;
     }
 
-    public void loginFacebook() {
+    void loginFacebook() {
         loggedInFacebook = true;
     }
 
-    public void logoutFacebook() {
+    void logoutFacebook() {
         loggedInFacebook = false;
     }
 
-    public boolean getLoggedInFacebook() {
+    boolean getLoggedInFacebook() {
         return loggedInFacebook;
     }
 
-    public void initializeCookies(Context context) {
+    void initializeCookies(Context context) {
         persistentCookieStore = new PersistentCookieStore(context);
         CookieHandler.setDefault(new CookieManager(persistentCookieStore, CookiePolicy.ACCEPT_ALL));
     }
 
-    public void removeAllCookies() {
+    void removeAllCookies() {
         persistentCookieStore.removeAll();
     }
 
-    public String getUrl() {
-        return url;
-    }
-
-    public void initializeFirebaseRegistrationToken() {
+    void initializeFirebaseRegistrationToken() {
         String token = FirebaseInstanceId.getInstance().getToken();
         if (token != null) {
             setFirebaseRegistrationToken(token);
         }
     }
 
-    public void setFirebaseRegistrationToken(String token) {
-        firebaseRegistrationToken = token;
-    }
-
-    public String getFirebaseRegistrationToken() {
+    String getFirebaseRegistrationToken() {
         return firebaseRegistrationToken;
     }
 
-    public void setValidity(boolean valid) {
-        this.valid = valid;
+    void setFirebaseRegistrationToken(String token) {
+        firebaseRegistrationToken = token;
     }
 
-    public boolean getValidity() {
-        return valid;
+    boolean getManualLocationSwitch() {
+        return manualLocationSwitch;
     }
 
-    private static final Data data = new Data();
+    void setManualLocationSwitch(boolean value) {
+        manualLocationSwitch = value;
+    }
 
-    public static Data getInstance() {
-        return data;
+    boolean getScheduleLocationSwitch() {
+        return scheduleLocationSwitch;
+    }
+
+    void setScheduleLocationSwitch(boolean value) {
+        scheduleLocationSwitch = value;
+    }
+
+    boolean getActivityRecognitionLocationSwitch() {
+        return activityRecognitionLocationSwitch;
+    }
+
+    void setActivityRecognitionLocationSwitch(boolean value) {
+        activityRecognitionLocationSwitch = value;
     }
 }

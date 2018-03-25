@@ -28,7 +28,7 @@ import org.json.JSONObject;
 import java.io.ByteArrayOutputStream;
 
 public class Profile extends AppCompatActivity {
-    private static final String TAG = "Profile";
+    private static final String TAG = Profile.class.getSimpleName();
     private RequestQueue requestQueue;
     private TextView nameText;
     private TextView interestText;
@@ -56,22 +56,21 @@ public class Profile extends AppCompatActivity {
         String location = "Location";
         String email = "Email";
 
-        profilePicture = (ImageView)findViewById(R.id.picture);
-        nameText = (TextView)findViewById(R.id.name);
-        interestText = (TextView)findViewById(R.id.interests);
-        aboutText = (TextView)findViewById(R.id.about);
-        locationText = (TextView)findViewById(R.id.location);
-        emailText = (TextView)findViewById(R.id.email);
+        profilePicture = (ImageView) findViewById(R.id.picture);
+        nameText = (TextView) findViewById(R.id.name);
+        interestText = (TextView) findViewById(R.id.interests);
+        aboutText = (TextView) findViewById(R.id.about);
+        locationText = (TextView) findViewById(R.id.location);
+        emailText = (TextView) findViewById(R.id.email);
 
-        nameText_input = (TextView)findViewById(R.id.name);
-        interestText_input = (TextView)findViewById(R.id.interests_text);
-        aboutText_input = (TextView)findViewById(R.id.about_text);
-        locationText_input = (TextView)findViewById(R.id.location_text);
-        emailText_input = (TextView)findViewById(R.id.email_text);
+        nameText_input = (TextView) findViewById(R.id.name);
+        interestText_input = (TextView) findViewById(R.id.interests_text);
+        aboutText_input = (TextView) findViewById(R.id.about_text);
+        locationText_input = (TextView) findViewById(R.id.location_text);
+        emailText_input = (TextView) findViewById(R.id.email_text);
 
 
         if (getCallingActivity() != null) {
-            Log.d("This is the callingactivity", getCallingActivity().getClassName());
             Log.d(TAG, getCallingActivity().getClassName());
             if (getCallingActivity().getClassName().equalsIgnoreCase("me.vvander.wander.ProfileEdit")) {
                 Intent in = getIntent();
@@ -83,7 +82,7 @@ public class Profile extends AppCompatActivity {
                 if (in.getExtras().getString("picture") != null) {
                     byte[] decoded_string = Base64.decode(in.getExtras().getString("picture"), Base64.DEFAULT);
                     if (decoded_string == null) {
-                        Log.d("ERROR MESSAGE", "ERROR!");
+                        Log.d(TAG, "ERROR!");
                     }
                     Bitmap decoded_byte = BitmapFactory.decodeByteArray(decoded_string, 0, decoded_string.length);
                     profilePicture.setImageBitmap(decoded_byte);
@@ -130,8 +129,7 @@ public class Profile extends AppCompatActivity {
                 new Response.Listener<JSONObject>() {
                     @Override
                     public void onResponse(JSONObject response) {
-                        try
-                        {
+                        try {
                             String res = response.getString("response");
                             if (res.equalsIgnoreCase("pass")) {
 
@@ -143,22 +141,20 @@ public class Profile extends AppCompatActivity {
                                 String interests = response.getString("interests");
                                 String picture = response.getString("picture");
 
-                                Log.d("Raw string", picture);
+                                Log.d(TAG, picture);
                                 //String name = first + " " + last;
-                                String name = first;
 
-                                nameText_input.setText(name);
+                                nameText_input.setText(first);
                                 locationText_input.setText(location);
                                 //emailText_input.setText(e);
                                 aboutText_input.setText(about);
                                 interestText_input.setText(interests);
                                 if (picture != null && !picture.equalsIgnoreCase("null")) {
                                     byte[] decoded_string = Base64.decode(picture.getBytes(), Base64.DEFAULT);
-                                    if (decoded_string == null)
-                                    {
-                                        Log.d("ERROR MESSAGE", "ERROR!");
+                                    if (decoded_string == null) {
+                                        Log.d(TAG, "ERROR!");
                                     }
-                                    Log.d("Decoded string", decoded_string.toString());
+                                    Log.d(TAG, decoded_string.toString());
                                     Bitmap decoded_byte = BitmapFactory.decodeByteArray(decoded_string, 0, decoded_string.length);
                                     profilePicture.setImageBitmap(decoded_byte);
                                 } else {
@@ -178,7 +174,7 @@ public class Profile extends AppCompatActivity {
                     public void onErrorResponse(VolleyError error) {
                         Toast.makeText(getApplicationContext(), "No profile found!", Toast.LENGTH_SHORT).show();
 
-                        Log.d("Error: ", error.toString());
+                        Log.d(TAG, error.toString());
                     }
                 }
         );
@@ -189,7 +185,7 @@ public class Profile extends AppCompatActivity {
         requestQueue.add(postRequest);
     }
 
-    public void edit(View view){
+    public void edit(View view) {
         /*
         EditText etInterests = (EditText) findViewById(R.id.interests_text);
         EditText etAbout = (EditText) findViewById(R.id.about_text);

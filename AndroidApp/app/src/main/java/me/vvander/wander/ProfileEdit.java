@@ -36,6 +36,8 @@ import java.util.Map;
 import de.hdodenhof.circleimageview.CircleImageView;
 
 public class ProfileEdit extends AppCompatActivity {
+    private static final String TAG = ProfileEdit.class.getSimpleName();
+    private static final int FINISHED = 1;
     private EditText etInterests;
     private EditText etAbout;
     private EditText etLocation;
@@ -44,8 +46,6 @@ public class ProfileEdit extends AppCompatActivity {
     private CircleImageView civPicture;
     private Spinner spinner;
     private RequestQueue requestQueue;
-
-    private final int FINISHED = 1;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -59,7 +59,7 @@ public class ProfileEdit extends AppCompatActivity {
         etLocation = (EditText) findViewById(R.id.location_text);
         etEmail = (EditText) findViewById(R.id.email_text);
         etName = findViewById(R.id.name);
-        spinner = (Spinner)findViewById(R.id.spinner);
+        spinner = (Spinner) findViewById(R.id.spinner);
         spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> adapterView, View view, int position, long id) {
@@ -94,7 +94,7 @@ public class ProfileEdit extends AppCompatActivity {
         if (picture != null) {
             byte[] decoded_string = Base64.decode(picture, Base64.DEFAULT);
             if (decoded_string == null) {
-                Log.d("ERROR MESSAGE", "ERROR!");
+                Log.d(TAG, "ERROR!");
             }
             Bitmap decoded_byte = BitmapFactory.decodeByteArray(decoded_string, 0, decoded_string.length);
             civPicture.setImageBitmap(decoded_byte);
@@ -116,13 +116,13 @@ public class ProfileEdit extends AppCompatActivity {
                 CircleImageView circleImageView = findViewById(R.id.picture);
                 circleImageView.setImageBitmap(BitmapFactory.decodeStream(inputStream));
             } catch (IOException e) {
-                Log.d("tag", e.toString());
+                Log.d(TAG, e.toString());
             }
 
         }
     }
 
-    public void done(View view){
+    public void done(View view) {
         //TODO: Save profile data
         etInterests = (EditText) findViewById(R.id.interests_text);
         etAbout = (EditText) findViewById(R.id.about_text);
@@ -136,7 +136,7 @@ public class ProfileEdit extends AppCompatActivity {
         bitmap.compress(Bitmap.CompressFormat.JPEG, 90, baos);
         byte[] b = baos.toByteArray();
         String encoded_picture = Base64.encodeToString(b, Base64.DEFAULT);
-        Log.d("Encoded Picture", encoded_picture);
+        Log.d(TAG, encoded_picture);
 
 
         Intent i = new Intent(ProfileEdit.this, Profile.class);
@@ -148,7 +148,7 @@ public class ProfileEdit extends AppCompatActivity {
         i.putExtra("picture", encoded_picture);
 
         String url = Data.getInstance().getUrl() + "/updateProfile";
-        Map<String, String> params = new HashMap<String,String>();
+        Map<String, String> params = new HashMap<>();
         params.put("name", etName.getText().toString());
         //params.put("email", etEmail.getText().toString());
         params.put("loc", etLocation.getText().toString());
@@ -160,8 +160,7 @@ public class ProfileEdit extends AppCompatActivity {
                 new Response.Listener<JSONObject>() {
                     @Override
                     public void onResponse(JSONObject response) {
-                        try
-                        {
+                        try {
                             String res = response.getString("response");
                             if (res.equalsIgnoreCase("pass")) {
                                 Toast.makeText(getApplicationContext(), "User data stored", Toast.LENGTH_SHORT).show();
@@ -175,7 +174,7 @@ public class ProfileEdit extends AppCompatActivity {
                 new Response.ErrorListener() {
                     @Override
                     public void onErrorResponse(VolleyError error) {
-                        Log.d("Error: ", error.toString());
+                        Log.d(TAG, error.toString());
                     }
                 }
         );

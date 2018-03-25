@@ -51,6 +51,7 @@ import static android.Manifest.permission.ACCESS_FINE_LOCATION;
 
 public class MyLocation extends AppCompatActivity implements OnMapReadyCallback, ActivityCompat.OnRequestPermissionsResultCallback, GoogleMap.OnMyLocationButtonClickListener,
         GoogleMap.OnMyLocationClickListener, GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener, LocationListener {
+    private static final String TAG = MyLocation.class.getSimpleName();
     private int MY_PERMISSIONS_REQUEST_FINE_LOCATION = 0;
     private GoogleMap mMap;
     private Location mLastLocation;
@@ -62,22 +63,21 @@ public class MyLocation extends AppCompatActivity implements OnMapReadyCallback,
     private TileOverlay overlayPersonal;
     private TileOverlay overlayAll;
 
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_my_location);
         requestQueue = Volley.newRequestQueue(this);
-        listPersonal = new ArrayList<LatLng>();
-        listAll = new ArrayList<LatLng>();
+        listPersonal = new ArrayList<>();
+        listAll = new ArrayList<>();
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
         getHeatmapData();
-       // buildGoogleApiClient();
+        // buildGoogleApiClient();
         //createLocationRequest();
-       // startLocationUpdates();
+        // startLocationUpdates();
     }
 
     /**
@@ -103,8 +103,7 @@ public class MyLocation extends AppCompatActivity implements OnMapReadyCallback,
         Criteria criteria = new Criteria();
 
         Location location = locationManager.getLastKnownLocation(locationManager.getBestProvider(criteria, false));
-        if (location != null)
-        {
+        if (location != null) {
             mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(location.getLatitude(), location.getLongitude()), 13));
 
             CameraPosition cameraPosition = new CameraPosition.Builder()
@@ -142,13 +141,13 @@ public class MyLocation extends AppCompatActivity implements OnMapReadyCallback,
     @Override
     protected void onStart() {
         super.onStart();
-        if(mGoogleApiClient != null)
+        if (mGoogleApiClient != null)
             mGoogleApiClient.connect();
     }
 
     @Override
-    protected void onStop(){
-        if(mGoogleApiClient != null) {
+    protected void onStop() {
+        if (mGoogleApiClient != null) {
             mGoogleApiClient.disconnect();
             //LocationServices.FusedLocationApi.removeLocationUpdates(mGoogleApiClient, this);
         }
@@ -175,7 +174,7 @@ public class MyLocation extends AppCompatActivity implements OnMapReadyCallback,
         mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
     }
 
-    private void buildGoogleApiClient(){
+    private void buildGoogleApiClient() {
         mGoogleApiClient = new GoogleApiClient.Builder(this)
                 .addConnectionCallbacks(this)
                 .addOnConnectionFailedListener(this)
@@ -184,14 +183,13 @@ public class MyLocation extends AppCompatActivity implements OnMapReadyCallback,
     }
 
     private void getHeatmapData() {
-        Map<String, String> params = new HashMap<String,String>();
+        Map<String, String> params = new HashMap<>();
         String url = Data.getInstance().getUrl() + "/getLocationForHeatmap";
         JsonObjectRequest postRequest = new JsonObjectRequest(Request.Method.POST, url, new JSONObject(params),
                 new Response.Listener<JSONObject>() {
                     @Override
                     public void onResponse(JSONObject response) {
-                        try
-                        {
+                        try {
 
                             JSONArray array = response.getJSONArray("Location");
                             int length = array.length();
@@ -200,7 +198,7 @@ public class MyLocation extends AppCompatActivity implements OnMapReadyCallback,
                                 double lat = Double.parseDouble(String.valueOf(object.get("latitude")));
                                 double lon = Double.parseDouble(String.valueOf(object.get("longitude")));
                                 listPersonal.add(new LatLng(lat, lon));
-                                Log.d("This is the Location", "Lat: " + lat + ", Lon: " + lon);
+                                Log.d(TAG, "Latitude: " + lat + ", Longitude: " + lon);
                             }
 
                         } catch (JSONException j) {
@@ -212,7 +210,7 @@ public class MyLocation extends AppCompatActivity implements OnMapReadyCallback,
                     @Override
                     public void onErrorResponse(VolleyError error) {
                         Toast.makeText(getApplicationContext(), "Heatmap data point retrieval failed", Toast.LENGTH_SHORT).show();
-                        Log.d("Error: ", error.toString());
+                        Log.d(TAG, error.toString());
                     }
                 }
         );
@@ -222,8 +220,7 @@ public class MyLocation extends AppCompatActivity implements OnMapReadyCallback,
                 new Response.Listener<JSONObject>() {
                     @Override
                     public void onResponse(JSONObject response) {
-                        try
-                        {
+                        try {
 
                             JSONArray array = response.getJSONArray("Location");
                             int length = array.length();
@@ -232,7 +229,7 @@ public class MyLocation extends AppCompatActivity implements OnMapReadyCallback,
                                 double lat = Double.parseDouble(String.valueOf(object.get("latitude")));
                                 double lon = Double.parseDouble(String.valueOf(object.get("longitude")));
                                 listAll.add(new LatLng(lat, lon));
-                                Log.d("This is the Location", "Lat: " + lat + ", Lon: " + lon);
+                                Log.d(TAG, "Latitude: " + lat + ", Longitude: " + lon);
                             }
 
                         } catch (JSONException j) {
@@ -244,7 +241,7 @@ public class MyLocation extends AppCompatActivity implements OnMapReadyCallback,
                     @Override
                     public void onErrorResponse(VolleyError error) {
                         Toast.makeText(getApplicationContext(), "Heatmap data point retrieval failed", Toast.LENGTH_SHORT).show();
-                        Log.d("Error: ", error.toString());
+                        Log.d(TAG, error.toString());
                     }
                 }
         );
@@ -257,7 +254,7 @@ public class MyLocation extends AppCompatActivity implements OnMapReadyCallback,
     }
 
     public void displayHeatmap(View view) {
-        TextView heatmap = (TextView)findViewById(R.id.heatmap_toggle);
+        TextView heatmap = findViewById(R.id.heatmap_toggle);
         if (overlayPersonal == null && heatmap.getText().toString().equals("Display Heatmap")) {
             Toast.makeText(getApplicationContext(), "Displaying Heatmap", Toast.LENGTH_SHORT).show();
             HeatmapTileProvider provider = new HeatmapTileProvider.Builder().data(listPersonal).build();
@@ -273,7 +270,7 @@ public class MyLocation extends AppCompatActivity implements OnMapReadyCallback,
     }
 
     public void displayHeatmapAll(View view) {
-        TextView heatmap = (TextView)findViewById(R.id.all_heatmap_toggle);
+        TextView heatmap = findViewById(R.id.all_heatmap_toggle);
         if (overlayAll == null && heatmap.getText().toString().equals("Display Popular Locations")) {
             Toast.makeText(getApplicationContext(), "Displaying Popular Locations", Toast.LENGTH_SHORT).show();
             HeatmapTileProvider provider = new HeatmapTileProvider.Builder().data(listAll).build();

@@ -17,7 +17,7 @@ import java.util.ArrayList;
 
 public class ScheduleNew extends AppCompatActivity {
     private EditText nameEdit;
-    private ArrayList<ScheduleItem> scheduleItems = new ArrayList<ScheduleItem>();
+    private ArrayList<ScheduleItem> scheduleItems = new ArrayList<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -27,7 +27,7 @@ public class ScheduleNew extends AppCompatActivity {
         nameEdit = (EditText) findViewById(R.id.name);
     }
 
-    public void done(View view){
+    public void done(View view) {
 
         String name = nameEdit.getText().toString();
 
@@ -36,15 +36,13 @@ public class ScheduleNew extends AppCompatActivity {
             FileInputStream fis = new FileInputStream(listItemsFile);
             ObjectInputStream ois = new ObjectInputStream(fis);
 
-             scheduleItems = (ArrayList<ScheduleItem>) ois.readObject();
+            scheduleItems = (ArrayList<ScheduleItem>) ois.readObject();
 
             ois.close();
             fis.close();
-        }
-        catch (IOException e){
+        } catch (IOException e) {
             e.printStackTrace();
-        }
-        catch(ClassNotFoundException e){
+        } catch (ClassNotFoundException e) {
             e.printStackTrace();
         }
 
@@ -60,26 +58,25 @@ public class ScheduleNew extends AppCompatActivity {
             oos.close();
             fos.close();
 
-        }
-        catch (IOException e){
+        } catch (IOException e) {
             e.printStackTrace();
         }
         startActivity(new Intent(ScheduleNew.this, Schedule.class));
     }
 
-    public void startTimeButton(View view){
+    public void startTimeButton(View view) {
         Bundle bundle = new Bundle();
         bundle.putInt("Type", 0);
         DialogFragment newFragment = new TimePickerFragment();
         newFragment.setArguments(bundle);
-        newFragment.show(getFragmentManager(),"TimePicker");
+        newFragment.show(getFragmentManager(), "TimePicker");
     }
 
-    public void endTimeButton(View view){
+    public void endTimeButton(View view) {
         Bundle bundle = new Bundle();
         bundle.putInt("Type", 1);
         DialogFragment newFragment = new TimePickerFragment();
         newFragment.setArguments(bundle);
-        newFragment.show(getFragmentManager(),"TimePicker");
+        newFragment.show(getFragmentManager(), "TimePicker");
     }
 }

@@ -23,32 +23,32 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class ChangeUsername extends AppCompatActivity {
-    private RequestQueue requestQueue;
-
-    EditText passwordEdit;
+    private static final String TAG = ChangeUsername.class.getSimpleName();
     EditText usernameEdit;
+    EditText passwordEdit;
+    private RequestQueue requestQueue;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_change_username);
 
-        passwordEdit = (EditText)findViewById(R.id.password);
-        usernameEdit = (EditText)findViewById(R.id.new_username);
+        usernameEdit = findViewById(R.id.new_username);
+        passwordEdit = findViewById(R.id.password);
         requestQueue = Volley.newRequestQueue(this);
     }
 
-    public void done(View view){
-        String password = passwordEdit.getText().toString();
+    public void done(View view) {
         String newUsername = usernameEdit.getText().toString();
+        String password = passwordEdit.getText().toString();
 
         sendPOSTRequest(newUsername, password);
     }
 
-    private void sendPOSTRequest(final String newUsername, String password) {
-        Map<String, String> params = new HashMap<String,String>();
-        params.put("password", password);
+    private void sendPOSTRequest(String newUsername, String password) {
+        Map<String, String> params = new HashMap<>();
         params.put("newUsername", newUsername);
+        params.put("password", password);
 
         String url = Data.getInstance().getUrl() + "/changeUsername";
 
@@ -56,15 +56,13 @@ public class ChangeUsername extends AppCompatActivity {
                 new Response.Listener<JSONObject>() {
                     @Override
                     public void onResponse(JSONObject response) {
-                        try
-                        {
+                        try {
                             String res = response.getString("response");
                             if (res.equalsIgnoreCase("pass")) {
                                 Toast.makeText(getApplicationContext(), "Username changed!", Toast.LENGTH_SHORT).show();
                                 Intent intent = new Intent(ChangeUsername.this, Settings.class);
                                 startActivity(intent);
-                            }
-                            else {
+                            } else {
                                 Toast.makeText(getApplicationContext(), "Username change failed!", Toast.LENGTH_SHORT).show();
                             }
                         } catch (JSONException j) {
@@ -76,8 +74,7 @@ public class ChangeUsername extends AppCompatActivity {
                     @Override
                     public void onErrorResponse(VolleyError error) {
                         Toast.makeText(getApplicationContext(), "Username change failed!", Toast.LENGTH_SHORT).show();
-
-                        Log.d("Error: ", error.toString());
+                        Log.d(TAG, error.toString());
                     }
                 }
         );

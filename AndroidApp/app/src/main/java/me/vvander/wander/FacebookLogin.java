@@ -31,8 +31,8 @@ import java.util.Map;
 
 public class FacebookLogin extends AppCompatActivity {
     private static final String TAG = FacebookLogin.class.getSimpleName();
-    private RequestQueue requestQueue;
     CallbackManager callbackManager;
+    private RequestQueue requestQueue;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -111,11 +111,10 @@ public class FacebookLogin extends AppCompatActivity {
                                 Toast.makeText(getApplicationContext(), "Facebook login successful!", Toast.LENGTH_SHORT).show();
                                 Data.getInstance().loginFacebook();
                                 sendFirebaseRegistrationTokenToServer();
-                                startGPSService();
+                                startLocationCollectionService();
                                 Intent intent = new Intent(FacebookLogin.this, AppHome.class);
                                 startActivity(intent);
-                            }
-                            else {
+                            } else {
                                 Toast.makeText(getApplicationContext(), "Facebook login failed!", Toast.LENGTH_SHORT).show();
                                 Intent intent = new Intent(FacebookLogin.this, Login.class);
                                 startActivity(intent);
@@ -180,7 +179,7 @@ public class FacebookLogin extends AppCompatActivity {
         }
     }
 
-    private void startGPSService() {
-        startService(new Intent(this, GpsCollection.class));
+    private void startLocationCollectionService() {
+        startService(new Intent(this, LocationCollectionService.class));
     }
 }

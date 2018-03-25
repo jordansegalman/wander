@@ -27,20 +27,18 @@ public class TimePickerFragment extends DialogFragment implements TimePickerDial
 
     public void onTimeSet(TimePicker view, int hourOfDay, int minute) {
         String timeText;
-        if(minute < 10){
+        if (minute < 10) {
             timeText = hourOfDay + ":0" + minute;
-        }
-        else{
+        } else {
             timeText = hourOfDay + ":" + minute;
         }
 
 
-        if(type == 0){
-            Button startTimeButton = (Button) getActivity().findViewById(R.id.startTimeButton);
+        if (type == 0) {
+            Button startTimeButton = getActivity().findViewById(R.id.startTimeButton);
             startTimeButton.setText(timeText);
-        }
-        else{
-            Button endTimeButton = (Button) getActivity().findViewById(R.id.endTimeButton);
+        } else {
+            Button endTimeButton = getActivity().findViewById(R.id.endTimeButton);
             endTimeButton.setText(timeText);
         }
     }
