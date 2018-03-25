@@ -40,6 +40,8 @@ const picture = "picture";
 const registrationToken = "registrationToken";
 const googleID = "googleID";
 const facebookID = "facebookID";
+const timesCrossed = "timesCrossed";
+const approved = "approved";
 
 // Constants used for MySQL
 const db_host = process.env.DB_HOST;
@@ -740,12 +742,37 @@ app.post('/approveUser', function(request, response){
 
 	// Validate uid
 	if (validateUid(request.body.uid)) {
-		var uid = request.body.uid;
+		var u = request.body.uid;
 	} else {
 		return response.status(400).send("Invalid user ID.\n");
 	}
 
-	approveUser(uid, request, response);
+	approveUser(u, request, response);
+});
+
+// Called when a POST request is made to /unapproveUser
+app.post('/unapproveUser', function(request, response){
+	// If the object request.body is null, respond with status 500 'Internal Server Error'
+	if (!request.body) return response.sendStatus(500);
+
+	// POST request must have 1 parameter (uid)
+	if (Object.keys(request.body).length != 1 || !request.body.uid) {
+		return response.status(400).send("Invalid POST request\n");
+	}
+
+	// If session not authenticated
+	if (!request.session || ((!request.session.authenticated || request.session.authenticated === false) && (!request.session.googleAuthenticated || request.session.googleAuthenticated === false) && (!request.session.facebookAuthenticated || request.session.facebookAuthenticated === false))) {
+		return response.status(400).send("User not logged in.\n");
+	}
+
+	// Validate uid
+	if (validateUid(request.body.uid)) {
+		var u = request.body.uid;
+	} else {
+		return response.status(400).send("Invalid user ID.\n");
+	}
+
+	unapproveUser(u, request, response);
 });
 
 // Called when a POST request is made to /getLocationForHeatmap
@@ -819,12 +846,12 @@ app.post('/getMatch', function(request, response){
 
 	// Validate uid
 	if (validateUid(request.body.uid)) {
-		var uid = request.body.uid;
+		var u = request.body.uid;
 	} else {
 		return response.status(400).send("Invalid user ID.\n");
 	}
 
-	getMatch(uid, request, response);
+	getMatch(u, request, response);
 });
 
 // Validates a user ID
@@ -1989,10 +2016,17 @@ function notifyMatches() {
 }
 
 // Approves the user with the given user ID
-function approveUser(uid, request, response) {
-	matchGraph.setEdge(request.session.uid, uid, true, "approved");
+function approveUser(u, request, response) {
+	matchGraph.setEdge(request.session.uid, u, true, "approved");
 	writeMatchGraph();
 	console.log('User approved.');
+}
+
+// Unapproves the user with the given user ID
+function unapproveUser(u, request, response) {
+	matchGraph.setEdge(request.session.uid, u, false, "approved");
+	writeMatchGraph();
+	console.log('User unapproved.');
 }
 
 // Gets all location coordinates for user ID for heatmap generation
@@ -2049,8 +2083,8 @@ function getAllMatches(request, response) {
 }
 
 // Gets information of a single match
-function getMatch(uid, request, response) {
-	var edges = matchGraph.outEdges(request.session.uid, uid);
+function getMatch(u, request, response) {
+	var edges = matchGraph.outEdges(request.session.uid, u);
 	for (var i = 0; i < edges.length; i++) {
 		if (edges[i].name === "match") {
 			var sql = "SELECT * FROM ?? WHERE ??=?";
@@ -2064,12 +2098,13 @@ function getMatch(uid, request, response) {
 					var key = "Profile";
 					object[key] = [];
 					for (var j = 0; j < result.length; j++) {
-						var u = result[i].uid;
 						var n = result[i].firstName;
 						var a = result[i].about;
 						var i = result[i].interests;
 						var p = result[i].picture;
-						var data = {uid: u, name: n, about: a, interests: i, picture: p};
+						var t = matchGraph.edge(request.session.uid, result[i].uid, "timesCrossed");
+						var ap = matchGraph.edge(request.session.uid, result[i].uid, "approved");
+						var data = {uid: result[i].uid, name: n, about: a, interests: i, picture: p, timesCrossed: t, approved: ap};
 						object[key].push(data);
 					}
 					return response.status(200).send(JSON.stringify(object));
