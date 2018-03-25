@@ -522,6 +522,24 @@ app.post('/changeCrossRadius', function(request, response) {
 	changeCrossRadius(n, request, response);
 });
 
+// Called when a POST request is made to /getCrossRadius
+app.post('/getCrossRadius', function(request, response) {
+	// If the object request.body is null, respond with status 500 'Internal Server Error'
+	if (!request.body) return response.sendStatus(500);
+
+	// POST request must have 0 parameters
+	if (Object.keys(request.body).length != 0) {
+		return response.status(400).send("Invalid POST request\n");
+	}
+
+	// If session not authenticated
+	if (!request.session || ((!request.session.authenticated || request.session.authenticated === false) && (!request.session.googleAuthenticated || request.session.googleAuthenticated === false) && (!request.session.facebookAuthenticated || request.session.facebookAuthenticated === false))) {
+		return response.status(400).send("User not logged in.\n");
+	}
+
+	getCrossRadius(request, response);
+});
+
 // Called when a POST request is made to /forgotPassword
 app.post('/forgotPassword', function(request, response) {
 	// If the object request.body is null, respond with status 500 'Internal Server Error'
@@ -743,6 +761,49 @@ app.post('/getLocationForHeatmap', function(request, response){
 		return response.status(400).send("User not logged in.\n");
 	}
 	getLocationForHeatmap(request, response);
+});
+
+// Called when a POST request is made to /getAllMatches
+app.post('/getAllMatches', function(request, response){
+	// If the object request.body is null, respond with status 500 'Internal Server Error'
+	if (!request.body) return response.sendStatus(500);
+
+	// POST request must have 0 parameters
+	if (Object.keys(request.body).length != 0) {
+		return response.status(400).send("Invalid POST request\n");
+	}
+
+	// If session not authenticated
+	if (!request.session || ((!request.session.authenticated || request.session.authenticated === false) && (!request.session.googleAuthenticated || request.session.googleAuthenticated === false) && (!request.session.facebookAuthenticated || request.session.facebookAuthenticated === false))) {
+		return response.status(400).send("User not logged in.\n");
+	}
+
+	getAllMatches(request, response);
+});
+
+// Called when a POST request is made to /getMatch
+app.post('/getMatch', function(request, response){
+	// If the object request.body is null, respond with status 500 'Internal Server Error'
+	if (!request.body) return response.sendStatus(500);
+
+	// POST request must have 1 parameter (uid)
+	if (Object.keys(request.body).length != 1 || !request.body.uid) {
+		return response.status(400).send("Invalid POST request\n");
+	}
+
+	// If session not authenticated
+	if (!request.session || ((!request.session.authenticated || request.session.authenticated === false) && (!request.session.googleAuthenticated || request.session.googleAuthenticated === false) && (!request.session.facebookAuthenticated || request.session.facebookAuthenticated === false))) {
+		return response.status(400).send("User not logged in.\n");
+	}
+
+	// Validate uid
+	if (validateUid(request.body.uid)) {
+		var uid = request.body.uid;
+	} else {
+		return response.status(400).send("Invalid user ID.\n");
+	}
+
+	getMatch(uid, request, response);
 });
 
 // Validates a user ID
@@ -1462,6 +1523,21 @@ function changeCrossRadius(n, request, response) {
 	});
 }
 
+// Gets the crossRadius of an account
+function getCrossRadius(request, response) {
+	// Get cross radius for user ID
+	var sql = "SELECT ?? FROM ?? WHERE ??=?";
+	var post = [crossRadius, db_accounts, uid, request.session.uid];
+	dbConnection.query(sql, post, function(err, result) {
+		if (err) throw err;
+		if (result.length == 0) {
+			return response.status(500).send("Error getting cross radius.\n");
+		} else {
+			return response.status(200).send(JSON.stringify({"response":"pass", crossRadius:result[0].crossRadius}));
+		}
+	});
+}
+
 // Sends password reset email
 function forgotPassword(u, e, response) {
 	// Check that account exists for username and email
@@ -1664,7 +1740,7 @@ function updateProfile(n, l, a, i, p, request, response) {
 	});
 }
 
-// Gets LinkedIn profile information
+// Gets profile information
 function getProfile(request, response) {
 	// Get profile for user ID and respond with profile data
 	var sql = "SELECT * FROM ?? WHERE ??=?";
@@ -1764,14 +1840,6 @@ function findCrossedPaths(lat, lon, currentTime, request, response) {
 							console.log('Users crossed paths again.');
 							if (matchGraph.edge(request.session.uid, uidOther, "timesCrossed") >= MATCH_THRESHOLD && matchGraph.edge(uidOther, request.session.uid, "timesCrossed") >= MATCH_THRESHOLD && !matchGraph.hasEdge(request.session.uid, uidOther, "matched") && !matchGraph.hasEdge(uidOther, request.session.uid, "matched")) {
 								// If crossed greater than or equal to match threshold times and not already matched, create matched, approved, unmatched, blocked, and newMatch edges
-								matchGraph.setEdge(request.session.uid, uidOther, true, "matched");
-								matchGraph.setEdge(uidOther, request.session.uid, true, "matched");
-								matchGraph.setEdge(request.session.uid, uidOther, false, "approved");
-								matchGraph.setEdge(uidOther, request.session.uid, false, "approved");
-								matchGraph.setEdge(request.session.uid, uidOther, false, "unmatched");
-								matchGraph.setEdge(uidOther, request.session.uid, false, "unmatched");
-								matchGraph.setEdge(request.session.uid, uidOther, false, "blocked");
-								matchGraph.setEdge(uidOther, request.session.uid, false, "blocked");
 								matchGraph.setEdge(request.session.uid, uidOther, true, "newMatch");
 								matchGraph.setEdge(uidOther, request.session.uid, true, "newMatch");
 								console.log('Users matched.');
@@ -1851,6 +1919,15 @@ function notifyMatches() {
 	var edgesToRemove = [];
 	for (var i = 0; i < matchGraph.edgeCount(); i++) {
 		if (edges[i].name === "newMatch") {
+			// Create matched, approved, unmatched, and blocked edges
+			matchGraph.setEdge(edges[i].v, edges[i].w, true, "matched");
+			matchGraph.setEdge(edges[i].w, edges[i].v, true, "matched");
+			matchGraph.setEdge(edges[i].v, edges[i].w, false, "approved");
+			matchGraph.setEdge(edges[i].w, edges[i].v, false, "approved");
+			matchGraph.setEdge(edges[i].v, edges[i].w, false, "unmatched");
+			matchGraph.setEdge(edges[i].w, edges[i].v, false, "unmatched");
+			matchGraph.setEdge(edges[i].v, edges[i].w, false, "blocked");
+			matchGraph.setEdge(edges[i].w, edges[i].v, false, "blocked");
 			// Notify user ID edges[i].v of match with user ID edges[i].w
 			var sql = "SELECT ?? FROM ?? WHERE ??=?";
 			var post = [registrationToken, db_firebase, uid, edges[i].v];
@@ -1914,6 +1991,52 @@ function getLocationForHeatmap(request, response) {
 		Console.log("User location for heatmap sent.");
 		return response.status(200).send(JSON.stringify(object));
 	});
+}
+
+// Gets user IDs of all matches
+function getAllMatches(request, response) {
+	var edges = matchGraph.outEdges(request.session.uid);
+	var object = {};
+	var key = "UIDs";
+	object[key] = [];
+	for (var i = 0; i < edges.length; i++) {
+		if (edges[i].name === "match") {
+			var data = {uid: edges[i].w};
+			object[key].push(data);
+		}
+	}
+	return response.status(200).send(JSON.stringify(object));
+}
+
+// Gets information of a single match
+function getMatch(uid, request, response) {
+	var edges = matchGraph.outEdges(request.session.uid, uid);
+	for (var i = 0; i < edges.length; i++) {
+		if (edges[i].name === "match") {
+			var sql = "SELECT * FROM ?? WHERE ??=?";
+			var post = [db_profiles, uid, edges[i].w];
+			dbConnection.query(sql, post, function(err, result) {
+				if (err) throw err;
+				if (result.length == 0) {
+					return response.status(500).send("Error getting match information.\n");
+				} else {
+					var object = {};
+					var key = "Profile";
+					object[key] = [];
+					for (var j = 0; j < result.length; j++) {
+						var u = result[i].uid;
+						var n = result[i].firstName;
+						var a = result[i].about;
+						var i = result[i].interests;
+						var p = result[i].picture;
+						var data = {uid: u, name: n, about: a, interests: i, picture: p};
+						object[key].push(data);
+					}
+					return response.status(200).send(JSON.stringify(object));
+				}
+			});
+		}
+	}
 }
 
 // Writes the match graph to a file
