@@ -36,7 +36,7 @@
                     android:layout_gravity="center"
                     android:layout_marginBottom="10dp"
                     android:contentDescription="Profile Picture"
-                    android:src="@drawable/profile"
+                    android:src="@drawable/default_profile"
                     android:visibility="invisible"
                     app:civ_border_color="	#D3D3D3"
                     app:civ_border_width="2dp" />
