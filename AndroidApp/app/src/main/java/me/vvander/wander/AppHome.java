@@ -1,50 +1,37 @@
 package me.vvander.wander;
-import me.vvander.wander.R;
-import com.google.android.gms.common.ConnectionResult;
-import com.google.android.gms.common.api.GoogleApiClient;
-import com.google.android.gms.location.ActivityRecognition;
 
 import android.app.PendingIntent;
-import android.os.Bundle;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
-import android.support.v7.app.AppCompatActivity;
-import android.util.Log;
 import android.content.Intent;
 import android.content.res.Configuration;
+import android.os.Bundle;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
+import android.support.v7.app.AppCompatActivity;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
 
-public class AppHome extends AppCompatActivity implements GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener {
+import com.google.android.gms.location.ActivityRecognitionClient;
+
+public class AppHome extends AppCompatActivity {
+    private static final int ACTIVITY_RECOGNITION_DETECTION_INTERVAL = 15000;
     private ListView mDrawerList;
-    private ArrayAdapter<String> mAdapter;
     private ActionBarDrawerToggle mDrawerToggle;
     private DrawerLayout mDrawerLayout;
-    private String mActivityTitle;
-    public GoogleApiClient mApiClient;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_app_home);
 
-        mApiClient = new GoogleApiClient.Builder(this)
-                .addApi(ActivityRecognition.API)
-                .addConnectionCallbacks(this)
-                .addOnConnectionFailedListener(this)
-                .build();
-        mApiClient.connect();
+        setupActivityRecognition();
 
-        mDrawerList = (ListView)findViewById(R.id.navList);
+        mDrawerList = findViewById(R.id.navList);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         getSupportActionBar().setHomeButtonEnabled(true);
-        mDrawerLayout = (DrawerLayout)findViewById(R.id.drawer_layout);
-        mActivityTitle = getTitle().toString();
+        mDrawerLayout = findViewById(R.id.drawer_layout);
 
         addDrawerItems();
         setupDrawer();
@@ -53,27 +40,16 @@ public class AppHome extends AppCompatActivity implements GoogleApiClient.Connec
         getSupportActionBar().setHomeButtonEnabled(true);
     }
 
-    @Override
-    public void onConnected(@Nullable Bundle bundle) {
-        Intent intent = new Intent(this, ActivityRecognizedService.class);
+    private void setupActivityRecognition() {
+        Intent intent = new Intent(this, ActivityRecognitionIntentService.class);
         PendingIntent pendingIntent = PendingIntent.getService(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
-        ActivityRecognition.ActivityRecognitionApi.requestActivityUpdates(mApiClient, 15000, pendingIntent); // the long "15000" is the 15 second delay before it checks the activity state again
-    }
-
-    @Override
-    public void onConnectionSuspended(int i) {
-    }
-
-    @Override
-    public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
-        Log.e("AppHome", "Activity Recognition connection failed");
+        ActivityRecognitionClient activityRecognitionClient = new ActivityRecognitionClient(this);
+        activityRecognitionClient.requestActivityUpdates(ACTIVITY_RECOGNITION_DETECTION_INTERVAL, pendingIntent);
     }
 
     private void addDrawerItems() {
-        // IMPORTANT: Currently where the nav bar links lead depends on the order of this list, if the order is
-        // changed be sure to update the values of the "position" variable below.
-        String[] osArray = { "My Matches", "Profile", "Popular Locations", "History", "Settings", "Map"};
-        mAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, osArray);
+        String[] osArray = {"My Matches", "Profile", "Popular Locations", "History", "Settings", "Map"};
+        ArrayAdapter<String> mAdapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, osArray);
         mDrawerList.setAdapter(mAdapter);
 
         mDrawerList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
@@ -119,17 +95,7 @@ public class AppHome extends AppCompatActivity implements GoogleApiClient.Connec
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        int id = item.getItemId();
-
-        if (id == R.id.action_settings) {
-            return true;
-        }
-
-        if (mDrawerToggle.onOptionsItemSelected(item)) {
-            return true;
-        }
-
-        return super.onOptionsItemSelected(item);
+        return item.getItemId() == R.id.action_settings || mDrawerToggle.onOptionsItemSelected(item) || super.onOptionsItemSelected(item);
     }
 
     @Override

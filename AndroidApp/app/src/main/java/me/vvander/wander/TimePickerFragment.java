@@ -9,8 +9,6 @@ import android.widget.Button;
 import android.widget.TextView;
 import android.widget.TimePicker;
 
-import me.vvander.wander.R;
-
 import java.util.Calendar;
 
 public class TimePickerFragment extends DialogFragment implements TimePickerDialog.OnTimeSetListener {
@@ -35,12 +33,10 @@ public class TimePickerFragment extends DialogFragment implements TimePickerDial
         TextView minuteView;
         if(minute < 10){
             timeText = hourOfDay + ":0" + minute;
-        }
-        else{
+        } else {
             timeText = hourOfDay + ":" + minute;
         }
-
-
+        
         if(type == 0){
             buttonText = "Start Time: " + timeText;
             Button startTimeButton = (Button) getActivity().findViewById(R.id.startTimeButton);

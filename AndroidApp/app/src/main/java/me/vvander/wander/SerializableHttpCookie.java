@@ -11,13 +11,13 @@ import java.io.Serializable;
 import java.lang.reflect.Field;
 import java.net.HttpCookie;
 
-public class SerializableHttpCookie implements Serializable {
+class SerializableHttpCookie implements Serializable {
     private static final String TAG = SerializableHttpCookie.class.getSimpleName();
     private static final long serialVersionUID = 3875866957119061529L;
     private transient HttpCookie cookie;
     private Field fieldHttpOnly;
 
-    public String encode(HttpCookie cookie) {
+    String encode(HttpCookie cookie) {
         this.cookie = cookie;
         ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
         try {
@@ -30,7 +30,7 @@ public class SerializableHttpCookie implements Serializable {
         return byteArrayToHexString(byteArrayOutputStream.toByteArray());
     }
 
-    public HttpCookie decode(String encodedCookie) {
+    HttpCookie decode(String encodedCookie) {
         byte[] bytes = hexStringToByteArray(encodedCookie);
         ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(bytes);
         HttpCookie cookie = null;

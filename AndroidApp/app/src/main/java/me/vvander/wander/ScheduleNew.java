@@ -2,8 +2,8 @@ package me.vvander.wander;
 
 import android.app.DialogFragment;
 import android.content.Intent;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -12,8 +12,6 @@ import android.widget.TextView;
 import android.widget.ToggleButton;
 
 import org.w3c.dom.Text;
-
-import me.vvander.wander.R;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -39,6 +37,7 @@ public class ScheduleNew extends AppCompatActivity {
     private ToggleButton day6;
     private ArrayList<ScheduleItem> scheduleItems = new ArrayList<ScheduleItem>();
 
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -59,7 +58,7 @@ public class ScheduleNew extends AppCompatActivity {
 
     }
 
-    public void done(View view){
+    public void done(View view) {
 
         String name = nameEdit.getText().toString();
         int startHour = Integer.parseInt(startHourText.getText().toString());
@@ -80,15 +79,13 @@ public class ScheduleNew extends AppCompatActivity {
             FileInputStream fis = new FileInputStream(listItemsFile);
             ObjectInputStream ois = new ObjectInputStream(fis);
 
-             scheduleItems = (ArrayList<ScheduleItem>) ois.readObject();
+            scheduleItems = (ArrayList<ScheduleItem>) ois.readObject();
 
             ois.close();
             fis.close();
-        }
-        catch (IOException e){
+        } catch (IOException e) {
             e.printStackTrace();
-        }
-        catch(ClassNotFoundException e){
+        } catch (ClassNotFoundException e) {
             e.printStackTrace();
         }
 
@@ -104,26 +101,25 @@ public class ScheduleNew extends AppCompatActivity {
             oos.close();
             fos.close();
 
-        }
-        catch (IOException e){
+        } catch (IOException e) {
             e.printStackTrace();
         }
         startActivity(new Intent(ScheduleNew.this, Schedule.class));
     }
 
-    public void startTimeButton(View view){
+    public void startTimeButton(View view) {
         Bundle bundle = new Bundle();
         bundle.putInt("Type", 0);
         DialogFragment newFragment = new TimePickerFragment();
         newFragment.setArguments(bundle);
-        newFragment.show(getFragmentManager(),"TimePicker");
+        newFragment.show(getFragmentManager(), "TimePicker");
     }
 
-    public void endTimeButton(View view){
+    public void endTimeButton(View view) {
         Bundle bundle = new Bundle();
         bundle.putInt("Type", 1);
         DialogFragment newFragment = new TimePickerFragment();
         newFragment.setArguments(bundle);
-        newFragment.show(getFragmentManager(),"TimePicker");
+        newFragment.show(getFragmentManager(), "TimePicker");
     }
 }

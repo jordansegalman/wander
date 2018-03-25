@@ -5,8 +5,8 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.drawable.BitmapDrawable;
 import android.net.Uri;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.app.AppCompatActivity;
 import android.util.Base64;
 import android.util.Log;
 import android.view.View;
@@ -21,7 +21,6 @@ import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.Volley;
-import me.vvander.wander.R;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -29,7 +28,7 @@ import org.json.JSONObject;
 import java.io.ByteArrayOutputStream;
 
 public class Profile extends AppCompatActivity {
-    private static final String TAG = "Profile";
+    private static final String TAG = Profile.class.getSimpleName();
     private RequestQueue requestQueue;
     private TextView nameText;
     private TextView interestText;
@@ -57,18 +56,19 @@ public class Profile extends AppCompatActivity {
         String location = "Location";
         String email = "Email";
 
-        profilePicture = (ImageView)findViewById(R.id.picture);
-        nameText = (TextView)findViewById(R.id.name);
-        interestText = (TextView)findViewById(R.id.interests);
-        aboutText = (TextView)findViewById(R.id.about);
-        locationText = (TextView)findViewById(R.id.location);
-        emailText = (TextView)findViewById(R.id.email);
+        profilePicture = (ImageView) findViewById(R.id.picture);
+        nameText = (TextView) findViewById(R.id.name);
+        interestText = (TextView) findViewById(R.id.interests);
+        aboutText = (TextView) findViewById(R.id.about);
+        locationText = (TextView) findViewById(R.id.location);
+        emailText = (TextView) findViewById(R.id.email);
 
-        nameText_input = (TextView)findViewById(R.id.name);
-        interestText_input = (TextView)findViewById(R.id.interests_text);
-        aboutText_input = (TextView)findViewById(R.id.about_text);
-        locationText_input = (TextView)findViewById(R.id.location_text);
-        emailText_input = (TextView)findViewById(R.id.email_text);
+        nameText_input = (TextView) findViewById(R.id.name);
+        interestText_input = (TextView) findViewById(R.id.interests_text);
+        aboutText_input = (TextView) findViewById(R.id.about_text);
+        locationText_input = (TextView) findViewById(R.id.location_text);
+        emailText_input = (TextView) findViewById(R.id.email_text);
+
 
         if (getCallingActivity() != null) {
             Log.d(TAG, getCallingActivity().getClassName());
@@ -79,13 +79,17 @@ public class Profile extends AppCompatActivity {
                 aboutText_input.setText(in.getExtras().getString("about"));
                 emailText_input.setText(in.getExtras().getString("email"));
                 locationText_input.setText(in.getExtras().getString("location"));
-                byte[] decoded_string = Base64.decode(in.getExtras().getString("picture"), Base64.DEFAULT);
-                if (decoded_string == null)
-                {
-                    Log.d("ERROR MESSAGE", "ERROR!");
+                if (in.getExtras().getString("picture") != null) {
+                    byte[] decoded_string = Base64.decode(in.getExtras().getString("picture"), Base64.DEFAULT);
+                    if (decoded_string == null) {
+                        Log.d(TAG, "ERROR!");
+                    }
+                    Bitmap decoded_byte = BitmapFactory.decodeByteArray(decoded_string, 0, decoded_string.length);
+                    profilePicture.setImageBitmap(decoded_byte);
+                } else {
+                    Bitmap icon = BitmapFactory.decodeResource(getResources(), R.drawable.default_profile);
+                    profilePicture.setImageBitmap(icon);
                 }
-                Bitmap decoded_byte = BitmapFactory.decodeByteArray(decoded_string, 0, decoded_string.length);
-                profilePicture.setImageBitmap(decoded_byte);
             }
         } else {
             sendPOSTRequest();
@@ -125,8 +129,7 @@ public class Profile extends AppCompatActivity {
                 new Response.Listener<JSONObject>() {
                     @Override
                     public void onResponse(JSONObject response) {
-                        try
-                        {
+                        try {
                             String res = response.getString("response");
                             if (res.equalsIgnoreCase("pass")) {
 
@@ -138,24 +141,25 @@ public class Profile extends AppCompatActivity {
                                 String interests = response.getString("interests");
                                 String picture = response.getString("picture");
 
-                                Log.d("Raw string", picture);
+                                Log.d(TAG, picture);
                                 //String name = first + " " + last;
-                                String name = first;
 
-                                nameText_input.setText(name);
+                                nameText_input.setText(first);
                                 locationText_input.setText(location);
                                 //emailText_input.setText(e);
                                 aboutText_input.setText(about);
                                 interestText_input.setText(interests);
-                                if (picture != null) {
+                                if (picture != null && !picture.equalsIgnoreCase("null")) {
                                     byte[] decoded_string = Base64.decode(picture.getBytes(), Base64.DEFAULT);
-                                    if (decoded_string == null)
-                                    {
-                                        Log.d("ERROR MESSAGE", "ERROR!");
+                                    if (decoded_string == null) {
+                                        Log.d(TAG, "ERROR!");
                                     }
-                                    Log.d("Decoded string", decoded_string.toString());
+                                    Log.d(TAG, decoded_string.toString());
                                     Bitmap decoded_byte = BitmapFactory.decodeByteArray(decoded_string, 0, decoded_string.length);
                                     profilePicture.setImageBitmap(decoded_byte);
+                                } else {
+                                    Bitmap icon = BitmapFactory.decodeResource(getResources(), R.drawable.default_profile);
+                                    profilePicture.setImageBitmap(icon);
                                 }
 
                                 //Toast.makeText(getApplicationContext(), "Profile Updated!", Toast.LENGTH_SHORT).show();
@@ -170,7 +174,7 @@ public class Profile extends AppCompatActivity {
                     public void onErrorResponse(VolleyError error) {
                         Toast.makeText(getApplicationContext(), "No profile found!", Toast.LENGTH_SHORT).show();
 
-                        Log.d("Error: ", error.toString());
+                        Log.d(TAG, error.toString());
                     }
                 }
         );
@@ -181,7 +185,7 @@ public class Profile extends AppCompatActivity {
         requestQueue.add(postRequest);
     }
 
-    public void edit(View view){
+    public void edit(View view) {
         /*
         EditText etInterests = (EditText) findViewById(R.id.interests_text);
         EditText etAbout = (EditText) findViewById(R.id.about_text);
@@ -197,13 +201,16 @@ public class Profile extends AppCompatActivity {
         i.putExtra("name", nameText_input.getText().toString());
 
         BitmapDrawable drawable = (BitmapDrawable) profilePicture.getDrawable();
-        Bitmap bitmap = drawable.getBitmap();
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        bitmap.compress(Bitmap.CompressFormat.JPEG, 90, baos);
-        byte[] b = baos.toByteArray();
-        String encoded_picture = Base64.encodeToString(b, Base64.DEFAULT);
+        if (drawable != null) {
+            Bitmap bitmap = drawable.getBitmap();
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            bitmap.compress(Bitmap.CompressFormat.JPEG, 90, baos);
+            byte[] b = baos.toByteArray();
+            String encoded_picture = Base64.encodeToString(b, Base64.DEFAULT);
 
-        i.putExtra("picture", encoded_picture);
+            i.putExtra("picture", encoded_picture);
+        }
+
 
         startActivity(i);
         this.finish();

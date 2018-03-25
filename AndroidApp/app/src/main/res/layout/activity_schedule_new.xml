@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -13,50 +12,58 @@
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:orientation="vertical"
             android:layout_margin="20dp"
+            android:orientation="vertical"
             android:padding="20dp">
 
-            <EditText
+            <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:text="Name:"
+                android:textSize="18sp" />
+
+            <EditText
                 android:id="@+id/name"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
                 android:hint="Name"/>
+
 
             <Button
                 android:id="@+id/startTimeButton"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Start Time"
-                android:onClick="startTimeButton"/>
+                android:onClick="startTimeButton"
+                android:text="Start Time" />
 
             <Button
                 android:id="@+id/endTimeButton"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="End Time"
-                android:onClick="endTimeButton"/>
+                android:onClick="endTimeButton"
+                android:text="End Time" />
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:layout_marginTop="10dp">
+                android:layout_marginTop="10dp"
+                android:orientation="horizontal">
 
                 <ToggleButton
                     android:id="@+id/day0"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:textOn="SU"
+                    android:layout_weight="1"
                     android:textOff="SU"
-                    android:layout_weight="1"/>
+                    android:textOn="SU" />
+
                 <ToggleButton
                     android:id="@+id/day1"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:textOn="MO"
+                    android:layout_weight="1"
                     android:textOff="MO"
-                    android:layout_weight="1"/>
+                    android:textOn="MO"/>
                 <ToggleButton
                     android:id="@+id/day2"
                     android:layout_width="0dp"
@@ -71,6 +78,7 @@
                     android:textOn="WE"
                     android:textOff="WE"
                     android:layout_weight="1"/>
+
             </LinearLayout>
 
             <LinearLayout
@@ -107,19 +115,19 @@
                     android:layout_width="0dp"
                     android:layout_height="match_parent"
                     android:layout_weight=".125"/>
-
+                
             </LinearLayout>
 
             <android.support.v4.widget.Space
                 android:layout_width="wrap_content"
                 android:layout_height="0dp"
-                android:layout_weight="1"/>
+                android:layout_weight="1" />
 
             <Button
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Done"
-                android:onClick="done"/>
+                android:onClick="done"
+                android:text="Done" />
 
         </LinearLayout>
 

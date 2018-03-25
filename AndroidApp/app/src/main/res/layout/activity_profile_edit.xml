@@ -20,22 +20,21 @@
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="fill_parent"
+            android:layout_above="@+id/button_layer"
             android:gravity="top"
-            android:orientation="vertical"
-            android:layout_above="@+id/button_layer">
+            android:orientation="vertical">
 
-            <de.hdodenhof.circleimageview.CircleImageView
-                xmlns:app="http://schemas.android.com/apk/res-auto"
+            <de.hdodenhof.circleimageview.CircleImageView xmlns:app="http://schemas.android.com/apk/res-auto"
                 android:id="@+id/picture"
                 android:layout_width="96dp"
                 android:layout_height="96dp"
                 android:layout_gravity="center"
                 android:layout_marginBottom="10dp"
-                android:src="@drawable/default_profile"
                 android:contentDescription="Profile Picture"
                 android:onClick="selectImage"
-                app:civ_border_width="2dp"
-                app:civ_border_color="	#D3D3D3"/>
+                android:src="@drawable/default_profile"
+                app:civ_border_color="	#D3D3D3"
+                app:civ_border_width="2dp" />
 
             <EditText
                 android:id="@+id/name"
@@ -48,9 +47,9 @@
 
             <TextView
                 android:id="@+id/interests"
-                android:inputType="none"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:inputType="none"
                 android:text="Interests:"
                 android:textColor="#000000"
                 android:textSize="20sp" />
@@ -69,7 +68,7 @@
                 android:layout_width="fill_parent"
                 android:layout_height="wrap_content"
                 android:entries="@array/interests_array"
-                android:prompt="@string/interests_prompt"/>
+                android:prompt="@string/interests_prompt" />
 
             <TextView
                 android:id="@+id/about"
