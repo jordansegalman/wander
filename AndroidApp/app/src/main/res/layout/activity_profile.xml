@@ -158,7 +158,7 @@
                 android:orientation="horizontal">
 
                 <Button
-                    android:layout_width="wrap_content"
+                    android:layout_width="63dp"
                     android:layout_height="wrap_content"
                     android:layout_gravity="end"
                     android:layout_weight="0"
@@ -175,6 +175,7 @@
                     android:onClick="update"
                     android:text="Update" />
 
+
                 <Button
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
@@ -182,7 +183,16 @@
                     android:layout_weight="0"
                     android:backgroundTint="@color/colorAccent"
                     android:onClick="linkedInProfile"
-                    android:text="Import LinkedIn Profile" />
+                    android:text="Import FB" />
+
+                <Button
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="end"
+                    android:layout_weight="0"
+                    android:backgroundTint="@color/colorAccent"
+                    android:onClick="linkedInProfile"
+                    android:text="Import LinkedIn" />
             </LinearLayout>
 
         </RelativeLayout>
