@@ -10,6 +10,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.util.Base64;
 import android.util.Log;
 import android.view.View;
+import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -21,11 +22,16 @@ import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.Volley;
+import com.facebook.AccessToken;
+import com.facebook.GraphRequest;
+import com.facebook.GraphResponse;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.ByteArrayOutputStream;
+import java.util.HashMap;
+import java.util.Map;
 
 public class Profile extends AppCompatActivity {
     private static final String TAG = Profile.class.getSimpleName();
@@ -48,6 +54,14 @@ public class Profile extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_profile);
 
+        Button importFacebookButton = findViewById(R.id.importFacebookButton);
+
+        if (Data.getInstance().getLoggedIn() || Data.getInstance().getLoggedInGoogle()) {
+            importFacebookButton.setVisibility(View.GONE);
+        } else if (Data.getInstance().getLoggedInFacebook()) {
+            importFacebookButton.setVisibility(View.VISIBLE);
+        }
+
         requestQueue = Volley.newRequestQueue(this);
 
         String name = "Name";
@@ -56,18 +70,18 @@ public class Profile extends AppCompatActivity {
         String location = "Location";
         String email = "Email";
 
-        profilePicture = (ImageView) findViewById(R.id.picture);
-        nameText = (TextView) findViewById(R.id.name);
-        interestText = (TextView) findViewById(R.id.interests);
-        aboutText = (TextView) findViewById(R.id.about);
-        locationText = (TextView) findViewById(R.id.location);
-        emailText = (TextView) findViewById(R.id.email);
+        profilePicture = findViewById(R.id.picture);
+        nameText = findViewById(R.id.name);
+        interestText = findViewById(R.id.interests);
+        aboutText = findViewById(R.id.about);
+        locationText = findViewById(R.id.location);
+        emailText = findViewById(R.id.email);
 
-        nameText_input = (TextView) findViewById(R.id.name);
-        interestText_input = (TextView) findViewById(R.id.interests_text);
-        aboutText_input = (TextView) findViewById(R.id.about_text);
-        locationText_input = (TextView) findViewById(R.id.location_text);
-        emailText_input = (TextView) findViewById(R.id.email_text);
+        nameText_input = findViewById(R.id.name);
+        interestText_input = findViewById(R.id.interests_text);
+        aboutText_input = findViewById(R.id.about_text);
+        locationText_input = findViewById(R.id.location_text);
+        emailText_input = findViewById(R.id.email_text);
 
 
         if (getCallingActivity() != null) {
@@ -92,7 +106,7 @@ public class Profile extends AppCompatActivity {
                 }
             }
         } else {
-            sendPOSTRequest();
+            getProfile();
         }
 
         nameText_input.setVisibility(View.VISIBLE);
@@ -110,19 +124,26 @@ public class Profile extends AppCompatActivity {
         //emailText.setText(email);
     }
 
-    public void linkedInProfile(View view) {
-        Intent intent = new Intent();
-        intent.setAction(Intent.ACTION_VIEW);
-        intent.addCategory(Intent.CATEGORY_BROWSABLE);
-        intent.setData(Uri.parse("https://vvander.me/linkedInProfile"));
-        startActivity(intent);
+    public void importFacebookProfile(View view) {
+        GraphRequest request = GraphRequest.newMeRequest(AccessToken.getCurrentAccessToken(),
+                new GraphRequest.GraphJSONObjectCallback() {
+                    @Override
+                    public void onCompleted(JSONObject object, GraphResponse response) {
+                        try {
+                            String name = object.getString("first_name");
+                            sendFacebookProfileToServer(name);
+                        } catch (JSONException e) {
+                            Toast.makeText(getApplicationContext(), "Failed to import Facebook profile!", Toast.LENGTH_SHORT).show();
+                        }
+                    }
+                });
+        Bundle parameters = new Bundle();
+        parameters.putString("fields", "first_name");
+        request.setParameters(parameters);
+        request.executeAsync();
     }
 
-    public void update(View view) {
-        sendPOSTRequest();
-    }
-
-    private void sendPOSTRequest() {
+    private void sendFacebookProfileToServer(final String name) {
         String url = Data.getInstance().getUrl() + "/getProfile";
 
         JsonObjectRequest postRequest = new JsonObjectRequest(Request.Method.POST, url, null,
@@ -132,7 +153,91 @@ public class Profile extends AppCompatActivity {
                         try {
                             String res = response.getString("response");
                             if (res.equalsIgnoreCase("pass")) {
+                                String location = response.getString("loc");
+                                String about = response.getString("about");
+                                String interests = response.getString("interests");
+                                String picture = response.getString("picture");
 
+                                Map<String, String> params = new HashMap<>();
+                                params.put("name", name);
+                                params.put("loc", location);
+                                params.put("about", about);
+                                params.put("interests", interests);
+                                params.put("picture", picture);
+
+                                String url = Data.getInstance().getUrl() + "/updateProfile";
+
+                                JsonObjectRequest postRequest = new JsonObjectRequest(Request.Method.POST, url, new JSONObject(params),
+                                        new Response.Listener<JSONObject>() {
+                                            @Override
+                                            public void onResponse(JSONObject response) {
+                                                try {
+                                                    String res = response.getString("response");
+                                                    if (res.equalsIgnoreCase("pass")) {
+                                                        Toast.makeText(getApplicationContext(), "Facebook profile imported!", Toast.LENGTH_SHORT).show();
+                                                    }
+                                                } catch (JSONException j) {
+                                                    j.printStackTrace();
+                                                }
+                                            }
+                                        },
+                                        new Response.ErrorListener() {
+                                            @Override
+                                            public void onErrorResponse(VolleyError error) {
+                                                Toast.makeText(getApplicationContext(), "Failed to import Facebook profile!", Toast.LENGTH_SHORT).show();
+                                                Log.d(TAG, error.toString());
+                                            }
+                                        }
+                                );
+                                postRequest.setRetryPolicy(new DefaultRetryPolicy(
+                                        0,
+                                        DefaultRetryPolicy.DEFAULT_MAX_RETRIES,
+                                        DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
+                                requestQueue.add(postRequest);
+                                getProfile();
+                            }
+                        } catch (JSONException j) {
+                            j.printStackTrace();
+                        }
+                    }
+                },
+                new Response.ErrorListener() {
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+                        Toast.makeText(getApplicationContext(), "Failed to import Facebook profile!", Toast.LENGTH_SHORT).show();
+                        Log.d(TAG, error.toString());
+                    }
+                }
+        );
+        postRequest.setRetryPolicy(new DefaultRetryPolicy(
+                0,
+                DefaultRetryPolicy.DEFAULT_MAX_RETRIES,
+                DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
+        requestQueue.add(postRequest);
+    }
+
+    public void importLinkedInProfile(View view) {
+        Intent intent = new Intent();
+        intent.setAction(Intent.ACTION_VIEW);
+        intent.addCategory(Intent.CATEGORY_BROWSABLE);
+        intent.setData(Uri.parse("https://vvander.me/linkedInProfile"));
+        startActivity(intent);
+    }
+
+    public void update(View view) {
+        getProfile();
+    }
+
+    private void getProfile() {
+        String url = Data.getInstance().getUrl() + "/getProfile";
+
+        JsonObjectRequest postRequest = new JsonObjectRequest(Request.Method.POST, url, null,
+                new Response.Listener<JSONObject>() {
+                    @Override
+                    public void onResponse(JSONObject response) {
+                        try {
+                            String res = response.getString("response");
+                            if (res.equalsIgnoreCase("pass")) {
                                 String first = response.getString("firstName");
                                 //String last = response.getString("lastName");
                                 //String e = response.getString("email");
@@ -173,7 +278,6 @@ public class Profile extends AppCompatActivity {
                     @Override
                     public void onErrorResponse(VolleyError error) {
                         Toast.makeText(getApplicationContext(), "No profile found!", Toast.LENGTH_SHORT).show();
-
                         Log.d(TAG, error.toString());
                     }
                 }
