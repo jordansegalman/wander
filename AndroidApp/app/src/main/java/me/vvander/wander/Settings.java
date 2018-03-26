@@ -3,13 +3,11 @@ package me.vvander.wander;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
-import android.util.Base64;
 import android.util.Log;
 import android.view.View;
+import android.widget.Button;
 import android.widget.SeekBar;
 import android.widget.Switch;
 import android.widget.TextView;
@@ -34,26 +32,38 @@ public class Settings extends AppCompatActivity {
     private static final String SP_LOCATION = "locationSwitch";
     Switch locationSwitch;
     private RequestQueue requestQueue;
-    TextView radius;
-    private String setRadius;
+    TextView radiusText;
+    SeekBar seekBar;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_settings);
 
+        Button changeEmailButton = findViewById(R.id.changeEmail);
+        Button changeUsernameButton = findViewById(R.id.changeUsername);
+        Button changePasswordButton = findViewById(R.id.changePassword);
+
+        if (Data.getInstance().getLoggedInGoogle() || Data.getInstance().getLoggedInFacebook()) {
+            changeEmailButton.setVisibility(View.GONE);
+            changeUsernameButton.setVisibility(View.GONE);
+            changePasswordButton.setVisibility(View.GONE);
+        } else if (Data.getInstance().getLoggedIn()) {
+            changeEmailButton.setVisibility(View.VISIBLE);
+            changeUsernameButton.setVisibility(View.VISIBLE);
+            changePasswordButton.setVisibility(View.VISIBLE);
+        }
+
         locationSwitch = findViewById(R.id.tracking);
         locationSwitch.setChecked(Data.getInstance().getManualLocationSwitch());
 
         requestQueue = Volley.newRequestQueue(this);
 
-        SeekBar seekBar = findViewById(R.id.seekBar);
-        seekBar.setOnSeekBarChangeListener(seekBarChangeListener);
+        seekBar = findViewById(R.id.seekBar);
+        radiusText = findViewById(R.id.textView);
 
-        int progress = seekBar.getProgress();
-        radius = findViewById(R.id.textView);
-        radius.setText("Cross Radius: " + progress);
         getCrossRadius();
+        initializeSeekBar();
     }
 
     public void locationToggle(View view) {
@@ -132,30 +142,30 @@ public class Settings extends AppCompatActivity {
         sharedPreferences.edit().clear().apply();
     }
 
-    SeekBar.OnSeekBarChangeListener seekBarChangeListener = new SeekBar.OnSeekBarChangeListener() {
+    private void initializeSeekBar() {
+        SeekBar.OnSeekBarChangeListener seekBarChangeListener = new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                String text = "Cross Radius: " + progress;
+                radiusText.setText(text);
+            }
 
-        @Override
-        public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-            // updated continuously as the user slides the thumb
-            radius.setText("Cross Radius: " + progress);
-        }
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
+            }
 
-        @Override
-        public void onStartTrackingTouch(SeekBar seekBar) {
-            // called when the user first touches the SeekBar
-        }
-
-        @Override
-        public void onStopTrackingTouch(SeekBar seekBar) {
-            // called after the user finishes moving the SeekBar
-            updateCrossRadius(seekBar.getProgress());
-        }
-    };
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+                updateCrossRadius(seekBar.getProgress());
+            }
+        };
+        seekBar.setOnSeekBarChangeListener(seekBarChangeListener);
+    }
 
     private void updateCrossRadius(int radius) {
         String url = Data.getInstance().getUrl() + "/changeCrossRadius";
-        Map<String, Integer> params = new HashMap<>();
-        params.put("newCrossRadius", radius);
+        Map<String, String> params = new HashMap<>();
+        params.put("newCrossRadius", String.valueOf(radius));
 
         JsonObjectRequest postRequest = new JsonObjectRequest(Request.Method.POST, url, new JSONObject(params),
                 new Response.Listener<JSONObject>() {
@@ -164,8 +174,7 @@ public class Settings extends AppCompatActivity {
                         try {
                             String res = response.getString("response");
                             if (res.equalsIgnoreCase("pass")) {
-
-                                Toast.makeText(getApplicationContext(), "Radius Updated", Toast.LENGTH_SHORT).show();
+                                Toast.makeText(getApplicationContext(), "Radius updated!", Toast.LENGTH_SHORT).show();
                             }
                         } catch (JSONException j) {
                             j.printStackTrace();
@@ -175,8 +184,7 @@ public class Settings extends AppCompatActivity {
                 new Response.ErrorListener() {
                     @Override
                     public void onErrorResponse(VolleyError error) {
-                        Toast.makeText(getApplicationContext(), "Issues setting radius!", Toast.LENGTH_SHORT).show();
-
+                        Toast.makeText(getApplicationContext(), "Error setting radius!", Toast.LENGTH_SHORT).show();
                         Log.d(TAG, error.toString());
                     }
                 }
@@ -196,9 +204,17 @@ public class Settings extends AppCompatActivity {
                     @Override
                     public void onResponse(JSONObject response) {
                         try {
-                            String res = response.getString("crossRadius");
-                            if (res != null) {
-                                radius.setText("Cross Radius: " + res);
+                            String r = response.getString("crossRadius");
+                            if (r != null) {
+                                try {
+                                    String text = "Cross Radius: " + r;
+                                    radiusText.setText(text);
+                                    seekBar.setProgress(Integer.parseInt(r));
+                                } catch (NumberFormatException e) {
+                                    String text = "Cross Radius: 150";
+                                    radiusText.setText(text);
+                                    seekBar.setProgress(150);
+                                }
                             }
                         } catch (JSONException j) {
                             j.printStackTrace();
@@ -208,8 +224,7 @@ public class Settings extends AppCompatActivity {
                 new Response.ErrorListener() {
                     @Override
                     public void onErrorResponse(VolleyError error) {
-                        Toast.makeText(getApplicationContext(), "Issues getting radius!", Toast.LENGTH_SHORT).show();
-
+                        Toast.makeText(getApplicationContext(), "Error getting radius!", Toast.LENGTH_SHORT).show();
                         Log.d(TAG, error.toString());
                     }
                 }

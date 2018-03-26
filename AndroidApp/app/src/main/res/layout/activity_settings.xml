@@ -91,18 +91,21 @@
                 android:layout_height="wrap_content"/>
 
             <Button
+                android:id="@+id/changeEmail"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:onClick="changeEmail"
                 android:text="Change Email" />
 
             <Button
+                android:id="@+id/changeUsername"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:onClick="changeUsername"
                 android:text="Change Username" />
 
             <Button
+                android:id="@+id/changePassword"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:onClick="changePassword"
