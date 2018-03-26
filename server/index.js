@@ -57,11 +57,14 @@ const db_firebase = "firebase";
 const saltRounds = 10;
 
 // Constants used for matching
-const MATCH_THRESHOLD = 10;			// 10 crossed paths
+//const MATCH_THRESHOLD = 10;			// 10 crossed paths
+const MATCH_THRESHOLD = 1;			// 1 crossed path (DEVELOPMENT)
 const DEFAULT_CROSS_RADIUS = 150;		// 150 feet
 const CROSS_TIME = 30000;			// 30 seconds
-const CROSS_COOLDOWN = 1800000;			// 30 minutes
-const MATCH_NOTIFY_CRON = '0 20 * * * *';	// every day at 20:00
+//const CROSS_COOLDOWN = 1800000;			// 30 minutes
+const CROSS_COOLDOWN = 1000;			// 1 second (DEVELOPMENT)
+//const MATCH_NOTIFY_CRON = '0 20 * * * *';	// every day at 20:00
+const MATCH_NOTIFY_CRON = '0 * * * * *';	// every minute (DEVELOPMENT)
 
 // Constant used for password reset and session
 const crypto = require('crypto');
@@ -1906,8 +1909,8 @@ function findCrossedPaths(lat, lon, currentTime, request, response) {
 							var object = {};
 							var key = "Cross Locations";
 							object[key] = [];
-							var crossLat = (lat + latOther) / 2;
-							var crossLon = (lon + lonOther) / 2;
+							var crossLat = (parseFloat(lat) + parseFloat(latOther)) / parseFloat(2.0);
+							var crossLon = (parseFloat(lon) + parseFloat(lonOther)) / parseFloat(2.0);
 							var data = {latitude: crossLat, longitude: crossLon};
 							object[key].push(data);
 							matchGraph.setEdge(request.session.uid, uidOther, JSON.stringify(object), "crossLocations");
@@ -1921,8 +1924,8 @@ function findCrossedPaths(lat, lon, currentTime, request, response) {
 							matchGraph.setEdge(uidOther, request.session.uid, currentTime, "lastTime");
 							var object = JSON.parse(matchGraph.edge(request.session.uid, uidOther, "crossLocations"));
 							var key = "Cross Locations";
-							var crossLat = (lat + latOther) / 2;
-							var crossLon = (lon + lonOther) / 2;
+							var crossLat = (parseFloat(lat) + parseFloat(latOther)) / parseFloat(2.0);
+							var crossLon = (parseFloat(lon) + parseFloat(lonOther)) / parseFloat(2.0);
 							var data = {latitude: crossLat, longitude: crossLon};
 							object[key].push(data);
 							matchGraph.setEdge(request.session.uid, uidOther, JSON.stringify(object), "crossLocations");
@@ -2008,7 +2011,7 @@ function notifyMatches() {
 	var edges = matchGraph.edges();
 	var edgesToRemove = [];
 	for (var i = 0; i < matchGraph.edgeCount(); i++) {
-		if (edges[i].name === "newMatch") {
+		if (edges[i] != null && edges[i].name === "newMatch") {
 			// Create matched, approved, unmatched, and blocked edges
 			matchGraph.setEdge(edges[i].v, edges[i].w, true, "matched");
 			matchGraph.setEdge(edges[i].w, edges[i].v, true, "matched");
@@ -2062,6 +2065,7 @@ function approveUser(u, request, response) {
 	matchGraph.setEdge(request.session.uid, u, true, "approved");
 	writeMatchGraph();
 	console.log('User approved.');
+	return response.status(200).send(JSON.stringify({"response":"success"}));
 }
 
 // Unapproves the user with the given user ID
@@ -2069,6 +2073,7 @@ function unapproveUser(u, request, response) {
 	matchGraph.setEdge(request.session.uid, u, false, "approved");
 	writeMatchGraph();
 	console.log('User unapproved.');
+	return response.status(200).send(JSON.stringify({"response":"success"}));
 }
 
 // Gets all location coordinates for user ID for heatmap generation
@@ -2116,7 +2121,7 @@ function getAllMatches(request, response) {
 	var key = "UIDs";
 	object[key] = [];
 	for (var i = 0; i < edges.length; i++) {
-		if (edges[i].name === "match") {
+		if (edges[i].name === "matched") {
 			var data = {uid: edges[i].w};
 			object[key].push(data);
 		}
@@ -2128,7 +2133,7 @@ function getAllMatches(request, response) {
 function getMatch(u, request, response) {
 	var edges = matchGraph.outEdges(request.session.uid, u);
 	for (var i = 0; i < edges.length; i++) {
-		if (edges[i].name === "match") {
+		if (edges[i].name === "matched") {
 			var sql = "SELECT * FROM ?? WHERE ??=?";
 			var post = [db_profiles, uid, edges[i].w];
 			dbConnection.query(sql, post, function(err, result) {
