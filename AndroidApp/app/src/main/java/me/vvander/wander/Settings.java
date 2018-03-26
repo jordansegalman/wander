@@ -21,6 +21,8 @@ import com.android.volley.toolbox.Volley;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.File;
+
 public class Settings extends AppCompatActivity {
     private static final String TAG = Settings.class.getSimpleName();
     private static final String SP_LOCATION = "locationSwitch";
@@ -106,6 +108,9 @@ public class Settings extends AppCompatActivity {
                 DefaultRetryPolicy.DEFAULT_MAX_RETRIES,
                 DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
         requestQueue.add(postRequest);
+
+        File listItemsFile = new File(this.getFilesDir(), "ScheduleItems");
+        listItemsFile.delete();
     }
 
 

@@ -1,6 +1,9 @@
 package me.vvander.wander;
 
+import android.app.AlarmManager;
 import android.app.DialogFragment;
+import android.app.PendingIntent;
+import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
@@ -12,7 +15,6 @@ import android.widget.TextView;
 import android.widget.ToggleButton;
 
 import org.w3c.dom.Text;
-
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -21,6 +23,7 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.sql.BatchUpdateException;
 import java.util.ArrayList;
+import java.util.Calendar;
 
 public class ScheduleNew extends AppCompatActivity {
     private EditText nameEdit;
@@ -36,7 +39,6 @@ public class ScheduleNew extends AppCompatActivity {
     private ToggleButton day5;
     private ToggleButton day6;
     private ArrayList<ScheduleItem> scheduleItems = new ArrayList<ScheduleItem>();
-
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -89,7 +91,9 @@ public class ScheduleNew extends AppCompatActivity {
             e.printStackTrace();
         }
 
-        scheduleItems.add(new ScheduleItem(name, startHour, startMinute, endHour, endMinute, repeatDays));
+        ScheduleItem item = new ScheduleItem(name, startHour, startMinute, endHour, endMinute, repeatDays);
+
+        scheduleItems.add(item);
 
         try {
             File file = new File(this.getFilesDir(), "ScheduleItems");
@@ -104,6 +108,9 @@ public class ScheduleNew extends AppCompatActivity {
         } catch (IOException e) {
             e.printStackTrace();
         }
+
+        item.resetAlarm(this);
+
         startActivity(new Intent(ScheduleNew.this, Schedule.class));
     }
 

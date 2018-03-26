@@ -72,4 +72,9 @@ public class Schedule extends AppCompatActivity {
     public void newSchedule(View view) {
         startActivity(new Intent(Schedule.this, ScheduleNew.class));
     }
+
+    @Override
+    public void onBackPressed() {
+        startActivity(new Intent(Schedule.this, Settings.class));
+    }
 }

@@ -8,6 +8,8 @@ import android.os.Bundle;
 
 import java.util.Calendar;
 
+import static android.content.Context.ALARM_SERVICE;
+
 /**
  * Created by Kyle on 3/25/2018.
  */
@@ -18,7 +20,7 @@ public class EnableTrackingAlarm {
 
         ScheduleItem item = (ScheduleItem) scheduleBundle.get("Schedule");
 
-        enableTracking();
+        enableTracking(context);
 
         Calendar calendar = Calendar.getInstance();
         calendar.setTimeInMillis(System.currentTimeMillis());
@@ -26,16 +28,15 @@ public class EnableTrackingAlarm {
         calendar.set(Calendar.MINUTE, item.GetEndMinute());
         calendar.set(Calendar.DAY_OF_WEEK, item.GetNextRepeatAfterToday());
 
-        AlarmManager alarmManager = item.getAlarmManager();
-        Intent enable = new Intent(context, EnableTrackingAlarm.class);
-        enable.putExtra("ScheduleItem", item);
-        PendingIntent pendingEnable = PendingIntent.getBroadcast(context, 0, enable, 0);
-        item.setAlarmDisable(pendingEnable);
+        AlarmManager alarmManager = (AlarmManager) context.getSystemService(ALARM_SERVICE);
+        PendingIntent pendingEnable = item.getAlarmEnable(context);
         alarmManager.setExact(AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(), pendingEnable);
     }
 
-    private void enableTracking(){
-        Data data = Data.getInstance();
-        data.setScheduleLocationSwitch(true);
+    private void enableTracking(Context context){
+        if(!ScheduleItem.isAnyDisableActive(context)) {
+            Data data = Data.getInstance();
+            data.setScheduleLocationSwitch(true);
+        }
     }
 }

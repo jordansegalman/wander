@@ -36,7 +36,7 @@ public class TimePickerFragment extends DialogFragment implements TimePickerDial
         } else {
             timeText = hourOfDay + ":" + minute;
         }
-        
+
         if(type == 0){
             buttonText = "Start Time: " + timeText;
             Button startTimeButton = (Button) getActivity().findViewById(R.id.startTimeButton);

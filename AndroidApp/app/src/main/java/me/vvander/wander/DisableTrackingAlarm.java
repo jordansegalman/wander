@@ -31,11 +31,8 @@ public class DisableTrackingAlarm extends WakefulBroadcastReceiver {
         calendar.set(Calendar.MINUTE, item.GetStartMinute());
         calendar.set(Calendar.DAY_OF_WEEK, item.GetNextRepeatAfterToday());
 
-        AlarmManager alarmManager = item.getAlarmManager();
-        Intent disable = new Intent(context, DisableTrackingAlarm.class);
-        disable.putExtra("ScheduleItem", item);
-        PendingIntent pendingDisable = PendingIntent.getBroadcast(context, 0, disable, 0);
-        item.setAlarmDisable(pendingDisable);
+        AlarmManager alarmManager = (AlarmManager) context.getSystemService(ALARM_SERVICE);
+        PendingIntent pendingDisable = item.getAlarmDisable(context);
         alarmManager.setExact(AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(), pendingDisable);
 
     }
