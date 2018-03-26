@@ -3,6 +3,7 @@ package me.vvander.wander;
 import android.Manifest;
 import android.content.Context;
 import android.content.pm.PackageManager;
+import android.graphics.Color;
 import android.location.Criteria;
 import android.location.Location;
 import android.location.LocationManager;
@@ -37,6 +38,7 @@ import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.TileOverlay;
 import com.google.android.gms.maps.model.TileOverlayOptions;
+import com.google.maps.android.heatmaps.Gradient;
 import com.google.maps.android.heatmaps.HeatmapTileProvider;
 
 import org.json.JSONArray;
@@ -60,8 +62,11 @@ public class MyLocation extends AppCompatActivity implements OnMapReadyCallback,
     private RequestQueue requestQueue;
     private ArrayList<LatLng> listPersonal;
     private ArrayList<LatLng> listAll;
+
     private TileOverlay overlayPersonal;
     private TileOverlay overlayAll;
+    private boolean overlayAllOn;
+    private boolean overlayPersonalOn;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -70,6 +75,8 @@ public class MyLocation extends AppCompatActivity implements OnMapReadyCallback,
         requestQueue = Volley.newRequestQueue(this);
         listPersonal = new ArrayList<>();
         listAll = new ArrayList<>();
+        overlayAllOn = false;
+        overlayPersonalOn = false;
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
@@ -255,6 +262,7 @@ public class MyLocation extends AppCompatActivity implements OnMapReadyCallback,
 
     public void displayHeatmap(View view) {
         TextView heatmap = findViewById(R.id.heatmapButton);
+        /*
         if (overlayPersonal == null && heatmap.getText().toString().equals("Display Heatmap")) {
             Toast.makeText(getApplicationContext(), "Displaying Heatmap", Toast.LENGTH_SHORT).show();
             HeatmapTileProvider provider = new HeatmapTileProvider.Builder().data(listPersonal).build();
@@ -267,10 +275,41 @@ public class MyLocation extends AppCompatActivity implements OnMapReadyCallback,
             heatmap.setText("Display Heatmap");
             overlayPersonal.setVisible(false);
         }
+        */
+        if (overlayPersonal == null && overlayPersonalOn == false) {
+            if (listPersonal.size() > 0) {
+                HeatmapTileProvider provider = new HeatmapTileProvider.Builder().data(listPersonal).build();
+                overlayPersonal = mMap.addTileOverlay(new TileOverlayOptions().tileProvider(provider));
+                overlayPersonalOn = true;
+                Toast.makeText(getApplicationContext(), "Displaying Heatmap", Toast.LENGTH_SHORT).show();
+            }else {
+                Toast.makeText(getApplicationContext(), "No Location History Yet", Toast.LENGTH_SHORT).show();
+            }
+        } else if (overlayPersonalOn == false) {
+            overlayPersonal.setVisible(true);
+            overlayPersonalOn = true;
+            Toast.makeText(getApplicationContext(), "Displaying Heatmap", Toast.LENGTH_SHORT).show();
+        } else if (overlayPersonalOn == true) {
+            overlayPersonal.setVisible(false);
+            overlayPersonalOn = false;
+            Toast.makeText(getApplicationContext(), "Removing Heatmap", Toast.LENGTH_SHORT).show();
+        }
     }
 
     public void displayHeatmapAll(View view) {
         TextView heatmap = findViewById(R.id.allHeatmapButton);
+
+        int[] colors = {
+                Color.parseColor("#00A99D"),
+                Color.parseColor("#93278F")
+        };
+
+        float[] startPoints = {
+                0.2f, 1f
+        };
+
+        Gradient gradient = new Gradient(colors, startPoints);
+        /*
         if (overlayAll == null && heatmap.getText().toString().equals("Display Popular Locations")) {
             Toast.makeText(getApplicationContext(), "Displaying Popular Locations", Toast.LENGTH_SHORT).show();
             HeatmapTileProvider provider = new HeatmapTileProvider.Builder().data(listAll).build();
@@ -282,6 +321,25 @@ public class MyLocation extends AppCompatActivity implements OnMapReadyCallback,
         } else if (heatmap.getText().toString().equals("Remove Popular Locations")) {
             heatmap.setText("Display Popular Locations");
             overlayAll.setVisible(false);
+        }
+        */
+        if (overlayAll == null && overlayAllOn == false) {
+            if (listAll.size() > 0) {
+                HeatmapTileProvider provider = new HeatmapTileProvider.Builder().gradient(gradient).data(listPersonal).build();
+                overlayAll = mMap.addTileOverlay(new TileOverlayOptions().tileProvider(provider));
+                overlayAllOn = true;
+                Toast.makeText(getApplicationContext(), "Displaying Heatmap", Toast.LENGTH_SHORT).show();
+            } else {
+                Toast.makeText(getApplicationContext(), "No Location History Yet", Toast.LENGTH_SHORT).show();
+            }
+        } else if (overlayAllOn == false) {
+            overlayAll.setVisible(true);
+            overlayAllOn = true;
+            Toast.makeText(getApplicationContext(), "Displaying Heatmap", Toast.LENGTH_SHORT).show();
+        } else if (overlayAllOn == true) {
+            overlayAll.setVisible(false);
+            overlayAllOn = false;
+            Toast.makeText(getApplicationContext(), "Removing Heatmap", Toast.LENGTH_SHORT).show();
         }
     }
 

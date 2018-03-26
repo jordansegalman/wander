@@ -32,19 +32,22 @@ import java.util.Map;
 import me.vvander.wander.R;
 
 public class MyMatches extends AppCompatActivity {
-    ArrayList<String> matchList;
-    Map<String, MatchData> matchMap = new HashMap<String, MatchData>();
+    ArrayList<MatchData> matchList;
+    Map<String, MatchData> matchMap;
     ListView matchListView;
     private RequestQueue requestQueue;
+    ProfileAdapter adapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_my_matches);
         requestQueue = Volley.newRequestQueue(this);
+        matchMap = new HashMap<String, MatchData>();
+        matchList = new ArrayList<MatchData>();
 
-        populateList();
-        setupListView();
+        requestAllMatches();
+
 
     }
 
@@ -55,7 +58,7 @@ public class MyMatches extends AppCompatActivity {
     private void requestAllMatches() {
         String url = Data.getInstance().getUrl() + "/getAllMatches";
         Map<String, String> params = new HashMap<>();
-
+        Toast.makeText(getApplicationContext(), "Comes here", Toast.LENGTH_SHORT).show();
         JsonObjectRequest postRequest = new JsonObjectRequest(Request.Method.POST, url, new JSONObject(params),
                 new Response.Listener<JSONObject>() {
                     @Override
@@ -66,21 +69,10 @@ public class MyMatches extends AppCompatActivity {
                             for (int i = 0; i < length; i++) {
                                 JSONObject object = array.getJSONObject(i);
                                 String uid = String.valueOf(object.get("uid"));
-                                //String picture = String.valueOf(object.get("picture"));
-                                //String about = String.valueOf(object.get("about"));
-                                //String interests = String.valueOf(object.get("interests"));
-                                //String name = String.valueOf(object.get("firstname"));
+                                Toast.makeText(getApplicationContext(), uid, Toast.LENGTH_SHORT).show();
                                 requestSingleMatch(uid);
-                                //MatchData match = new MatchData();
-                                //match.setAbout(String.valueOf(object.get("about")));
-                                //match.setUserId(String.valueOf(object.get("uid")));
-                                //match.setInterests(String.valueOf(object.get("interests")));
-                                //match.setPicture(String.valueOf(object.get("picture")));
-                                //match.setName(String.valueOf(object.get("firstname")));
-                                //matchMap.put(uid, match);
-
                             }
-
+                            setupListView();
                         } catch (JSONException j) {
                             j.printStackTrace();
                         }
@@ -104,6 +96,7 @@ public class MyMatches extends AppCompatActivity {
         String url = Data.getInstance().getUrl() + "/getMatch";
         Map<String, String> params = new HashMap<>();
         params.put("uid", uid);
+        Toast.makeText(getApplicationContext(), "Gets to single match request.", Toast.LENGTH_SHORT).show();
 
         JsonObjectRequest postRequest = new JsonObjectRequest(Request.Method.POST, url, new JSONObject(params),
                 new Response.Listener<JSONObject>() {
@@ -111,24 +104,37 @@ public class MyMatches extends AppCompatActivity {
                     public void onResponse(JSONObject response) {
                         try {
                             // Should only be one item in the array
+                            Toast.makeText(getApplicationContext(), "Response from server.", Toast.LENGTH_SHORT).show();
                             JSONArray array = response.getJSONArray("Profile");
 
                             JSONObject object = array.getJSONObject(0);
                             String uid = String.valueOf(object.get("uid"));
-                            //String picture = String.valueOf(object.get("picture"));
-                            //String about = String.valueOf(object.get("about"));
-                            //String interests = String.valueOf(object.get("interests"));
-                            //String name = String.valueOf(object.get("firstname"));
+                            Log.d("UID", uid);
+                            String picture = String.valueOf(object.get("picture"));
+                            Log.d("Picture", picture);
+                            String about = String.valueOf(object.get("about"));
+                            Log.d("About", about);
+                            String interests = String.valueOf(object.get("interests"));
+                            Log.d("Interests", interests);
+                            String firstName = String.valueOf(object.get("firstName"));
+                            Log.d("Name", firstName);
+                            String timesCrossed = String.valueOf(object.get("timesCrossed"));
+                            Log.d("Times Crossed", timesCrossed);
+                            String approved = String.valueOf(object.get("approved"));
+                            Log.d("Approved", approved);
+                            String otherApproved = String.valueOf(object.get("otherApproved"));
+                            Log.d("Other Approved", otherApproved);
 
                             MatchData match = new MatchData();
-                            match.setAbout(String.valueOf(object.get("about")));
-                            match.setUserId(String.valueOf(object.get("uid")));
-                            match.setInterests(String.valueOf(object.get("interests")));
-                            match.setPicture(String.valueOf(object.get("picture")));
-                            match.setName(String.valueOf(object.get("firstname")));
+                            match.setAbout(about);
+                            match.setUserId(uid);
+                            match.setInterests(interests);
+                            match.setPicture(picture);
+                            match.setName(firstName);
+                            Log.d("All profile information", uid + " " + about + " " + interests);
                             matchMap.put(uid, match);
 
-
+                            setupListView();
                         } catch (JSONException j) {
                             j.printStackTrace();
                         }
@@ -149,17 +155,16 @@ public class MyMatches extends AppCompatActivity {
     }
 
     private void setupListView(){
-
-        String[] listItems;
+        if (adapter != null) {
+            adapter.clear();
+        }
 
         if(matchMap == null || matchMap.isEmpty()){
-            //listItems = new String[1];
-            //listItems[0] = "No New Matches";
-            matchList.add("No New Matches");
+            MatchData matchData = new MatchData();
+            matchData.setName("No New Matches");
+            matchList.add(matchData);
         }
         else {
-            listItems = new String[matchMap.size()];
-
             for (int i = 0; i < matchMap.size(); i++) {
                 //listItems[i] = matchMap.get(i).getName();
                 Iterator it = matchMap.entrySet().iterator();
@@ -167,14 +172,17 @@ public class MyMatches extends AppCompatActivity {
                     Map.Entry pair = (Map.Entry) it.next();
                     MatchData matchData = (MatchData) pair.getValue();
                     //listItems[i] = matchData.getName();
-                    matchList.add(matchData.getName());
+                    matchList.add(matchData);
                     it.remove();
                 }
             }
         }
 
 
-        ArrayAdapter<String> adapter = new ArrayAdapter<String>(this, R.layout.simple_list_item_1, matchList);
+        //ArrayAdapter<String> adapter = new ArrayAdapter<String>(this, R.layout.simple_list_item_1, matchList);
+        //ArrayList<MatchData> arrayList = new ArrayList<MatchData>();
+        adapter = new ProfileAdapter(this, matchList);
+
         matchListView = (ListView) findViewById(R.id.matchesList);
         matchListView.setAdapter(adapter);
 
@@ -183,7 +191,9 @@ public class MyMatches extends AppCompatActivity {
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 /*TODO: when a user clicks on a match in the list this is triggered. The value of position is equal
                 to the index of the corresponding matchData in matchList*/
-
+                //int position = (Integer) view.getTag();
+                // Access the row position here to get the correct data item
+                //MatchData matchData = getItem(position);
             }
         });
     }
