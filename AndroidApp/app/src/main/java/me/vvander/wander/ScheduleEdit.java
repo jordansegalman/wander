@@ -184,7 +184,6 @@ public class ScheduleEdit extends AppCompatActivity {
     }
 
     public void delete(View view){
-        item.removeAlarm(this);
         scheduleItems.remove(position);
         try {
             File file = new File(this.getFilesDir(), "ScheduleItems");
@@ -203,9 +202,9 @@ public class ScheduleEdit extends AppCompatActivity {
 
         Data data = Data.getInstance();
         if(ScheduleItem.isAnyDisableActive(this)){
-            data.setScheduleLocationSwitch(true);
-        } else{
             data.setScheduleLocationSwitch(false);
+        } else{
+            data.setScheduleLocationSwitch(true);
         }
 
         startActivity(new Intent(ScheduleEdit.this, Schedule.class));

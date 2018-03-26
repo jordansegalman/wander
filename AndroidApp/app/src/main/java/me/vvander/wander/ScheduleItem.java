@@ -4,6 +4,7 @@ import android.app.AlarmManager;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -81,22 +82,6 @@ public class ScheduleItem implements Serializable {
         return repeatDays;
     }
 
-    public PendingIntent getAlarmDisable(Context context) {
-        Intent disable = new Intent(context, DisableTrackingAlarm.class);
-        disable.putExtra("ScheduleItem", this);
-        PendingIntent pendingDisable = PendingIntent.getBroadcast(context, 0, disable, 0);
-
-        return pendingDisable;
-    }
-
-    public PendingIntent getAlarmEnable(Context context) {
-        Intent enable = new Intent(context, EnableTrackingAlarm.class);
-        enable.putExtra("ScheduleItem", this);
-        PendingIntent pendingEnable = PendingIntent.getBroadcast(context, 0, enable, 0);
-
-        return pendingEnable;
-    }
-
     public int GetNextRepeat() {
 
         int day = Calendar.getInstance().get(Calendar.DAY_OF_WEEK) - 1;
@@ -124,33 +109,25 @@ public class ScheduleItem implements Serializable {
     }
 
     public void resetAlarm(Context context){
-        AlarmManager alarmManager = (AlarmManager) context.getSystemService(ALARM_SERVICE);
 
         Data data = Data.getInstance();
         if(isDisableActive()){
-            data.setScheduleLocationSwitch(true);
-        } else{
             data.setScheduleLocationSwitch(false);
+        } else{
+            data.setScheduleLocationSwitch(true);
         }
 
-        PendingIntent pendingDisable = getAlarmDisable(context);
-        PendingIntent pendingEnable = getAlarmEnable(context);
+    }
 
-        alarmManager.cancel(pendingEnable);
-        alarmManager.cancel(pendingDisable);
+    public void resetAlarm(){
 
-        Calendar calendar = Calendar.getInstance();
-        calendar.setTimeInMillis(System.currentTimeMillis());
-        calendar.set(Calendar.HOUR_OF_DAY, startHour);
-        calendar.set(Calendar.MINUTE, startMinute);
-        calendar.set(Calendar.DAY_OF_WEEK, GetNextRepeat());
+        Data data = Data.getInstance();
+        if(isDisableActive()){
+            data.setScheduleLocationSwitch(false);
+        } else{
+            data.setScheduleLocationSwitch(true);
+        }
 
-        alarmManager.setExact(AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(), pendingDisable);
-
-        calendar.set(Calendar.HOUR_OF_DAY, endHour);
-        calendar.set(Calendar.MINUTE, endMinute);
-
-        alarmManager.setExact(AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(), pendingEnable);
     }
 
     public boolean isDisableActive(){
@@ -158,7 +135,13 @@ public class ScheduleItem implements Serializable {
         int day = calendar.get(Calendar.DAY_OF_WEEK) - 1;
         int hour = calendar.get(Calendar.HOUR_OF_DAY);
         int minute = calendar.get(Calendar.MINUTE);
-        if(repeatDays[day] && hour < endHour && hour > startHour && minute < endMinute && minute > startMinute){
+        if(repeatDays[day] && hour < endHour && hour > startHour){
+            return true;
+        }
+        if(repeatDays[day] && hour == startHour && minute > startMinute){
+            return true;
+        }
+        if(repeatDays[day] && hour == endHour && minute < endMinute){
             return true;
         }
         return false;
@@ -187,13 +170,6 @@ public class ScheduleItem implements Serializable {
             }
         }
         return false;
-    }
-
-    public void removeAlarm(Context context){
-        AlarmManager alarmManager = (AlarmManager) context.getSystemService(ALARM_SERVICE);
-
-        alarmManager.cancel(getAlarmEnable(context));
-        alarmManager.cancel(getAlarmDisable(context));
     }
 
 }

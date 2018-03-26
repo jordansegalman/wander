@@ -42,10 +42,11 @@ public class Schedule extends AppCompatActivity {
         } catch (IOException | ClassNotFoundException e) {
             e.printStackTrace();
         }
-
+        boolean empty = false;
         if (scheduleItems == null || scheduleItems.isEmpty()) {
             listItems = new String[1];
             listItems[0] = "No Schedule Set";
+            empty = true;
         } else {
             listItems = new String[scheduleItems.size()];
 
@@ -58,15 +59,17 @@ public class Schedule extends AppCompatActivity {
         scheduleListView = findViewById(R.id.scheduleList);
         scheduleListView.setAdapter(adapter);
 
-        scheduleListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                Intent edit = new Intent(Schedule.this, ScheduleEdit.class);
-                edit.putExtra("Position", position);
-                startActivity(edit);
+        if (!empty) {
+            scheduleListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+                @Override
+                public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                    Intent edit = new Intent(Schedule.this, ScheduleEdit.class);
+                    edit.putExtra("Position", position);
+                    startActivity(edit);
 
-            }
-        });
+                }
+            });
+        }
     }
 
     public void newSchedule(View view) {

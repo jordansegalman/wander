@@ -1,11 +1,14 @@
 package me.vvander.wander;
 
+import android.app.AlarmManager;
 import android.app.Dialog;
+import android.app.PendingIntent;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.os.SystemClock;
 import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
@@ -108,9 +111,18 @@ public class Login extends AppCompatActivity {
             e.printStackTrace();
         }
 
+        Data.getInstance().setScheduleLocationSwitch(true);
+
         for(ScheduleItem item : scheduleItems){
             item.resetAlarm(this);
         }
+
+        AlarmManager alarmMgr = (AlarmManager)this.getSystemService(Context.ALARM_SERVICE);
+        Intent intent = new Intent(this, ScheduleAlarmReceiver.class);
+        PendingIntent alarmIntent = PendingIntent.getBroadcast(this, 0, intent, 0);
+
+        alarmMgr.setInexactRepeating(AlarmManager.ELAPSED_REALTIME_WAKEUP, SystemClock.elapsedRealtime() + 60 * 1000, 60*1000, alarmIntent);
+
     }
 
     public void login(View view) {
