@@ -73,6 +73,11 @@ public class Settings extends AppCompatActivity {
         SharedPreferences.Editor editor = sharedPreferences.edit();
         editor.putBoolean("manualLocationSwitch", value);
         editor.apply();
+        if (Data.getInstance().getManualLocationSwitch() && Data.getInstance().getScheduleLocationSwitch() && Data.getInstance().getActivityRecognitionLocationSwitch()) {
+            startService(new Intent(this, LocationCollectionService.class));
+        } else {
+            stopService(new Intent(this, LocationCollectionService.class));
+        }
     }
 
     public void delete(View view) {

@@ -225,7 +225,11 @@ public class Login extends AppCompatActivity {
     }
 
     private void startLocationCollectionService() {
-        startService(new Intent(this, LocationCollectionService.class));
+        if (Data.getInstance().getManualLocationSwitch() && Data.getInstance().getScheduleLocationSwitch() && Data.getInstance().getActivityRecognitionLocationSwitch()) {
+            startService(new Intent(this, LocationCollectionService.class));
+        } else {
+            stopService(new Intent(this, LocationCollectionService.class));
+        }
     }
 
     public void forgotPassword(View view) {
