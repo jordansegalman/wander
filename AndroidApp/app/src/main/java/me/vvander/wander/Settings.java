@@ -26,6 +26,7 @@ import org.json.JSONObject;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.io.File;
 
 public class Settings extends AppCompatActivity {
     private static final String TAG = Settings.class.getSimpleName();
@@ -139,6 +140,14 @@ public class Settings extends AppCompatActivity {
                 DefaultRetryPolicy.DEFAULT_MAX_RETRIES,
                 DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
         requestQueue.add(postRequest);
+
+        File listItemsFile = new File(this.getFilesDir(), "ScheduleItems");
+        listItemsFile.delete();
+    }
+
+
+    public void setSchedule(View view) {
+        startActivity(new Intent(Settings.this, Schedule.class));
     }
 
     private void resetManualLocationSwitch() {
