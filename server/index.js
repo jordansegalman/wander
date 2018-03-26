@@ -854,6 +854,31 @@ app.post('/getMatch', function(request, response){
 	getMatch(u, request, response);
 });
 
+// Called when a POST request is made to /getCrossLocations
+app.post('/getCrossLocations', function(request, response){
+	// If the object request.body is null, respond with status 500 'Internal Server Error'
+	if (!request.body) return response.sendStatus(500);
+
+	// POST request must have 1 parameter (uid)
+	if (Object.keys(request.body).length != 1 || !request.body.uid) {
+		return response.status(400).send("Invalid POST request\n");
+	}
+
+	// If session not authenticated
+	if (!request.session || ((!request.session.authenticated || request.session.authenticated === false) && (!request.session.googleAuthenticated || request.session.googleAuthenticated === false) && (!request.session.facebookAuthenticated || request.session.facebookAuthenticated === false))) {
+		return response.status(400).send("User not logged in.\n");
+	}
+
+	// Validate uid
+	if (validateUid(request.body.uid)) {
+		var u = request.body.uid;
+	} else {
+		return response.status(400).send("Invalid user ID.\n");
+	}
+
+	getCrossLocations(u, request, response);
+});
+
 // Validates a user ID
 function validateUid(uid) {
 	return !validator.isEmpty(uid) && validator.isHexadecimal(uid) && validator.isLength(uid, {min: 16, max: 16});
@@ -1873,18 +1898,35 @@ function findCrossedPaths(lat, lon, currentTime, request, response) {
 					if (lat >= otherLatMin && lat <= otherLatMax && lon >= otherLonMin && lon <= otherLonMax) {
 						// If also within other user ID's cross radius
 						if (!matchGraph.hasEdge(request.session.uid, uidOther, "timesCrossed") && !matchGraph.hasEdge(uidOther, request.session.uid, "timesCrossed")) {
-							// If never crossed before, create timesCrossed and lastTime edges
+							// If never crossed before, create timesCrossed, lastTime, and crossLocations edges
 							matchGraph.setEdge(request.session.uid, uidOther, 1, "timesCrossed");
 							matchGraph.setEdge(uidOther, request.session.uid, 1, "timesCrossed");
 							matchGraph.setEdge(request.session.uid, uidOther, currentTime, "lastTime");
 							matchGraph.setEdge(uidOther, request.session.uid, currentTime, "lastTime");
+							var object = {};
+							var key = "Cross Locations";
+							object[key] = [];
+							var crossLat = (lat + latOther) / 2;
+							var crossLon = (lon + lonOther) / 2;
+							var data = {latitude: crossLat, longitude: crossLon};
+							object[key].push(data);
+							matchGraph.setEdge(request.session.uid, uidOther, JSON.stringify(object), "crossLocations");
+							matchGraph.setEdge(uidOther, request.session.uid, JSON.stringify(object), "crossLocations");
 							console.log('Users crossed paths for the first time.');
 						} else if (matchGraph.edge(request.session.uid, uidOther, "lastTime") < currentTime - CROSS_COOLDOWN && matchGraph.edge(uidOther, request.session.uid, "lastTime") < currentTime - CROSS_COOLDOWN) {
-							// If crossed before, increment timesCrossed edge and update lastTime edge
+							// If crossed before, increment timesCrossed edge and update lastTime and crossLocations edges
 							matchGraph.setEdge(request.session.uid, uidOther, matchGraph.edge(request.session.uid, uidOther, "timesCrossed") + 1, "timesCrossed");
 							matchGraph.setEdge(uidOther, request.session.uid, matchGraph.edge(uidOther, request.session.uid, "timesCrossed") + 1, "timesCrossed");
 							matchGraph.setEdge(request.session.uid, uidOther, currentTime, "lastTime");
 							matchGraph.setEdge(uidOther, request.session.uid, currentTime, "lastTime");
+							var object = JSON.parse(matchGraph.edge(request.session.uid, uidOther, "crossLocations"));
+							var key = "Cross Locations";
+							var crossLat = (lat + latOther) / 2;
+							var crossLon = (lon + lonOther) / 2;
+							var data = {latitude: crossLat, longitude: crossLon};
+							object[key].push(data);
+							matchGraph.setEdge(request.session.uid, uidOther, JSON.stringify(object), "crossLocations");
+							matchGraph.setEdge(uidOther, request.session.uid, JSON.stringify(object), "crossLocations");
 							console.log('Users crossed paths again.');
 							if (matchGraph.edge(request.session.uid, uidOther, "timesCrossed") >= MATCH_THRESHOLD && matchGraph.edge(uidOther, request.session.uid, "timesCrossed") >= MATCH_THRESHOLD && !matchGraph.hasEdge(request.session.uid, uidOther, "matched") && !matchGraph.hasEdge(uidOther, request.session.uid, "matched")) {
 								// If crossed greater than or equal to match threshold times and not already matched, create matched, approved, unmatched, blocked, and newMatch edges
@@ -1915,9 +1957,9 @@ function findCrossedPaths(lat, lon, currentTime, request, response) {
 												.then((response) => {
 													console.log('Successfully sent existing match crossed paths notification.');
 												})
-												.catch((error) => {
-													console.log(error);
-												});
+											.catch((error) => {
+												console.log(error);
+											});
 										}
 									}
 								});
@@ -1943,9 +1985,9 @@ function findCrossedPaths(lat, lon, currentTime, request, response) {
 												.then((response) => {
 													console.log('Successfully sent existing match crossed paths notification.');
 												})
-												.catch((error) => {
-													console.log(error);
-												});
+											.catch((error) => {
+												console.log(error);
+											});
 										}
 									}
 								});
@@ -1999,9 +2041,9 @@ function notifyMatches() {
 							.then((response) => {
 								console.log('Successfully sent match notification.');
 							})
-							.catch((error) => {
-								console.log(error);
-							});
+						.catch((error) => {
+							console.log(error);
+						});
 					}
 				}
 			});
@@ -2113,6 +2155,15 @@ function getMatch(u, request, response) {
 			});
 		}
 	}
+}
+
+// Gets all location coordinates where users crossed paths
+function getCrossLocations(u, request, response) {
+	if (matchGraph.hasEdge(request.session.uid, u, "crossLocations") && matchGraph.hasEdge(u, request.session.uid, "crossLocations")) {
+		console.log("Cross locations sent.");
+		return response.status(200).send(matchGraph.edge(request.session.uid, u, "crossLocations"));
+	}
+	return response.status(500).send("Error getting cross locations.\n");
 }
 
 // Writes the match graph to a file
