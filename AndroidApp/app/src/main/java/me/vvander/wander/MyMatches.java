@@ -1,13 +1,23 @@
 package me.vvander.wander;
 
+import android.app.Dialog;
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.support.v4.app.ActivityCompat;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Base64;
 import android.util.Log;
 import android.view.View;
+import android.view.Window;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ListView;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.android.volley.DefaultRetryPolicy;
@@ -17,7 +27,14 @@ import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.Volley;
+import com.facebook.CustomTabMainActivity;
+import com.google.android.gms.maps.GoogleMap;
+import com.google.android.gms.maps.MapView;
+import com.google.android.gms.maps.MapsInitializer;
+import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.Marker;
+import com.google.android.gms.maps.model.MarkerOptions;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -29,6 +46,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import de.hdodenhof.circleimageview.CircleImageView;
 import me.vvander.wander.R;
 
 public class MyMatches extends AppCompatActivity {
@@ -58,7 +76,6 @@ public class MyMatches extends AppCompatActivity {
     private void requestAllMatches() {
         String url = Data.getInstance().getUrl() + "/getAllMatches";
         Map<String, String> params = new HashMap<>();
-        Toast.makeText(getApplicationContext(), "Comes here", Toast.LENGTH_SHORT).show();
         JsonObjectRequest postRequest = new JsonObjectRequest(Request.Method.POST, url, new JSONObject(params),
                 new Response.Listener<JSONObject>() {
                     @Override
@@ -69,10 +86,9 @@ public class MyMatches extends AppCompatActivity {
                             for (int i = 0; i < length; i++) {
                                 JSONObject object = array.getJSONObject(i);
                                 String uid = String.valueOf(object.get("uid"));
-                                Toast.makeText(getApplicationContext(), uid, Toast.LENGTH_SHORT).show();
                                 requestSingleMatch(uid);
                             }
-                            setupListView();
+
                         } catch (JSONException j) {
                             j.printStackTrace();
                         }
@@ -96,7 +112,6 @@ public class MyMatches extends AppCompatActivity {
         String url = Data.getInstance().getUrl() + "/getMatch";
         Map<String, String> params = new HashMap<>();
         params.put("uid", uid);
-        Toast.makeText(getApplicationContext(), "Gets to single match request.", Toast.LENGTH_SHORT).show();
 
         JsonObjectRequest postRequest = new JsonObjectRequest(Request.Method.POST, url, new JSONObject(params),
                 new Response.Listener<JSONObject>() {
@@ -104,7 +119,6 @@ public class MyMatches extends AppCompatActivity {
                     public void onResponse(JSONObject response) {
                         try {
                             // Should only be one item in the array
-                            Toast.makeText(getApplicationContext(), "Response from server.", Toast.LENGTH_SHORT).show();
                             JSONArray array = response.getJSONArray("Profile");
 
                             JSONObject object = array.getJSONObject(0);
@@ -118,12 +132,13 @@ public class MyMatches extends AppCompatActivity {
                             Log.d("Interests", interests);
                             String firstName = String.valueOf(object.get("firstName"));
                             Log.d("Name", firstName);
-                            String timesCrossed = String.valueOf(object.get("timesCrossed"));
-                            Log.d("Times Crossed", timesCrossed);
+                            int timesCrossed = Integer.parseInt(String.valueOf(object.get("timesCrossed")));
+                            Log.d("Times Crossed", timesCrossed + "");
                             String approved = String.valueOf(object.get("approved"));
                             Log.d("Approved", approved);
                             String otherApproved = String.valueOf(object.get("otherApproved"));
                             Log.d("Other Approved", otherApproved);
+
 
                             MatchData match = new MatchData();
                             match.setAbout(about);
@@ -131,10 +146,113 @@ public class MyMatches extends AppCompatActivity {
                             match.setInterests(interests);
                             match.setPicture(picture);
                             match.setName(firstName);
+                            match.setNumPathCrosses(timesCrossed);
+                            match.setApproved(Boolean.valueOf(approved));
                             Log.d("All profile information", uid + " " + about + " " + interests);
                             matchMap.put(uid, match);
-
                             setupListView();
+
+                        } catch (JSONException j) {
+                            j.printStackTrace();
+                        }
+                    }
+                },
+                new Response.ErrorListener() {
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+                        Log.d("TAG", error.toString());
+                        setupListView();
+                    }
+                }
+        );
+        postRequest.setRetryPolicy(new DefaultRetryPolicy(
+                0,
+                DefaultRetryPolicy.DEFAULT_MAX_RETRIES,
+                DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
+        requestQueue.add(postRequest);
+    }
+
+    private void approveUser(String uid) {
+        String url = Data.getInstance().getUrl() + "/approveUser";
+        Map<String, String> params = new HashMap<>();
+        params.put("uid", uid);
+
+        JsonObjectRequest postRequest = new JsonObjectRequest(Request.Method.POST, url, new JSONObject(params),
+                new Response.Listener<JSONObject>() {
+                    @Override
+                    public void onResponse(JSONObject response) {
+                        Toast.makeText(getApplicationContext(), "User approved.", Toast.LENGTH_SHORT).show();
+                    }
+                },
+                new Response.ErrorListener() {
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+                        Log.d("TAG", error.toString());
+                    }
+                }
+        );
+        postRequest.setRetryPolicy(new DefaultRetryPolicy(
+                0,
+                DefaultRetryPolicy.DEFAULT_MAX_RETRIES,
+                DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
+        requestQueue.add(postRequest);
+    }
+
+    private void unapproveUser(String uid) {
+        String url = Data.getInstance().getUrl() + "/unapproveUser";
+        Map<String, String> params = new HashMap<>();
+        params.put("uid", uid);
+
+        JsonObjectRequest postRequest = new JsonObjectRequest(Request.Method.POST, url, new JSONObject(params),
+                new Response.Listener<JSONObject>() {
+                    @Override
+                    public void onResponse(JSONObject response) {
+                        Toast.makeText(getApplicationContext(), "User unapproved.", Toast.LENGTH_SHORT).show();
+                    }
+                },
+                new Response.ErrorListener() {
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+                        Log.d("TAG", error.toString());
+                    }
+                }
+        );
+        postRequest.setRetryPolicy(new DefaultRetryPolicy(
+                0,
+                DefaultRetryPolicy.DEFAULT_MAX_RETRIES,
+                DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
+        requestQueue.add(postRequest);
+    }
+
+    private void getCrossLocations(String uid) {
+        String url = Data.getInstance().getUrl() + "/getCrossLocations";
+        Map<String, String> params = new HashMap<>();
+        params.put("uid", uid);
+
+        JsonObjectRequest postRequest = new JsonObjectRequest(Request.Method.POST, url, new JSONObject(params),
+                new Response.Listener<JSONObject>() {
+                    @Override
+                    public void onResponse(JSONObject response) {
+                        try {
+                            JSONArray array = response.getJSONArray("Cross Locations");
+                            int length = array.length();
+                            ArrayList<LatLng> list = new ArrayList<LatLng>();
+                            for (int i = 0; i < length; i++) {
+                                JSONObject object = array.getJSONObject(i);
+                                if (object.get("latitude") != null && object.get("longitude") != null) {
+                                    String latitude = String.valueOf(object.get("latitude"));
+                                    String longitude = String.valueOf(object.get("longitude"));
+                                    if (latitude != null && longitude != null && !latitude.equals("null") && !longitude.equals("null")) {
+                                        LatLng point = new LatLng(Double.parseDouble(latitude), Double.parseDouble(longitude));
+                                        list.add(point);
+                                    }
+                                }
+                            }
+
+                            Intent i = new Intent(MyMatches.this, MyLocation.class);
+                            i.putExtra("cross", list);
+                            ActivityCompat.startActivityForResult(MyMatches.this, i, 0, null);
+
                         } catch (JSONException j) {
                             j.printStackTrace();
                         }
@@ -193,7 +311,90 @@ public class MyMatches extends AppCompatActivity {
                 to the index of the corresponding matchData in matchList*/
                 //int position = (Integer) view.getTag();
                 // Access the row position here to get the correct data item
-                //MatchData matchData = getItem(position);
+                Log.d("This is the match data", "Test");
+                final MatchData matchData = (MatchData) parent.getAdapter().getItem(position);
+                Log.d("This is the match data", matchData.getName());
+                Log.d("This is the match data", matchData.getAbout());
+                Log.d("This is the match data", matchData.getInterests());
+                Log.d("This is the match data", matchData.getPicture());
+
+                AlertDialog.Builder mBuilder = new AlertDialog.Builder(MyMatches.this);
+                View mView = getLayoutInflater().inflate(R.layout.match_profile, null);
+
+                TextView name = (TextView) mView.findViewById(R.id.name);
+                EditText interests = (EditText) mView.findViewById(R.id.interests_text);
+                EditText about = (EditText) mView.findViewById(R.id.about_text);
+                EditText timesCrossed = (EditText) mView.findViewById(R.id.crossed_text);
+                CircleImageView civPicture = (CircleImageView) mView.findViewById(R.id.picture);
+
+                final Button approve = (Button) mView.findViewById(R.id.approveButton);
+                if (matchData.getApproved()) {
+                    approve.setText("Unapprove");
+                    approve.setOnClickListener(new View.OnClickListener(){
+                        @Override
+                        public void onClick(View view) {
+                            if (approve.getText().equals("Approve") ) {
+                                approveUser(matchData.getUserId());
+                                approve.setText("Unapprove");
+                                matchData.setApproved(true);
+                            } else if (approve.getText().equals("Unapprove")) {
+                                unapproveUser(matchData.getUserId());
+                                approve.setText("Approve");
+                                matchData.setApproved(false);
+                            }
+                        }
+                    });
+                } else {
+                    approve.setText("Approve");
+                    approve.setOnClickListener(new View.OnClickListener(){
+                        @Override
+                        public void onClick(View view) {
+                            if (approve.getText().equals("Approve") ) {
+                                approveUser(matchData.getUserId());
+                                approve.setText("Unapprove");
+                                matchData.setApproved(true);
+                            } else if (approve.getText().equals("Unapprove")) {
+                                unapproveUser(matchData.getUserId());
+                                approve.setText("Approve");
+                                matchData.setApproved(false);
+                            }
+                        }
+                    });
+                }
+                Button crossed = (Button) mView.findViewById(R.id.crossedPathsButton);
+
+
+
+                crossed.setOnClickListener(new View.OnClickListener(){
+                    @Override
+                    public void onClick(View view) {
+                        getCrossLocations(matchData.getUserId());
+
+                    }
+                });
+
+                name.setText(matchData.getName());
+                interests.setText(matchData.getInterests());
+                about.setText(matchData.getAbout());
+                timesCrossed.setText(String.valueOf(matchData.getNumPathCrosses()));
+
+                if (matchData.getPicture() != null) {
+                    byte[] decoded_string = Base64.decode(matchData.getPicture(), Base64.DEFAULT);
+                    if (decoded_string == null) {
+                        Log.d("TAG", "ERROR!");
+                    }
+                    Bitmap decoded_byte = BitmapFactory.decodeByteArray(decoded_string, 0, decoded_string.length);
+                    civPicture.setImageBitmap(decoded_byte);
+                } else {
+                    Bitmap icon = BitmapFactory.decodeResource(getResources(), R.drawable.default_profile);
+
+                    civPicture.setImageBitmap(icon);
+                }
+
+                mBuilder.setView(mView);
+                AlertDialog dialog = mBuilder.create();
+                dialog.show();
+
             }
         });
     }

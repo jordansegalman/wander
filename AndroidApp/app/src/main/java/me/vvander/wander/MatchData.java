@@ -20,6 +20,7 @@ public class MatchData {
     private Date matchTime;
     private int[] latitudes; //An array of the latitude data for all path crosses (if you think there is a better way
     private int[] longitudes; //to store location data go for it)
+    private boolean approved;
     //TODO: add any other info about matches as necessary
 
 
@@ -31,6 +32,7 @@ public class MatchData {
     public void setUserId(String userId) {this.userId = userId;}
     public void setPicture(String picture) {this.picture = picture;}
     public void setNumPathCrosses(int numPathCrosses) {this.numPathCrosses = numPathCrosses;}
+    public void setApproved(boolean approved) {this.approved = approved;}
     public void setLatitudes(int[] latitudes) {this.latitudes = latitudes;}
     public void setLongitudes(int[] longitudes) {this.longitudes = longitudes;}
     public void setMatchTime(Date matchTime) {this.matchTime = matchTime;}
@@ -40,8 +42,10 @@ public class MatchData {
     public String getAbout() {return about;}
     public String getLocation() {return location;}
     public String getEmail() {return email;}
+    public String getPicture() {return picture;}
     public String getUserId() {return userId;}
     public int getNumPathCrosses() {return numPathCrosses;}
+    public boolean getApproved() {return approved;}
     public Date getMatchTime() {return matchTime;}
     public int[] getLatitudes() {return latitudes;}
     public int[] getLongitudes() {return longitudes;}

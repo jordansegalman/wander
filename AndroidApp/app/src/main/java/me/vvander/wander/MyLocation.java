@@ -2,6 +2,7 @@ package me.vvander.wander;
 
 import android.Manifest;
 import android.content.Context;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.location.Criteria;
@@ -36,6 +37,7 @@ import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.TileOverlay;
 import com.google.android.gms.maps.model.TileOverlayOptions;
 import com.google.maps.android.heatmaps.Gradient;
@@ -68,6 +70,8 @@ public class MyLocation extends AppCompatActivity implements OnMapReadyCallback,
     private boolean overlayAllOn;
     private boolean overlayPersonalOn;
 
+    private ArrayList<LatLng> cross;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -85,6 +89,16 @@ public class MyLocation extends AppCompatActivity implements OnMapReadyCallback,
         // buildGoogleApiClient();
         //createLocationRequest();
         // startLocationUpdates();
+
+        if (getCallingActivity() != null) {
+            Log.d(TAG, getCallingActivity().getClassName());
+            Toast.makeText(getApplicationContext(), getCallingActivity().getClassName(), Toast.LENGTH_SHORT).show();
+            if (getCallingActivity().getClassName().equalsIgnoreCase("me.vvander.wander.MyMatches")) {
+                Intent in = getIntent();
+                cross = (ArrayList<LatLng>)in.getSerializableExtra("cross");
+            }
+        }
+
     }
 
     /**
@@ -99,6 +113,17 @@ public class MyLocation extends AppCompatActivity implements OnMapReadyCallback,
     @Override
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
+        if (cross != null && cross.size() > 0) {
+            Toast.makeText(getApplicationContext(), "Here", Toast.LENGTH_SHORT).show();
+
+            Log.d("Comes in here", "Comes into here onMapReady");
+            for (int i = 0; i < cross.size(); i++) {
+                Log.d("Comes in here", "Comes into here onMapReady 2");
+                mMap.addMarker(new MarkerOptions()
+                        .position(cross.get(i))
+                        .title("Crossed here!"));
+            }
+        }
         while (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(this, new String[]{ACCESS_FINE_LOCATION}, 1);
         }
@@ -117,6 +142,8 @@ public class MyLocation extends AppCompatActivity implements OnMapReadyCallback,
                     .target(new LatLng(location.getLatitude(), location.getLongitude())).zoom(17).build();
             mMap.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition));
         }
+
+
     }
 
     @Override
