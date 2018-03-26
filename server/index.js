@@ -2104,7 +2104,8 @@ function getMatch(u, request, response) {
 						var p = result[i].picture;
 						var t = matchGraph.edge(request.session.uid, result[i].uid, "timesCrossed");
 						var ap = matchGraph.edge(request.session.uid, result[i].uid, "approved");
-						var data = {uid: result[i].uid, name: n, about: a, interests: i, picture: p, timesCrossed: t, approved: ap};
+						var oap = matchGraph.edge(result[i].uid, request.session.uid, "approved");
+						var data = {uid: result[i].uid, name: n, about: a, interests: i, picture: p, timesCrossed: t, approved: ap, otherApproved: oap};
 						object[key].push(data);
 					}
 					return response.status(200).send(JSON.stringify(object));
