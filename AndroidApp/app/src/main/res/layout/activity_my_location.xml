@@ -1,58 +1,47 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="fill_parent"
     android:layout_height="fill_parent"
     android:orientation="horizontal">
 
-    <fragment xmlns:android="http://schemas.android.com/apk/res/android"
-        xmlns:tools="http://schemas.android.com/tools"
+    <fragment
         android:id="@+id/map"
         android:name="com.google.android.gms.maps.SupportMapFragment"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         tools:context="me.vvander.wander.MyLocation" />
 
-    <TextView
-        android:id="@+id/heatmap_toggle"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center"
-        android:layout_margin="10dp"
-        android:layout_weight="1"
-        android:clickable="true"
-        android:focusable="true"
-        android:gravity="center"
-        android:onClick="displayHeatmap"
-        android:padding="0dp"
-        android:text="Display Heatmap"
-        android:textColor="#0645AD" />
-
-
-    <TextView
-        android:id="@+id/all_heatmap_toggle"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignBaseline="@+id/heatmap_toggle"
-        android:layout_alignBottom="@+id/heatmap_toggle"
-        android:layout_gravity="center"
-        android:layout_marginStart="15dp"
-        android:layout_toEndOf="@+id/heatmap_toggle"
-        android:layout_weight="1"
-        android:clickable="true"
-        android:focusable="true"
-        android:gravity="center"
-        android:onClick="displayHeatmapAll"
-        android:padding="0dp"
-        android:text="Display Popular Locations"
-        android:textColor="#0645AD" />
-    <!--
-    <Button
+    <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_weight="0.1"
-        android:minHeight="0dp"
-        android:minWidth="0dp"
-        android:backgroundTint="@color/cardview_dark_background"
-        android:onClick="displayHeatmap"
-        android:text="Display Heatmap" />
-    -->
+        android:layout_height="match_parent"
+        android:orientation="vertical">
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <Button
+                android:id="@+id/heatmapButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:alpha="0.6"
+                android:backgroundTint="@color/colorAccent"
+                android:onClick="displayHeatmap"
+                android:text="Location History" />
+
+            <Button
+                android:id="@+id/allHeatmapButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:alpha="0.6"
+                android:backgroundTint="@color/colorAccent"
+                android:onClick="displayHeatmapAll"
+                android:text="Popular Locations" />
+        </LinearLayout>
+    </LinearLayout>
+
+
 </RelativeLayout>

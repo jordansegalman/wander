@@ -8,6 +8,8 @@ import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
 import android.widget.EditText;
+import android.widget.Space;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.android.volley.DefaultRetryPolicy;
@@ -27,24 +29,38 @@ import java.util.Map;
 public class Delete extends AppCompatActivity {
     private static final String TAG = Delete.class.getSimpleName();
     private static final String SP_LOCATION = "locationSwitch";
-    EditText passwordEdit;
+    EditText passwordEditText;
     private RequestQueue requestQueue;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_delete);
+
+        Space passwordSpace = findViewById(R.id.passwordSpace);
+        TextView passwordTextView = findViewById(R.id.passwordTextView);
+        passwordEditText = findViewById(R.id.passwordEditText);
+
+        if (Data.getInstance().getLoggedInGoogle() || Data.getInstance().getLoggedInFacebook()) {
+            passwordSpace.setVisibility(View.GONE);
+            passwordTextView.setVisibility(View.GONE);
+            passwordEditText.setVisibility(View.GONE);
+        } else if (Data.getInstance().getLoggedIn()) {
+            passwordSpace.setVisibility(View.VISIBLE);
+            passwordTextView.setVisibility(View.VISIBLE);
+            passwordEditText.setVisibility(View.VISIBLE);
+        }
+
         requestQueue = Volley.newRequestQueue(this);
-        passwordEdit = findViewById(R.id.password);
     }
 
     public void delete(View view) {
         if (Data.getInstance().getLoggedIn() && !Data.getInstance().getLoggedInGoogle() && !Data.getInstance().getLoggedInFacebook()) {
-            if (passwordEdit.getText().toString().length() == 0) {
+            if (passwordEditText.getText().toString().length() == 0) {
                 Toast.makeText(getApplicationContext(), "Please enter your password.", Toast.LENGTH_SHORT).show();
                 return;
             }
-            sendPOSTRequest(passwordEdit.getText().toString());
+            sendPOSTRequest(passwordEditText.getText().toString());
         } else if (!Data.getInstance().getLoggedIn() && (Data.getInstance().getLoggedInGoogle() || Data.getInstance().getLoggedInFacebook())) {
             sendPOSTRequest(null);
         }

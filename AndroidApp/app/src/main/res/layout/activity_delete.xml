@@ -32,10 +32,12 @@
                 android:textSize="20sp" />
 
             <Space
+                android:id="@+id/passwordSpace"
                 android:layout_width="match_parent"
                 android:layout_height="40dp" />
 
             <TextView
+                android:id="@+id/passwordTextView"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:gravity="center"
@@ -45,7 +47,7 @@
                 android:textSize="24sp" />
 
             <EditText
-                android:id="@+id/password"
+                android:id="@+id/passwordEditText"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:backgroundTint="#000000"

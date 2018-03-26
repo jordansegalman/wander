@@ -254,7 +254,7 @@ public class MyLocation extends AppCompatActivity implements OnMapReadyCallback,
     }
 
     public void displayHeatmap(View view) {
-        TextView heatmap = findViewById(R.id.heatmap_toggle);
+        TextView heatmap = findViewById(R.id.heatmapButton);
         if (overlayPersonal == null && heatmap.getText().toString().equals("Display Heatmap")) {
             Toast.makeText(getApplicationContext(), "Displaying Heatmap", Toast.LENGTH_SHORT).show();
             HeatmapTileProvider provider = new HeatmapTileProvider.Builder().data(listPersonal).build();
@@ -270,7 +270,7 @@ public class MyLocation extends AppCompatActivity implements OnMapReadyCallback,
     }
 
     public void displayHeatmapAll(View view) {
-        TextView heatmap = findViewById(R.id.all_heatmap_toggle);
+        TextView heatmap = findViewById(R.id.allHeatmapButton);
         if (overlayAll == null && heatmap.getText().toString().equals("Display Popular Locations")) {
             Toast.makeText(getApplicationContext(), "Displaying Popular Locations", Toast.LENGTH_SHORT).show();
             HeatmapTileProvider provider = new HeatmapTileProvider.Builder().data(listAll).build();
