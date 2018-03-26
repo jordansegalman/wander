@@ -91,7 +91,7 @@
                     android:cursorVisible="false"
                     android:focusable="false"
                     android:focusableInTouchMode="false"
-                    android:text="No Information"
+                    android:text="No About"
                     android:textColor="#606060"
                     android:textSize="14sp"
                     android:visibility="invisible" />
@@ -151,48 +151,73 @@
 
             <LinearLayout
                 android:id="@+id/button_layer"
-                android:layout_width="wrap_content"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_alignParentBottom="true"
-                android:gravity="center"
                 android:orientation="horizontal">
 
-                <Button
-                    android:layout_width="63dp"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="end"
-                    android:layout_weight="0"
-                    android:backgroundTint="@color/colorAccent"
-                    android:onClick="edit"
-                    android:text="Edit" />
-
-                <Button
+                <LinearLayout
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_gravity="end"
                     android:layout_weight="0"
-                    android:backgroundTint="@color/colorAccent"
-                    android:onClick="update"
-                    android:text="Update" />
+                    android:orientation="vertical">
 
+                    <Button
+                        android:id="@+id/editButton"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="end"
+                        android:layout_weight="0"
+                        android:backgroundTint="@color/colorAccent"
+                        android:onClick="edit"
+                        android:text="Edit" />
 
-                <Button
+                    <Button
+                        android:id="@+id/updateButton"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="end"
+                        android:layout_weight="0"
+                        android:backgroundTint="@color/colorAccent"
+                        android:onClick="update"
+                        android:text="Update" />
+
+                </LinearLayout>
+
+                <Space
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1" />
+
+                <LinearLayout
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_gravity="end"
                     android:layout_weight="0"
-                    android:backgroundTint="@color/colorAccent"
-                    android:onClick="linkedInProfile"
-                    android:text="Import FB" />
+                    android:orientation="vertical">
 
-                <Button
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="end"
-                    android:layout_weight="0"
-                    android:backgroundTint="@color/colorAccent"
-                    android:onClick="linkedInProfile"
-                    android:text="Import LinkedIn" />
+                    <Button
+                        android:id="@+id/importFacebookButton"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="end"
+                        android:layout_weight="0"
+                        android:backgroundTint="@color/colorAccent"
+                        android:onClick="importFacebookProfile"
+                        android:text="Import Facebook" />
+
+                    <Button
+                        android:id="@+id/importLinkedInButton"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="end"
+                        android:layout_weight="0"
+                        android:backgroundTint="@color/colorAccent"
+                        android:onClick="importLinkedInProfile"
+                        android:text="Import LinkedIn" />
+
+                </LinearLayout>
+
+
             </LinearLayout>
 
         </RelativeLayout>

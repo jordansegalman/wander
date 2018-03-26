@@ -123,7 +123,6 @@ public class ProfileEdit extends AppCompatActivity {
     }
 
     public void done(View view) {
-        //TODO: Save profile data
         etInterests = (EditText) findViewById(R.id.interests_text);
         etAbout = (EditText) findViewById(R.id.about_text);
         etLocation = (EditText) findViewById(R.id.location_text);

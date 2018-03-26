@@ -83,7 +83,7 @@
                 android:layout_width="fill_parent"
                 android:layout_height="wrap_content"
                 android:background="@android:color/transparent"
-                android:text="No Information"
+                android:text="No About"
                 android:textColor="#606060"
                 android:textSize="14sp" />
 

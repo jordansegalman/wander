@@ -26,20 +26,22 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:alpha="0.6"
-                android:backgroundTint="@color/colorAccent"
+                android:alpha="0.8"
+                android:backgroundTint="@color/colorPrimaryDark"
                 android:onClick="displayHeatmap"
-                android:text="Location History" />
+                android:text="Location History"
+                android:textColor="@android:color/white" />
 
             <Button
                 android:id="@+id/allHeatmapButton"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:alpha="0.6"
-                android:backgroundTint="@color/colorAccent"
+                android:alpha="0.8"
+                android:backgroundTint="@color/colorPrimaryDark"
                 android:onClick="displayHeatmapAll"
-                android:text="Popular Locations" />
+                android:text="Popular Locations"
+                android:textColor="@android:color/white" />
         </LinearLayout>
     </LinearLayout>
 
