@@ -4,6 +4,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
 
@@ -41,10 +42,11 @@ public class Schedule extends AppCompatActivity {
         } catch (IOException | ClassNotFoundException e) {
             e.printStackTrace();
         }
-
+        boolean empty = false;
         if (scheduleItems == null || scheduleItems.isEmpty()) {
             listItems = new String[1];
             listItems[0] = "No Schedule Set";
+            empty = true;
         } else {
             listItems = new String[scheduleItems.size()];
 
@@ -56,9 +58,26 @@ public class Schedule extends AppCompatActivity {
         adapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, listItems);
         scheduleListView = findViewById(R.id.scheduleList);
         scheduleListView.setAdapter(adapter);
+
+        if (!empty) {
+            scheduleListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+                @Override
+                public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                    Intent edit = new Intent(Schedule.this, ScheduleEdit.class);
+                    edit.putExtra("Position", position);
+                    startActivity(edit);
+
+                }
+            });
+        }
     }
 
     public void newSchedule(View view) {
         startActivity(new Intent(Schedule.this, ScheduleNew.class));
+    }
+
+    @Override
+    public void onBackPressed() {
+        startActivity(new Intent(Schedule.this, Settings.class));
     }
 }

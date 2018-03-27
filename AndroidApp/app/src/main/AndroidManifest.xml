@@ -10,6 +10,7 @@
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="com.android.alarm.permission.SET_ALARM"/>
     <uses-permission android:name="com.google.android.gms.permission.ACTIVITY_RECOGNITION" />
 
     <application
@@ -30,6 +31,9 @@
         <activity android:name="me.vvander.wander.AppHome" />
         <activity android:name="me.vvander.wander.Profile" />
         <activity android:name="me.vvander.wander.ProfileEdit" />
+        <activity android:name="me.vvander.wander.Schedule" />
+        <activity android:name="me.vvander.wander.ScheduleEdit" />
+        <activity android:name="me.vvander.wander.ScheduleNew" />
 
         <meta-data
             android:name="com.google.android.geo.API_KEY"

@@ -6,6 +6,7 @@ import android.app.TimePickerDialog;
 import android.os.Bundle;
 import android.text.format.DateFormat;
 import android.widget.Button;
+import android.widget.TextView;
 import android.widget.TimePicker;
 
 import java.util.Calendar;
@@ -27,19 +28,33 @@ public class TimePickerFragment extends DialogFragment implements TimePickerDial
 
     public void onTimeSet(TimePicker view, int hourOfDay, int minute) {
         String timeText;
-        if (minute < 10) {
+        String buttonText;
+        TextView hourView;
+        TextView minuteView;
+        if(minute < 10){
             timeText = hourOfDay + ":0" + minute;
         } else {
             timeText = hourOfDay + ":" + minute;
         }
 
+        if(type == 0){
+            buttonText = "Start Time: " + timeText;
+            Button startTimeButton = (Button) getActivity().findViewById(R.id.startTimeButton);
+            startTimeButton.setText(buttonText);
+            hourView = (TextView) getActivity().findViewById(R.id.startHour);
+            minuteView = (TextView) getActivity().findViewById(R.id.startMinute);
+            hourView.setText(String.valueOf(hourOfDay));
+            minuteView.setText(String.valueOf(minute));
 
-        if (type == 0) {
-            Button startTimeButton = getActivity().findViewById(R.id.startTimeButton);
-            startTimeButton.setText(timeText);
-        } else {
-            Button endTimeButton = getActivity().findViewById(R.id.endTimeButton);
-            endTimeButton.setText(timeText);
+        }
+        else{
+            buttonText = "End Time: " + timeText;
+            Button endTimeButton = (Button) getActivity().findViewById(R.id.endTimeButton);
+            endTimeButton.setText(buttonText);
+            hourView = (TextView) getActivity().findViewById(R.id.endHour);
+            minuteView = (TextView) getActivity().findViewById(R.id.endMinute);
+            hourView.setText(String.valueOf(hourOfDay));
+            minuteView.setText(String.valueOf(minute));
         }
     }
 }
