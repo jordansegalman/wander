@@ -651,7 +651,12 @@ app.post('/updateLinkedIn', function(request, response) {
 		return response.status(400).send("Invalid POST request\n");
 	}
 
-	var e = request.body.email;
+	// Validate email
+	if (validateEmail(request.body.email)) {
+		var e = normalizeEmail(request.body.email);
+	} else {
+		return response.status(400).send("Email must be valid and have a minimum length of 3 characters and a maximum length of 255 characters.\n");
+	}
 	var f = request.body.firstName;
 	var l = request.body.lastName;
 	var lo = request.body.loc;
@@ -789,7 +794,7 @@ app.post('/getLocationForHeatmap', function(request, response){
 	}
 
 	// If session not autheticated
-	if (!request.session || !request.session.authenticated || request.session.autheticated === false) {
+	if (!request.session || ((!request.session.authenticated || request.session.authenticated === false) && (!request.session.googleAuthenticated || request.session.googleAuthenticated === false) && (!request.session.facebookAuthenticated || request.session.facebookAuthenticated === false))) {
 		return response.status(400).send("User not logged in.\n");
 	}
 
@@ -807,7 +812,7 @@ app.post('/getAllLocationsForHeatmap', function(request, response){
 	}
 
 	// If session not autheticated
-	if (!request.session || !request.session.authenticated || request.session.autheticated === false) {
+	if (!request.session || ((!request.session.authenticated || request.session.authenticated === false) && (!request.session.googleAuthenticated || request.session.googleAuthenticated === false) && (!request.session.facebookAuthenticated || request.session.facebookAuthenticated === false))) {
 		return response.status(400).send("User not logged in.\n");
 	}
 
@@ -1936,7 +1941,7 @@ function findCrossedPaths(lat, lon, currentTime, request, response) {
 								matchGraph.setEdge(request.session.uid, uidOther, true, "newMatch");
 								matchGraph.setEdge(uidOther, request.session.uid, true, "newMatch");
 								console.log('Users matched.');
-							} else if (matchGraph.edge(request.session.uid, uidOther, "timesCrossed") >= MATCH_THRESHOLD && matchGraph.edge(uidOther, request.session.uid, "timesCrossed") >= MATCH_THRESHOLD && matchGraph.hasEdge(request.session.uid, uidOther, "matched") && matchGraph.hasEdge(uidOther, request.session.uid, "matched")) {
+							} else if (matchGraph.edge(request.session.uid, uidOther, "timesCrossed") >= MATCH_THRESHOLD && matchGraph.edge(uidOther, request.session.uid, "timesCrossed") >= MATCH_THRESHOLD && matchGraph.hasEdge(request.session.uid, uidOther, "matched") && matchGraph.hasEdge(uidOther, request.session.uid, "matched") && matchGraph.hasEdge(request.session.uid, uidOther, "approved") && matchGraph.hasEdge(uidOther, request.session.uid, "approved") && matchGraph.edge(request.session.uid, uidOther, "approved") == true && matchGraph.edge(uidOther, request.session.uid, "approved") == true) {
 								// If crossed and already matched, notify users
 								var sql = "SELECT ?? FROM ?? WHERE ??=?";
 								var post = [registrationToken, db_firebase, uid, request.session.uid];
@@ -2079,7 +2084,7 @@ function unapproveUser(u, request, response) {
 // Gets all location coordinates for user ID for heatmap generation
 function getLocationForHeatmap(request, response) {
 	var sql = "SELECT ??,?? FROM ?? WHERE ??=?";
-	var post = [longitude, latitude, db_locations, uid, request.session.uid];
+	var post = [latitude, longitude, db_locations, uid, request.session.uid];
 	dbConnection.query(sql, post, function(err, result){
 		var object = {};
 		var key = "Location";
@@ -2098,7 +2103,7 @@ function getLocationForHeatmap(request, response) {
 // Gets all location coordinates for all users for heatmap generation
 function getAllLocationsForHeatmap(request, response) {
 	var sql = "SELECT ??,?? FROM ??";
-	var post = [longitude, latitude, db_locations];
+	var post = [latitude, longitude, db_locations];
 	dbConnection.query(sql, post, function(err, result){
 		var object = {};
 		var key = "Location";
