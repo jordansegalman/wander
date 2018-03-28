@@ -34,9 +34,9 @@ public class Settings extends AppCompatActivity {
     private static final String SP_LOCATION = "locationSwitch";
     private static final String SP_SCHEDULE = "locationSchedule";
     Switch locationSwitch;
-    private RequestQueue requestQueue;
     TextView radiusText;
     SeekBar seekBar;
+    private RequestQueue requestQueue;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -179,7 +179,7 @@ public class Settings extends AppCompatActivity {
         SeekBar.OnSeekBarChangeListener seekBarChangeListener = new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                String text = "Cross Radius: " + progress;
+                String text = "Cross Radius: " + progress + " feet";
                 radiusText.setText(text);
             }
 
@@ -240,11 +240,11 @@ public class Settings extends AppCompatActivity {
                             String r = response.getString("crossRadius");
                             if (r != null) {
                                 try {
-                                    String text = "Cross Radius: " + r;
+                                    String text = "Cross Radius: " + r + " feet";
                                     radiusText.setText(text);
                                     seekBar.setProgress(Integer.parseInt(r));
                                 } catch (NumberFormatException e) {
-                                    String text = "Cross Radius: 150";
+                                    String text = "Cross Radius: 150 feet";
                                     radiusText.setText(text);
                                     seekBar.setProgress(150);
                                 }

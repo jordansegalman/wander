@@ -4,8 +4,8 @@ import android.app.DialogFragment;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -68,18 +68,18 @@ public class LocationScheduleEdit extends AppCompatActivity {
         endHourText.setText(String.valueOf(existingSchedule.getEndHour()));
         endMinuteText.setText(String.valueOf(existingSchedule.getEndMinute()));
 
-        if(existingSchedule.getStartMinute() < 10){
+        if (existingSchedule.getStartMinute() < 10) {
             String startButtonText = "Start Time: " + existingSchedule.getStartHour() + ":0" + existingSchedule.getStartMinute();
             startButton.setText(startButtonText);
-        } else{
+        } else {
             String startButtonText = "Start Time: " + existingSchedule.getStartHour() + ":" + existingSchedule.getStartMinute();
             startButton.setText(startButtonText);
         }
 
-        if(existingSchedule.getEndMinute() < 10) {
+        if (existingSchedule.getEndMinute() < 10) {
             String endButtonText = "End Time: " + existingSchedule.getEndHour() + ":0" + existingSchedule.getEndMinute();
             endButton.setText(endButtonText);
-        } else{
+        } else {
             String endButtonText = "End Time: " + existingSchedule.getEndHour() + ":" + existingSchedule.getEndMinute();
             endButton.setText(endButtonText);
         }
@@ -93,7 +93,7 @@ public class LocationScheduleEdit extends AppCompatActivity {
         day6.setChecked(existingSchedule.getDays()[6]);
     }
 
-    public void done(View view){
+    public void done(View view) {
         String name = nameEdit.getText().toString();
         int startHour = Integer.parseInt(startHourText.getText().toString());
         int startMinute = Integer.parseInt(startMinuteText.getText().toString());
@@ -118,23 +118,23 @@ public class LocationScheduleEdit extends AppCompatActivity {
         startActivity(new Intent(LocationScheduleEdit.this, LocationSchedule.class));
     }
 
-    public void startTimeButton(View view){
+    public void startTimeButton(View view) {
         Bundle bundle = new Bundle();
         bundle.putString("Time", "Start");
         DialogFragment newFragment = new LocationScheduleTimePickerFragment();
         newFragment.setArguments(bundle);
-        newFragment.show(getFragmentManager(),"TimePicker");
+        newFragment.show(getFragmentManager(), "TimePicker");
     }
 
-    public void endTimeButton(View view){
+    public void endTimeButton(View view) {
         Bundle bundle = new Bundle();
         bundle.putString("Time", "Start");
         DialogFragment newFragment = new LocationScheduleTimePickerFragment();
         newFragment.setArguments(bundle);
-        newFragment.show(getFragmentManager(),"TimePicker");
+        newFragment.show(getFragmentManager(), "TimePicker");
     }
 
-    public void delete(View view){
+    public void delete(View view) {
         ArrayList<LocationScheduleItem> locationSchedule = Data.getInstance().getLocationSchedule();
         locationSchedule.remove(position);
         saveSchedule();

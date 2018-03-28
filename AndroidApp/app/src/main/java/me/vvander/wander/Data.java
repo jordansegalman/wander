@@ -110,19 +110,19 @@ public class Data {
         return activityRecognitionLocationSwitch;
     }
 
-    void initializeLocationSchedule() {
-        locationSchedule = new ArrayList<>();
+    void setActivityRecognitionLocationSwitch(boolean value) {
+        activityRecognitionLocationSwitch = value;
     }
 
-    void setLocationSchedule(ArrayList<LocationScheduleItem> locationSchedule) {
-        this.locationSchedule = locationSchedule;
+    void initializeLocationSchedule() {
+        locationSchedule = new ArrayList<>();
     }
 
     ArrayList<LocationScheduleItem> getLocationSchedule() {
         return locationSchedule;
     }
 
-    void setActivityRecognitionLocationSwitch(boolean value) {
-        activityRecognitionLocationSwitch = value;
+    void setLocationSchedule(ArrayList<LocationScheduleItem> locationSchedule) {
+        this.locationSchedule = locationSchedule;
     }
 }

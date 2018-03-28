@@ -1857,7 +1857,7 @@ function updateLocation(lat, lon, request, response) {
 		dbConnection.query(sql, post, function(err, result){
 			if (err) throw err;
 		});
-		response.status(200).send(JSON.stringify({"response":"success"}));	
+		response.status(200).send(JSON.stringify({"response":"pass"}));	
 		findCrossedPaths(lat, lon, currentTime, request, response);
 	});
 }
@@ -2070,7 +2070,7 @@ function approveUser(u, request, response) {
 	matchGraph.setEdge(request.session.uid, u, true, "approved");
 	writeMatchGraph();
 	console.log('User approved.');
-	return response.status(200).send(JSON.stringify({"response":"success"}));
+	return response.status(200).send(JSON.stringify({"response":"pass"}));
 }
 
 // Unapproves the user with the given user ID
@@ -2078,7 +2078,7 @@ function unapproveUser(u, request, response) {
 	matchGraph.setEdge(request.session.uid, u, false, "approved");
 	writeMatchGraph();
 	console.log('User unapproved.');
-	return response.status(200).send(JSON.stringify({"response":"success"}));
+	return response.status(200).send(JSON.stringify({"response":"pass"}));
 }
 
 // Gets all location coordinates for user ID for heatmap generation

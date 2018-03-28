@@ -8,7 +8,7 @@ public class LocationScheduleItem {
     private int endMinute;
     private boolean[] days;
 
-    LocationScheduleItem(String name, int startHour, int startMinute, int endHour, int endMinute, boolean[] days){
+    LocationScheduleItem(String name, int startHour, int startMinute, int endHour, int endMinute, boolean[] days) {
         this.name = name;
         this.startHour = startHour;
         this.startMinute = startMinute;

@@ -1,12 +1,16 @@
 package me.vvander.wander;
 
+import android.Manifest;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.location.Location;
+import android.location.LocationListener;
 import android.location.LocationManager;
 import android.os.Bundle;
 import android.os.IBinder;
+import android.support.v4.app.ActivityCompat;
 import android.util.Log;
 
 import com.android.volley.DefaultRetryPolicy;
@@ -24,80 +28,56 @@ import java.util.Map;
 
 public class LocationCollectionService extends Service {
     private static final String TAG = LocationCollectionService.class.getSimpleName();
-    private static final int LOCATION_INTERVAL = 1000;
-    private static final float LOCATION_DISTANCE = 0;
-    LocationListener[] mLocationListeners = new LocationListener[]{
-            new LocationListener(LocationManager.GPS_PROVIDER),
-            new LocationListener(LocationManager.NETWORK_PROVIDER)
+    private static final int MINIMUM_TIME = 1000;
+    private static final float MINIMUM_DISTANCE = 0;
+    private LocationManager locationManager;
+    private CustomLocationListener[] locationListeners = new CustomLocationListener[]{
+            new CustomLocationListener(),
+            new CustomLocationListener()
     };
-    private LocationManager mLocationManager = null;
-    private RequestQueue requestQueue;
 
     @Override
-    public IBinder onBind(Intent arg0) {
-        return null;
+    public void onCreate() {
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED || ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            return;
+        }
+        locationManager = (LocationManager) getApplicationContext().getSystemService(Context.LOCATION_SERVICE);
+        if (locationManager != null) {
+            locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, MINIMUM_TIME, MINIMUM_DISTANCE, locationListeners[0]);
+            locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, MINIMUM_TIME, MINIMUM_DISTANCE, locationListeners[1]);
+        }
     }
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        Log.d(TAG, "onStartCommand");
         super.onStartCommand(intent, flags, startId);
         return START_STICKY;
     }
 
     @Override
-    public void onCreate() {
-        requestQueue = Volley.newRequestQueue(this);
-        Log.d(TAG, "onCreate");
-        initializeLocationManager();
-        try {
-            mLocationManager.requestLocationUpdates(
-                    LocationManager.NETWORK_PROVIDER, LOCATION_INTERVAL, LOCATION_DISTANCE,
-                    mLocationListeners[1]);
-        } catch (java.lang.SecurityException ex) {
-            Log.d(TAG, "fail to request location update, ignore", ex);
-        } catch (IllegalArgumentException ex) {
-            Log.d(TAG, "network provider does not exist, " + ex.getMessage());
-        }
-        try {
-            mLocationManager.requestLocationUpdates(
-                    LocationManager.GPS_PROVIDER, LOCATION_INTERVAL, LOCATION_DISTANCE,
-                    mLocationListeners[0]);
-        } catch (java.lang.SecurityException ex) {
-            Log.d(TAG, "fail to request location update, ignore", ex);
-        } catch (IllegalArgumentException ex) {
-            Log.d(TAG, "gps provider does not exist " + ex.getMessage());
-        }
+    public IBinder onBind(Intent intent) {
+        return null;
     }
 
     @Override
     public void onDestroy() {
-        Log.d(TAG, "onDestroy");
         super.onDestroy();
-        if (mLocationManager != null) {
-            for (LocationListener mLocationListener : mLocationListeners) {
-                try {
-                    mLocationManager.removeUpdates(mLocationListener);
-                } catch (Exception ex) {
-                    Log.d(TAG, "fail to remove location listners, ignore", ex);
-                }
+        if (locationManager != null) {
+            for (CustomLocationListener locationListener : locationListeners) {
+                locationManager.removeUpdates(locationListener);
             }
         }
     }
 
-    private void initializeLocationManager() {
-        Log.d(TAG, "initializeLocationManager");
-        if (mLocationManager == null) {
-            mLocationManager = (LocationManager) getApplicationContext().getSystemService(Context.LOCATION_SERVICE);
-        }
-    }
+    private void sendLocationToServer(Location location) {
+        RequestQueue requestQueue = Volley.newRequestQueue(this);
 
-    private void sendToServer(Location location) {
+        String url = Data.getInstance().getUrl() + "/updateLocation";
+
         Map<String, String> params = new HashMap<>();
         params.put("latitude", Double.toString(location.getLatitude()));
         params.put("longitude", Double.toString(location.getLongitude()));
 
-        String url = Data.getInstance().getUrl() + "/updateLocation";
         JsonObjectRequest postRequest = new JsonObjectRequest(Request.Method.POST, url, new JSONObject(params),
                 new com.android.volley.Response.Listener<JSONObject>() {
                     @Override
@@ -105,7 +85,9 @@ public class LocationCollectionService extends Service {
                         try {
                             String res = response.getString("response");
                             if (res.equalsIgnoreCase("pass")) {
-                                Log.d(TAG, "Location recorded.");
+                                Log.d(TAG, "Location sent to server.");
+                            } else {
+                                Log.d(TAG, "Error sending location to server.");
                             }
                         } catch (JSONException j) {
                             j.printStackTrace();
@@ -124,39 +106,27 @@ public class LocationCollectionService extends Service {
                 DefaultRetryPolicy.DEFAULT_MAX_RETRIES,
                 DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
         requestQueue.add(postRequest);
-
     }
 
-    private class LocationListener implements android.location.LocationListener {
-        Location mLastLocation;
-
-        LocationListener(String provider) {
-            Log.d(TAG, "LocationListener " + provider);
-            mLastLocation = new Location(provider);
-        }
-
+    private class CustomLocationListener implements LocationListener {
         @Override
         public void onLocationChanged(Location location) {
-            Log.d(TAG, "onLocationChanged: " + location);
-            mLastLocation.set(location);
+            Log.d(TAG, location.toString());
             if (Data.getInstance().getManualLocationSwitch() && Data.getInstance().getScheduleLocationSwitch() && Data.getInstance().getActivityRecognitionLocationSwitch()) {
-                sendToServer(location);
+                sendLocationToServer(location);
             }
         }
 
         @Override
-        public void onProviderDisabled(String provider) {
-            Log.d(TAG, "onProviderDisabled: " + provider);
+        public void onStatusChanged(String provider, int status, Bundle extras) {
         }
 
         @Override
         public void onProviderEnabled(String provider) {
-            Log.d(TAG, "onProviderEnabled: " + provider);
         }
 
         @Override
-        public void onStatusChanged(String provider, int status, Bundle extras) {
-            Log.d(TAG, "onStatusChanged: " + provider);
+        public void onProviderDisabled(String provider) {
         }
     }
 }

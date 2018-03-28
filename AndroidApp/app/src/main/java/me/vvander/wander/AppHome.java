@@ -63,17 +63,18 @@ public class AppHome extends AppCompatActivity {
         String json = sharedPreferences.getString("schedule", null);
         if (json != null) {
             Gson gson = new Gson();
-            Data.getInstance().setLocationSchedule((ArrayList<LocationScheduleItem>) gson.fromJson(json, new TypeToken<ArrayList<LocationScheduleItem>>(){}.getType()));
+            Data.getInstance().setLocationSchedule((ArrayList<LocationScheduleItem>) gson.fromJson(json, new TypeToken<ArrayList<LocationScheduleItem>>() {
+            }.getType()));
         }
     }
 
     private void setupLocationScheduleAlarm() {
-            Intent intent = new Intent(getApplicationContext(), LocationScheduleAlarmReceiver.class);
-            PendingIntent pendingIntent = PendingIntent.getBroadcast(getApplicationContext(), 0, intent, PendingIntent.FLAG_CANCEL_CURRENT);
-            AlarmManager alarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
-            if (alarmManager != null) {
-                alarmManager.setInexactRepeating(AlarmManager.ELAPSED_REALTIME, SystemClock.elapsedRealtime(), 60000, pendingIntent);
-            }
+        Intent intent = new Intent(getApplicationContext(), LocationScheduleAlarmReceiver.class);
+        PendingIntent pendingIntent = PendingIntent.getBroadcast(getApplicationContext(), 0, intent, PendingIntent.FLAG_CANCEL_CURRENT);
+        AlarmManager alarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
+        if (alarmManager != null) {
+            alarmManager.setInexactRepeating(AlarmManager.ELAPSED_REALTIME, SystemClock.elapsedRealtime(), 60000, pendingIntent);
+        }
     }
 
     private void setupActivityRecognition() {
@@ -104,7 +105,7 @@ public class AppHome extends AppCompatActivity {
                 }
 
                 if (position == 5) {
-                    startActivity(new Intent(AppHome.this, MyLocation.class));
+                    startActivity(new Intent(AppHome.this, Map.class));
                 }
             }
         });

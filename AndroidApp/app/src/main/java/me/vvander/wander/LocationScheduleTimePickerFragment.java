@@ -32,13 +32,13 @@ public class LocationScheduleTimePickerFragment extends DialogFragment implement
         TextView endHourView = getActivity().findViewById(R.id.endHour);
         TextView endMinuteView = getActivity().findViewById(R.id.endMinute);
         if (hourOfDay < 12) {
-            if(minute < 10){
+            if (minute < 10) {
                 timeText = hourOfDay % 12 + ":0" + minute + " AM";
             } else {
                 timeText = hourOfDay % 12 + ":" + minute + " AM";
             }
         } else {
-            if(minute < 10){
+            if (minute < 10) {
                 timeText = hourOfDay % 12 + ":0" + minute + " PM";
             } else {
                 timeText = hourOfDay % 12 + ":" + minute + " PM";

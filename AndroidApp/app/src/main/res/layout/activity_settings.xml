@@ -47,34 +47,34 @@
                     android:layout_weight="0"
                     android:onClick="locationToggle" />
             </LinearLayout>
-<!--
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="10dp"
-                android:orientation="horizontal">
+            <!--
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginBottom="10dp"
+                            android:orientation="horizontal">
 
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:id="@+id/textView"
-                    android:layout_weight="0"
-                    android:text="Cross Radius: " />
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:id="@+id/textView"
+                                android:layout_weight="0"
+                                android:text="Cross Radius: " />
 
-                <Space
-                    android:layout_width="10dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1" />
+                            <Space
+                                android:layout_width="10dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1" />
 
-                <SeekBar
-                    android:id="@+id/seekBar"
-                    android:min="10"
-                    android:max="5280"
-                    android:progress="150"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"/>
-            </LinearLayout>
--->
+                            <SeekBar
+                                android:id="@+id/seekBar"
+                                android:min="10"
+                                android:max="5280"
+                                android:progress="150"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"/>
+                        </LinearLayout>
+            -->
 
             <Button
                 android:id="@+id/setSchedule"
@@ -92,11 +92,11 @@
 
             <SeekBar
                 android:id="@+id/seekBar"
-                android:min="10"
-                android:max="5290"
-                android:progress="150"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"/>
+                android:layout_height="wrap_content"
+                android:max="5290"
+                android:min="10"
+                android:progress="150" />
 
             <Button
                 android:id="@+id/changeEmail"

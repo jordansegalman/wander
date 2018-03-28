@@ -9,15 +9,14 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import java.util.ArrayList;
 
-import de.hdodenhof.circleimageview.CircleImageView;
-
 public class ProfileAdapter extends ArrayAdapter<MatchData> {
 
-    public ProfileAdapter(Context context, ArrayList<MatchData> items) {
+    ProfileAdapter(Context context, ArrayList<MatchData> items) {
         super(context, 0, items);
     }
 
@@ -29,16 +28,16 @@ public class ProfileAdapter extends ArrayAdapter<MatchData> {
 
         MatchData matchData = getItem(position);
         if (matchData != null) {
-            TextView name = (TextView) convertView.findViewById(R.id.name);
+            TextView name = convertView.findViewById(R.id.name);
             name.setText(matchData.getName());
-            CircleImageView circleImageView = (CircleImageView) convertView.findViewById(R.id.picture);
+            ImageView imageView = convertView.findViewById(R.id.picture);
             if (matchData.getPicture() != null) {
                 byte[] decoded_string = Base64.decode(matchData.getPicture(), Base64.DEFAULT);
                 if (decoded_string == null) {
                     Log.d("TAG", "ERROR!");
                 }
                 Bitmap decoded_byte = BitmapFactory.decodeByteArray(decoded_string, 0, decoded_string.length);
-                circleImageView.setImageBitmap(decoded_byte);
+                imageView.setImageBitmap(decoded_byte);
             }
         }
         return convertView;

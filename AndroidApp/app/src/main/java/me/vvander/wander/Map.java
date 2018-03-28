@@ -48,9 +48,9 @@ import java.util.ArrayList;
 
 import static android.Manifest.permission.ACCESS_FINE_LOCATION;
 
-public class MyLocation extends AppCompatActivity implements OnMapReadyCallback, ActivityCompat.OnRequestPermissionsResultCallback, GoogleMap.OnMyLocationButtonClickListener,
+public class Map extends AppCompatActivity implements OnMapReadyCallback, ActivityCompat.OnRequestPermissionsResultCallback, GoogleMap.OnMyLocationButtonClickListener,
         GoogleMap.OnMyLocationClickListener, GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener, LocationListener {
-    private static final String TAG = MyLocation.class.getSimpleName();
+    private static final String TAG = Map.class.getSimpleName();
     private GoogleMap mMap;
     private RequestQueue requestQueue;
     private ArrayList<LatLng> listPersonal;
@@ -228,7 +228,7 @@ public class MyLocation extends AppCompatActivity implements OnMapReadyCallback,
                 HeatmapTileProvider mProvider = new HeatmapTileProvider.Builder().data(listPersonal).build();
                 overlayPersonal = mMap.addTileOverlay(new TileOverlayOptions().tileProvider(mProvider));
                 overlayPersonalOn = true;
-            }else {
+            } else {
                 Toast.makeText(getApplicationContext(), "No location data.", Toast.LENGTH_SHORT).show();
             }
         } else if (overlayPersonal != null && !overlayPersonalOn) {

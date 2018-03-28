@@ -57,58 +57,65 @@
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:textOff="MO"
-                    android:textOn="MO"/>
+                    android:textOn="MO" />
+
                 <ToggleButton
                     android:id="@+id/day2"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:textOn="TU"
+                    android:layout_weight="1"
                     android:textOff="TU"
-                    android:layout_weight="1"/>
+                    android:textOn="TU" />
+
                 <ToggleButton
                     android:id="@+id/day3"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:textOn="WE"
+                    android:layout_weight="1"
                     android:textOff="WE"
-                    android:layout_weight="1"/>
+                    android:textOn="WE" />
 
             </LinearLayout>
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:layout_marginTop="10dp">
+                android:layout_marginTop="10dp"
+                android:orientation="horizontal">
+
                 <Space
                     android:layout_width="0dp"
                     android:layout_height="match_parent"
-                    android:layout_weight=".125"/>
+                    android:layout_weight=".125" />
+
                 <ToggleButton
                     android:id="@+id/day4"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:textOn="TH"
+                    android:layout_weight=".25"
                     android:textOff="TH"
-                    android:layout_weight=".25"/>
+                    android:textOn="TH" />
+
                 <ToggleButton
                     android:id="@+id/day5"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:textOn="FR"
+                    android:layout_weight=".25"
                     android:textOff="FR"
-                    android:layout_weight=".25"/>
+                    android:textOn="FR" />
+
                 <ToggleButton
                     android:id="@+id/day6"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:textOn="SA"
+                    android:layout_weight=".25"
                     android:textOff="SA"
-                    android:layout_weight=".25"/>
+                    android:textOn="SA" />
+
                 <Space
                     android:layout_width="0dp"
                     android:layout_height="match_parent"
-                    android:layout_weight=".125"/>
+                    android:layout_weight=".125" />
 
             </LinearLayout>
 
@@ -131,14 +138,17 @@
             android:id="@+id/startHour"
             android:layout_width="0dp"
             android:layout_height="0dp" />
+
         <TextView
             android:id="@+id/startMinute"
             android:layout_width="0dp"
             android:layout_height="0dp" />
+
         <TextView
             android:id="@+id/endHour"
             android:layout_width="0dp"
             android:layout_height="0dp" />
+
         <TextView
             android:id="@+id/endMinute"
             android:layout_width="0dp"

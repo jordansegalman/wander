@@ -13,6 +13,9 @@
     <uses-permission android:name="com.android.alarm.permission.SET_ALARM" />
     <uses-permission android:name="com.google.android.gms.permission.ACTIVITY_RECOGNITION" />
 
+    <uses-feature android:name="android.hardware.location.gps" />
+    <uses-feature android:name="android.hardware.location.network" />
+
     <application
         android:allowBackup="false"
         android:icon="@mipmap/wander_launcher"
@@ -39,7 +42,7 @@
             android:name="com.google.android.geo.API_KEY"
             android:value="@string/google_maps_key" />
 
-        <activity android:name="me.vvander.wander.MyLocation" />
+        <activity android:name="me.vvander.wander.Map" />
 
         <service android:name="me.vvander.wander.LocationCollectionService" />
         <service android:name="me.vvander.wander.ActivityRecognitionIntentService" />

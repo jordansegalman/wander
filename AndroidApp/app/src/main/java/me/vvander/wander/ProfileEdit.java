@@ -12,6 +12,7 @@ import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -33,8 +34,6 @@ import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
 
-import de.hdodenhof.circleimageview.CircleImageView;
-
 public class ProfileEdit extends AppCompatActivity {
     private static final String TAG = ProfileEdit.class.getSimpleName();
     private static final int FINISHED = 1;
@@ -43,8 +42,7 @@ public class ProfileEdit extends AppCompatActivity {
     private EditText etLocation;
     private EditText etEmail;
     private TextView etName;
-    private CircleImageView civPicture;
-    private Spinner spinner;
+    private ImageView etPicture;
     private RequestQueue requestQueue;
 
     @Override
@@ -54,12 +52,12 @@ public class ProfileEdit extends AppCompatActivity {
 
         requestQueue = Volley.newRequestQueue(this);
 
-        etInterests = (EditText) findViewById(R.id.interests_text);
-        etAbout = (EditText) findViewById(R.id.about_text);
-        etLocation = (EditText) findViewById(R.id.location_text);
-        etEmail = (EditText) findViewById(R.id.email_text);
+        etInterests = findViewById(R.id.interests_text);
+        etAbout = findViewById(R.id.about_text);
+        etLocation = findViewById(R.id.location_text);
+        etEmail = findViewById(R.id.email_text);
         etName = findViewById(R.id.name);
-        spinner = (Spinner) findViewById(R.id.spinner);
+        Spinner spinner = findViewById(R.id.spinner);
         spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> adapterView, View view, int position, long id) {
@@ -75,7 +73,7 @@ public class ProfileEdit extends AppCompatActivity {
             }
         });
 
-        civPicture = findViewById(R.id.picture);
+        etPicture = findViewById(R.id.picture);
 
         Intent in = getIntent();
         String loc = in.getExtras().getString("location");
@@ -97,7 +95,7 @@ public class ProfileEdit extends AppCompatActivity {
                 Log.d(TAG, "ERROR!");
             }
             Bitmap decoded_byte = BitmapFactory.decodeByteArray(decoded_string, 0, decoded_string.length);
-            civPicture.setImageBitmap(decoded_byte);
+            etPicture.setImageBitmap(decoded_byte);
         }
     }
 
@@ -113,8 +111,8 @@ public class ProfileEdit extends AppCompatActivity {
         if (data != null && requestCode == FINISHED) {
             try {
                 InputStream inputStream = getApplicationContext().getContentResolver().openInputStream(data.getData());
-                CircleImageView circleImageView = findViewById(R.id.picture);
-                circleImageView.setImageBitmap(BitmapFactory.decodeStream(inputStream));
+                ImageView imageView = findViewById(R.id.picture);
+                imageView.setImageBitmap(BitmapFactory.decodeStream(inputStream));
             } catch (IOException e) {
                 Log.d(TAG, e.toString());
             }
@@ -123,13 +121,13 @@ public class ProfileEdit extends AppCompatActivity {
     }
 
     public void done(View view) {
-        etInterests = (EditText) findViewById(R.id.interests_text);
-        etAbout = (EditText) findViewById(R.id.about_text);
-        etLocation = (EditText) findViewById(R.id.location_text);
-        etEmail = (EditText) findViewById(R.id.email_text);
-        etName = (TextView) findViewById(R.id.name);
+        etInterests = findViewById(R.id.interests_text);
+        etAbout = findViewById(R.id.about_text);
+        etLocation = findViewById(R.id.location_text);
+        etEmail = findViewById(R.id.email_text);
+        etName = findViewById(R.id.name);
 
-        BitmapDrawable drawable = (BitmapDrawable) civPicture.getDrawable();
+        BitmapDrawable drawable = (BitmapDrawable) etPicture.getDrawable();
         Bitmap bitmap = drawable.getBitmap();
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         bitmap.compress(Bitmap.CompressFormat.JPEG, 90, baos);
