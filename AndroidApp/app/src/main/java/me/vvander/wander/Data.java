@@ -7,6 +7,7 @@ import com.google.firebase.iid.FirebaseInstanceId;
 import java.net.CookieHandler;
 import java.net.CookieManager;
 import java.net.CookiePolicy;
+import java.util.ArrayList;
 
 public class Data {
     private static final String url = "https://vvander.me";
@@ -19,6 +20,7 @@ public class Data {
     private boolean manualLocationSwitch = true;
     private boolean scheduleLocationSwitch = true;
     private boolean activityRecognitionLocationSwitch = false;
+    private ArrayList<LocationScheduleItem> locationSchedule;
 
     static Data getInstance() {
         return data;
@@ -106,6 +108,18 @@ public class Data {
 
     boolean getActivityRecognitionLocationSwitch() {
         return activityRecognitionLocationSwitch;
+    }
+
+    void initializeLocationSchedule() {
+        locationSchedule = new ArrayList<>();
+    }
+
+    void setLocationSchedule(ArrayList<LocationScheduleItem> locationSchedule) {
+        this.locationSchedule = locationSchedule;
+    }
+
+    ArrayList<LocationScheduleItem> getLocationSchedule() {
+        return locationSchedule;
     }
 
     void setActivityRecognitionLocationSwitch(boolean value) {

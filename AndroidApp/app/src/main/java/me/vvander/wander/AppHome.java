@@ -1,9 +1,13 @@
 package me.vvander.wander;
 
+import android.app.AlarmManager;
 import android.app.PendingIntent;
+import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.res.Configuration;
 import android.os.Bundle;
+import android.os.SystemClock;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
@@ -14,8 +18,14 @@ import android.widget.ArrayAdapter;
 import android.widget.ListView;
 
 import com.google.android.gms.location.ActivityRecognitionClient;
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
+
+import java.util.ArrayList;
 
 public class AppHome extends AppCompatActivity {
+    private static final String SP_LOCATION = "locationSwitch";
+    private static final String SP_SCHEDULE = "locationSchedule";
     private static final int ACTIVITY_RECOGNITION_DETECTION_INTERVAL = 15000;
     private ListView mDrawerList;
     private ActionBarDrawerToggle mDrawerToggle;
@@ -26,6 +36,9 @@ public class AppHome extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_app_home);
 
+        initializeManualLocationSwitch();
+        initializeScheduleLocationSwitch();
+        setupLocationScheduleAlarm();
         setupActivityRecognition();
 
         mDrawerList = findViewById(R.id.navList);
@@ -40,10 +53,33 @@ public class AppHome extends AppCompatActivity {
         getSupportActionBar().setHomeButtonEnabled(true);
     }
 
+    private void initializeManualLocationSwitch() {
+        SharedPreferences sharedPreferences = getSharedPreferences(SP_LOCATION, Context.MODE_PRIVATE);
+        Data.getInstance().setManualLocationSwitch(sharedPreferences.getBoolean("manualLocationSwitch", true));
+    }
+
+    private void initializeScheduleLocationSwitch() {
+        SharedPreferences sharedPreferences = getSharedPreferences(SP_SCHEDULE, Context.MODE_PRIVATE);
+        String json = sharedPreferences.getString("schedule", null);
+        if (json != null) {
+            Gson gson = new Gson();
+            Data.getInstance().setLocationSchedule((ArrayList<LocationScheduleItem>) gson.fromJson(json, new TypeToken<ArrayList<LocationScheduleItem>>(){}.getType()));
+        }
+    }
+
+    private void setupLocationScheduleAlarm() {
+            Intent intent = new Intent(getApplicationContext(), LocationScheduleAlarmReceiver.class);
+            PendingIntent pendingIntent = PendingIntent.getBroadcast(getApplicationContext(), 0, intent, PendingIntent.FLAG_CANCEL_CURRENT);
+            AlarmManager alarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
+            if (alarmManager != null) {
+                alarmManager.setInexactRepeating(AlarmManager.ELAPSED_REALTIME, SystemClock.elapsedRealtime(), 60000, pendingIntent);
+            }
+    }
+
     private void setupActivityRecognition() {
-        Intent intent = new Intent(this, ActivityRecognitionIntentService.class);
-        PendingIntent pendingIntent = PendingIntent.getService(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
-        ActivityRecognitionClient activityRecognitionClient = new ActivityRecognitionClient(this);
+        Intent intent = new Intent(getApplicationContext(), ActivityRecognitionIntentService.class);
+        PendingIntent pendingIntent = PendingIntent.getService(getApplicationContext(), 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+        ActivityRecognitionClient activityRecognitionClient = new ActivityRecognitionClient(getApplicationContext());
         activityRecognitionClient.requestActivityUpdates(ACTIVITY_RECOGNITION_DETECTION_INTERVAL, pendingIntent);
     }
 

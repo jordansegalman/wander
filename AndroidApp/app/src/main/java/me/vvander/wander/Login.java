@@ -1,14 +1,9 @@
 package me.vvander.wander;
 
-import android.app.AlarmManager;
 import android.app.Dialog;
-import android.app.PendingIntent;
-import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.os.SystemClock;
 import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
@@ -29,11 +24,6 @@ import com.google.android.gms.common.GoogleApiAvailability;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -42,9 +32,6 @@ import static android.Manifest.permission.ACCESS_FINE_LOCATION;
 public class Login extends AppCompatActivity {
     private static final String TAG = Login.class.getSimpleName();
     private static final int GOOGLE_PLAY_SERVICES_REQUEST_CODE = 9999;
-    private static final String SP_LOCATION = "locationSwitch";
-    EditText usernameText;
-    EditText passwordText;
     private RequestQueue requestQueue;
 
     @Override
@@ -54,16 +41,11 @@ public class Login extends AppCompatActivity {
 
         checkGooglePlayServices();
 
-        initializeManualLocationSwitch();
-        initializeSchedule();
-
         Data.getInstance().initializeCookies(getApplicationContext());
         Data.getInstance().initializeFirebaseRegistrationToken();
+        Data.getInstance().initializeLocationSchedule();
 
         ActivityCompat.requestPermissions(this, new String[]{ACCESS_FINE_LOCATION}, 1);
-
-        usernameText = findViewById(R.id.username);
-        passwordText = findViewById(R.id.password);
 
         requestQueue = Volley.newRequestQueue(this);
 
@@ -89,43 +71,9 @@ public class Login extends AppCompatActivity {
         }
     }
 
-    private void initializeManualLocationSwitch() {
-        SharedPreferences sharedPreferences = getSharedPreferences(SP_LOCATION, Context.MODE_PRIVATE);
-        Data.getInstance().setManualLocationSwitch(sharedPreferences.getBoolean("manualLocationSwitch", true));
-    }
-
-    private void initializeSchedule(){
-        ArrayList<ScheduleItem> scheduleItems = null;
-
-        try {
-            File listItemsFile = new File(this.getFilesDir(), "ScheduleItems");
-            FileInputStream fis = new FileInputStream(listItemsFile);
-            ObjectInputStream ois = new ObjectInputStream(fis);
-
-            scheduleItems = (ArrayList<ScheduleItem>) ois.readObject();
-
-            ois.close();
-            fis.close();
-
-        } catch (IOException | ClassNotFoundException e) {
-            e.printStackTrace();
-        }
-
-        Data.getInstance().setScheduleLocationSwitch(true);
-
-        for(ScheduleItem item : scheduleItems){
-            item.resetAlarm(this);
-        }
-
-        AlarmManager alarmMgr = (AlarmManager)this.getSystemService(Context.ALARM_SERVICE);
-        Intent intent = new Intent(this, ScheduleAlarmReceiver.class);
-        PendingIntent alarmIntent = PendingIntent.getBroadcast(this, 0, intent, 0);
-
-        alarmMgr.setInexactRepeating(AlarmManager.ELAPSED_REALTIME_WAKEUP, SystemClock.elapsedRealtime() + 60 * 1000, 60*1000, alarmIntent);
-
-    }
-
     public void login(View view) {
+        EditText usernameText = findViewById(R.id.username);
+        EditText passwordText = findViewById(R.id.password);
         String username = usernameText.getText().toString();
         String password = passwordText.getText().toString();
         if (username.length() == 0 || password.length() == 0) {
@@ -266,9 +214,9 @@ public class Login extends AppCompatActivity {
 
     private void startLocationCollectionService() {
         if (Data.getInstance().getManualLocationSwitch() && Data.getInstance().getScheduleLocationSwitch() && Data.getInstance().getActivityRecognitionLocationSwitch()) {
-            startService(new Intent(this, LocationCollectionService.class));
+            startService(new Intent(getApplicationContext(), LocationCollectionService.class));
         } else {
-            stopService(new Intent(this, LocationCollectionService.class));
+            stopService(new Intent(getApplicationContext(), LocationCollectionService.class));
         }
     }
 

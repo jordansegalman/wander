@@ -75,10 +75,18 @@
                     android:layout_height="wrap_content"/>
             </LinearLayout>
 -->
+
+            <Button
+                android:id="@+id/setSchedule"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:onClick="setSchedule"
+                android:text="Schedule Location Tracking" />
+
             <TextView
+                android:id="@+id/textView"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:id="@+id/textView"
                 android:layout_weight="0"
                 android:text="Cross Radius: " />
 
@@ -92,12 +100,6 @@
 
             <Button
                 android:id="@+id/changeEmail"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:onClick="setSchedule"
-                android:text="Set Schedule" />
-
-            <Button
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:onClick="changeEmail"

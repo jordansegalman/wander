@@ -3,7 +3,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context="me.vvander.wander.ScheduleEdit">
+    tools:context="me.vvander.wander.LocationScheduleEdit">
 
     <android.support.design.widget.CoordinatorLayout
         android:layout_width="match_parent"
@@ -16,17 +16,11 @@
             android:orientation="vertical"
             android:padding="20dp">
 
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="Name:"
-                android:textSize="18sp" />
-
             <EditText
                 android:id="@+id/name"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:hint="Name"/>
+                android:hint="Schedule Name" />
 
 
             <Button
@@ -126,34 +120,39 @@
             <Button
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:backgroundTint="#DB3236"
                 android:onClick="delete"
                 android:text="Delete" />
 
             <Button
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:backgroundTint="@color/colorAccent"
                 android:onClick="done"
                 android:text="Done" />
 
         </LinearLayout>
 
-        <!--These are used to store data in the view-->
         <TextView
             android:id="@+id/startHour"
             android:layout_width="0dp"
-            android:layout_height="0dp" />
+            android:layout_height="0dp"
+            android:visibility="gone" />
         <TextView
             android:id="@+id/startMinute"
             android:layout_width="0dp"
-            android:layout_height="0dp" />
+            android:layout_height="0dp"
+            android:visibility="gone" />
         <TextView
             android:id="@+id/endHour"
             android:layout_width="0dp"
-            android:layout_height="0dp" />
+            android:layout_height="0dp"
+            android:visibility="gone" />
         <TextView
             android:id="@+id/endMinute"
             android:layout_width="0dp"
-            android:layout_height="0dp" />
+            android:layout_height="0dp"
+            android:visibility="gone" />
 
     </android.support.design.widget.CoordinatorLayout>
 

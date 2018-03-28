@@ -60,9 +60,9 @@ public class ActivityRecognitionIntentService extends IntentService {
                 }
             }
             if (Data.getInstance().getManualLocationSwitch() && Data.getInstance().getScheduleLocationSwitch() && Data.getInstance().getActivityRecognitionLocationSwitch()) {
-                startService(new Intent(this, LocationCollectionService.class));
+                startService(new Intent(getApplicationContext(), LocationCollectionService.class));
             } else {
-                stopService(new Intent(this, LocationCollectionService.class));
+                stopService(new Intent(getApplicationContext(), LocationCollectionService.class));
             }
         }
     }

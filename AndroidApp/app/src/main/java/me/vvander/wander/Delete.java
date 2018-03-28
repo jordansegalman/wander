@@ -1,5 +1,7 @@
 package me.vvander.wander;
 
+import android.app.AlarmManager;
+import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -29,6 +31,7 @@ import java.util.Map;
 public class Delete extends AppCompatActivity {
     private static final String TAG = Delete.class.getSimpleName();
     private static final String SP_LOCATION = "locationSwitch";
+    private static final String SP_SCHEDULE = "locationSchedule";
     EditText passwordEditText;
     private RequestQueue requestQueue;
 
@@ -60,13 +63,13 @@ public class Delete extends AppCompatActivity {
                 Toast.makeText(getApplicationContext(), "Please enter your password.", Toast.LENGTH_SHORT).show();
                 return;
             }
-            sendPOSTRequest(passwordEditText.getText().toString());
+            attemptDelete(passwordEditText.getText().toString());
         } else if (!Data.getInstance().getLoggedIn() && (Data.getInstance().getLoggedInGoogle() || Data.getInstance().getLoggedInFacebook())) {
-            sendPOSTRequest(null);
+            attemptDelete(null);
         }
     }
 
-    private void sendPOSTRequest(String password) {
+    private void attemptDelete(String password) {
         if (Data.getInstance().getLoggedIn()) {
             Map<String, String> params = new HashMap<>();
             params.put("password", password);
@@ -80,10 +83,13 @@ public class Delete extends AppCompatActivity {
                             try {
                                 String res = response.getString("response");
                                 if (res.equalsIgnoreCase("pass")) {
-                                    Toast.makeText(getApplicationContext(), "Account deleted!", Toast.LENGTH_SHORT).show();
+                                    stopService(new Intent(getApplicationContext(), LocationCollectionService.class));
                                     resetManualLocationSwitch();
+                                    resetScheduleLocationSwitch();
+                                    cancelLocationScheduleAlarm();
                                     Data.getInstance().logout();
                                     Data.getInstance().removeAllCookies();
+                                    Toast.makeText(getApplicationContext(), "Account deleted!", Toast.LENGTH_SHORT).show();
                                     Intent intent = new Intent(Delete.this, Login.class);
                                     startActivity(intent);
                                 } else {
@@ -117,10 +123,13 @@ public class Delete extends AppCompatActivity {
                             try {
                                 String res = response.getString("response");
                                 if (res.equalsIgnoreCase("pass")) {
-                                    Toast.makeText(getApplicationContext(), "Account deleted!", Toast.LENGTH_SHORT).show();
+                                    stopService(new Intent(getApplicationContext(), LocationCollectionService.class));
                                     resetManualLocationSwitch();
+                                    resetScheduleLocationSwitch();
+                                    cancelLocationScheduleAlarm();
                                     Data.getInstance().logoutGoogle();
                                     Data.getInstance().removeAllCookies();
+                                    Toast.makeText(getApplicationContext(), "Account deleted!", Toast.LENGTH_SHORT).show();
                                     Intent intent = new Intent(Delete.this, Login.class);
                                     startActivity(intent);
                                 } else {
@@ -154,10 +163,13 @@ public class Delete extends AppCompatActivity {
                             try {
                                 String res = response.getString("response");
                                 if (res.equalsIgnoreCase("pass")) {
-                                    Toast.makeText(getApplicationContext(), "Account deleted!", Toast.LENGTH_SHORT).show();
+                                    stopService(new Intent(getApplicationContext(), LocationCollectionService.class));
                                     resetManualLocationSwitch();
+                                    resetScheduleLocationSwitch();
+                                    cancelLocationScheduleAlarm();
                                     Data.getInstance().logoutFacebook();
                                     Data.getInstance().removeAllCookies();
+                                    Toast.makeText(getApplicationContext(), "Account deleted!", Toast.LENGTH_SHORT).show();
                                     Intent intent = new Intent(Delete.this, Login.class);
                                     startActivity(intent);
                                 } else {
@@ -188,6 +200,22 @@ public class Delete extends AppCompatActivity {
         Data.getInstance().setManualLocationSwitch(true);
         SharedPreferences sharedPreferences = getSharedPreferences(SP_LOCATION, Context.MODE_PRIVATE);
         sharedPreferences.edit().clear().apply();
+    }
+
+    private void resetScheduleLocationSwitch() {
+        SharedPreferences sharedPreferences = getSharedPreferences(SP_SCHEDULE, Context.MODE_PRIVATE);
+        sharedPreferences.edit().clear().apply();
+        Data.getInstance().setScheduleLocationSwitch(true);
+    }
+
+    private void cancelLocationScheduleAlarm() {
+        Intent intent = new Intent(getApplicationContext(), LocationScheduleAlarmReceiver.class);
+        PendingIntent pendingIntent = PendingIntent.getBroadcast(getApplicationContext(), 0, intent, PendingIntent.FLAG_CANCEL_CURRENT);
+        pendingIntent.cancel();
+        AlarmManager alarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
+        if (alarmManager != null) {
+            alarmManager.cancel(pendingIntent);
+        }
     }
 
     public void back(View view) {

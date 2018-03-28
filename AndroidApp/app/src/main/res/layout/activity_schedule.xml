@@ -3,7 +3,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context="me.vvander.wander.Schedule">
+    tools:context="me.vvander.wander.LocationSchedule">
 
     <android.support.design.widget.CoordinatorLayout
         android:layout_width="match_parent"
@@ -14,18 +14,47 @@
             android:layout_height="match_parent"
             android:orientation="vertical">
 
+            <Space
+                android:id="@+id/noSchedulesTopSpace"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_weight="0.25"
+                android:visibility="gone" />
+
+            <TextView
+                android:id="@+id/noSchedulesText"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_weight="0"
+                android:text="No Schedules"
+                android:textAlignment="center"
+                android:textColor="#000000"
+                android:textSize="30sp"
+                android:visibility="gone" />
+
+            <Space
+                android:id="@+id/noSchedulesBottomSpace"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:visibility="gone" />
+
             <ListView
                 android:id="@+id/scheduleList"
-                android:layout_width="wrap_content"
-                android:layout_height="0dp"
-                android:layout_weight="1" />
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_weight="1">
+
+            </ListView>
 
             <Button
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_margin="10dp"
+                android:layout_weight="0"
+                android:backgroundTint="@color/colorAccent"
                 android:onClick="newSchedule"
-                android:text="Set new time" />
+                android:text="New Schedule" />
 
         </LinearLayout>
 

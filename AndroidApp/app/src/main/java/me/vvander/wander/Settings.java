@@ -1,5 +1,7 @@
 package me.vvander.wander;
 
+import android.app.AlarmManager;
+import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -26,11 +28,11 @@ import org.json.JSONObject;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.io.File;
 
 public class Settings extends AppCompatActivity {
     private static final String TAG = Settings.class.getSimpleName();
     private static final String SP_LOCATION = "locationSwitch";
+    private static final String SP_SCHEDULE = "locationSchedule";
     Switch locationSwitch;
     private RequestQueue requestQueue;
     TextView radiusText;
@@ -75,9 +77,9 @@ public class Settings extends AppCompatActivity {
         editor.putBoolean("manualLocationSwitch", value);
         editor.apply();
         if (Data.getInstance().getManualLocationSwitch() && Data.getInstance().getScheduleLocationSwitch() && Data.getInstance().getActivityRecognitionLocationSwitch()) {
-            startService(new Intent(this, LocationCollectionService.class));
+            startService(new Intent(getApplicationContext(), LocationCollectionService.class));
         } else {
-            stopService(new Intent(this, LocationCollectionService.class));
+            stopService(new Intent(getApplicationContext(), LocationCollectionService.class));
         }
     }
 
@@ -116,12 +118,16 @@ public class Settings extends AppCompatActivity {
                         try {
                             String res = response.getString("response");
                             if (res.equalsIgnoreCase("pass")) {
-                                Toast.makeText(getApplicationContext(), "Logged out!", Toast.LENGTH_SHORT).show();
+                                stopService(new Intent(getApplicationContext(), LocationCollectionService.class));
                                 resetManualLocationSwitch();
+                                resetScheduleLocationSwitch();
+                                cancelLocationScheduleAlarm();
                                 Data.getInstance().logout();
+                                Data.getInstance().loginGoogle();
+                                Data.getInstance().loginFacebook();
                                 Data.getInstance().removeAllCookies();
-                                Intent intent = new Intent(Settings.this, Login.class);
-                                startActivity(intent);
+                                Toast.makeText(getApplicationContext(), "Logged out!", Toast.LENGTH_SHORT).show();
+                                startActivity(new Intent(Settings.this, Login.class));
                             }
                         } catch (JSONException j) {
                             j.printStackTrace();
@@ -140,20 +146,33 @@ public class Settings extends AppCompatActivity {
                 DefaultRetryPolicy.DEFAULT_MAX_RETRIES,
                 DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
         requestQueue.add(postRequest);
-
-        File listItemsFile = new File(this.getFilesDir(), "ScheduleItems");
-        listItemsFile.delete();
     }
 
 
     public void setSchedule(View view) {
-        startActivity(new Intent(Settings.this, Schedule.class));
+        startActivity(new Intent(Settings.this, LocationSchedule.class));
     }
 
     private void resetManualLocationSwitch() {
-        Data.getInstance().setManualLocationSwitch(true);
         SharedPreferences sharedPreferences = getSharedPreferences(SP_LOCATION, Context.MODE_PRIVATE);
         sharedPreferences.edit().clear().apply();
+        Data.getInstance().setManualLocationSwitch(true);
+    }
+
+    private void resetScheduleLocationSwitch() {
+        SharedPreferences sharedPreferences = getSharedPreferences(SP_SCHEDULE, Context.MODE_PRIVATE);
+        sharedPreferences.edit().clear().apply();
+        Data.getInstance().setScheduleLocationSwitch(true);
+    }
+
+    private void cancelLocationScheduleAlarm() {
+        Intent intent = new Intent(getApplicationContext(), LocationScheduleAlarmReceiver.class);
+        PendingIntent pendingIntent = PendingIntent.getBroadcast(getApplicationContext(), 0, intent, PendingIntent.FLAG_CANCEL_CURRENT);
+        pendingIntent.cancel();
+        AlarmManager alarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
+        if (alarmManager != null) {
+            alarmManager.cancel(pendingIntent);
+        }
     }
 
     private void initializeSeekBar() {
