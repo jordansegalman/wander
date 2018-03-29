@@ -28,7 +28,7 @@
                 android:layout_weight="1"
                 android:alpha="0.8"
                 android:backgroundTint="@color/colorPrimaryDark"
-                android:onClick="displayHeatmap"
+                android:onClick="displayHeatmapPersonal"
                 android:text="Location History"
                 android:textColor="@android:color/white" />
 

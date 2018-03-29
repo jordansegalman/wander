@@ -31,12 +31,16 @@
         <activity android:name="me.vvander.wander.Registration" />
         <activity android:name="me.vvander.wander.FacebookLogin" />
         <activity android:name="me.vvander.wander.GoogleLogin" />
-        <activity android:name="me.vvander.wander.AppHome" />
+        <activity android:name="me.vvander.wander.Home" />
         <activity android:name="me.vvander.wander.Profile" />
         <activity android:name="me.vvander.wander.ProfileEdit" />
         <activity android:name="me.vvander.wander.LocationSchedule" />
         <activity android:name="me.vvander.wander.LocationScheduleEdit" />
         <activity android:name="me.vvander.wander.LocationScheduleNew" />
+
+        <meta-data
+            android:name="com.google.android.gms.version"
+            android:value="@integer/google_play_services_version" />
 
         <meta-data
             android:name="com.google.android.geo.API_KEY"
@@ -69,7 +73,7 @@
         <activity android:name="me.vvander.wander.ChangeUsername" />
         <activity android:name="me.vvander.wander.ForgotPassword" />
         <activity android:name="me.vvander.wander.ChangePassword" />
-        <activity android:name="me.vvander.wander.MyMatches" />
+        <activity android:name="me.vvander.wander.Matches" />
 
         <meta-data
             android:name="com.facebook.sdk.ApplicationId"

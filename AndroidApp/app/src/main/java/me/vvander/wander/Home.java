@@ -23,7 +23,7 @@ import com.google.gson.reflect.TypeToken;
 
 import java.util.ArrayList;
 
-public class AppHome extends AppCompatActivity {
+public class Home extends AppCompatActivity {
     private static final String SP_LOCATION = "locationSwitch";
     private static final String SP_SCHEDULE = "locationSchedule";
     private static final int ACTIVITY_RECOGNITION_DETECTION_INTERVAL = 15000;
@@ -34,7 +34,7 @@ public class AppHome extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_app_home);
+        setContentView(R.layout.activity_home);
 
         initializeManualLocationSwitch();
         initializeScheduleLocationSwitch();
@@ -93,19 +93,19 @@ public class AppHome extends AppCompatActivity {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 if (position == 0) {
-                    startActivity(new Intent(AppHome.this, MyMatches.class));
+                    startActivity(new Intent(Home.this, Matches.class));
                 }
 
                 if (position == 1) {
-                    startActivity(new Intent(AppHome.this, Profile.class));
+                    startActivity(new Intent(Home.this, Profile.class));
                 }
 
                 if (position == 4) {
-                    startActivity(new Intent(AppHome.this, Settings.class));
+                    startActivity(new Intent(Home.this, Settings.class));
                 }
 
                 if (position == 5) {
-                    startActivity(new Intent(AppHome.this, Map.class));
+                    startActivity(new Intent(Home.this, Map.class));
                 }
             }
         });

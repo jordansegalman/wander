@@ -271,6 +271,6 @@ public class Settings extends AppCompatActivity {
 
     @Override
     public void onBackPressed() {
-        startActivity(new Intent(Settings.this, AppHome.class));
+        startActivity(new Intent(Settings.this, Home.class));
     }
 }

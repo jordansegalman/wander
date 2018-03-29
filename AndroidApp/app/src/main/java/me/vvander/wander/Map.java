@@ -10,9 +10,7 @@ import android.location.Location;
 import android.location.LocationManager;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
-import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
@@ -25,18 +23,16 @@ import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.Volley;
-import com.google.android.gms.common.ConnectionResult;
-import com.google.android.gms.common.api.GoogleApiClient;
-import com.google.android.gms.location.LocationListener;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
-import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.TileOverlay;
 import com.google.android.gms.maps.model.TileOverlayOptions;
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 import com.google.maps.android.heatmaps.Gradient;
 import com.google.maps.android.heatmaps.HeatmapTileProvider;
 
@@ -46,111 +42,95 @@ import org.json.JSONObject;
 
 import java.util.ArrayList;
 
-import static android.Manifest.permission.ACCESS_FINE_LOCATION;
-
-public class Map extends AppCompatActivity implements OnMapReadyCallback, ActivityCompat.OnRequestPermissionsResultCallback, GoogleMap.OnMyLocationButtonClickListener,
-        GoogleMap.OnMyLocationClickListener, GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener, LocationListener {
+public class Map extends AppCompatActivity implements OnMapReadyCallback, GoogleMap.OnMyLocationButtonClickListener {
     private static final String TAG = Map.class.getSimpleName();
-    private GoogleMap mMap;
+    private static final int PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION = 2222;
     private RequestQueue requestQueue;
+    private GoogleMap googleMap;
     private ArrayList<LatLng> listPersonal;
     private ArrayList<LatLng> listAll;
     private TileOverlay overlayPersonal;
     private TileOverlay overlayAll;
     private boolean overlayPersonalOn;
     private boolean overlayAllOn;
-    private ArrayList<LatLng> cross;
+    private ArrayList<LatLng> crossList;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_my_location);
+        setContentView(R.layout.activity_map);
         requestQueue = Volley.newRequestQueue(this);
         listPersonal = new ArrayList<>();
         listAll = new ArrayList<>();
         overlayPersonalOn = false;
         overlayAllOn = false;
+        getHeatmapData();
+        if (getCallingActivity() != null) {
+            if (getCallingActivity().getClassName().equalsIgnoreCase("me.vvander.wander.Matches")) {
+                Intent intent = getIntent();
+                String json = intent.getStringExtra("Cross List");
+                Gson gson = new Gson();
+                crossList = gson.fromJson(json, new TypeToken<ArrayList<LatLng>>() {
+                }.getType());
+            }
+        }
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
-        getHeatmapData();
-        if (getCallingActivity() != null) {
-            if (getCallingActivity().getClassName().equalsIgnoreCase("me.vvander.wander.MyMatches")) {
-                Intent intent = getIntent();
-                cross = (ArrayList<LatLng>) intent.getSerializableExtra("cross");
-            }
-        }
     }
 
     @Override
     public void onMapReady(GoogleMap googleMap) {
-        mMap = googleMap;
-        if (cross != null && cross.size() > 0) {
-            Toast.makeText(getApplicationContext(), "Here", Toast.LENGTH_SHORT).show();
-
-            Log.d("Comes in here", "Comes into here onMapReady");
-            for (int i = 0; i < cross.size(); i++) {
-                Log.d("Comes in here", "Comes into here onMapReady 2");
-                mMap.addMarker(new MarkerOptions()
-                        .position(cross.get(i))
-                        .title("Crossed here!"));
+        this.googleMap = googleMap;
+        if (crossList != null && crossList.size() > 0) {
+            for (int i = 0; i < crossList.size(); i++) {
+                this.googleMap.addMarker(new MarkerOptions()
+                        .position(crossList.get(i))
+                        .title("Crossed paths here!"));
             }
+            this.googleMap.animateCamera(CameraUpdateFactory.newLatLngZoom(crossList.get(crossList.size() - 1), 15));
         }
-        while (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(this, new String[]{ACCESS_FINE_LOCATION}, 1);
-        }
-        mMap.setMyLocationEnabled(true);
-        mMap.setOnMyLocationButtonClickListener(this);
-        mMap.setOnMyLocationClickListener(this);
-
-        LocationManager locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
-
-        if (locationManager != null) {
-            Criteria criteria = new Criteria();
-            Location location = locationManager.getLastKnownLocation(locationManager.getBestProvider(criteria, false));
-            if (location != null) {
-                mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(location.getLatitude(), location.getLongitude()), 13));
-
-                CameraPosition cameraPosition = new CameraPosition.Builder()
-                        .target(new LatLng(location.getLatitude(), location.getLongitude())).zoom(17).build();
-                mMap.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition));
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED || ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION);
+        } else {
+            this.googleMap.setMyLocationEnabled(true);
+            this.googleMap.setOnMyLocationButtonClickListener(this);
+            if (crossList == null) {
+                LocationManager locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+                if (locationManager != null) {
+                    Criteria criteria = new Criteria();
+                    Location location = locationManager.getLastKnownLocation(locationManager.getBestProvider(criteria, false));
+                    if (location != null) {
+                        this.googleMap.animateCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(location.getLatitude(), location.getLongitude()), 15));
+                    }
+                }
             }
         }
     }
 
     @Override
-    public void onConnected(@Nullable Bundle bundle) {
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        if (requestCode == PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION) {
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+                this.googleMap.setMyLocationEnabled(true);
+                this.googleMap.setOnMyLocationButtonClickListener(this);
+                if (crossList == null) {
+                    LocationManager locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+                    if (locationManager != null) {
+                        Criteria criteria = new Criteria();
+                        Location location = locationManager.getLastKnownLocation(locationManager.getBestProvider(criteria, false));
+                        if (location != null) {
+                            this.googleMap.animateCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(location.getLatitude(), location.getLongitude()), 15));
+                        }
+                    }
+                }
+            }
+        }
     }
 
     @Override
     public boolean onMyLocationButtonClick() {
         return false;
-    }
-
-    @Override
-    public void onMyLocationClick(@NonNull Location location) {
-    }
-
-    @Override
-    public void onConnectionSuspended(int i) {
-    }
-
-    @Override
-    public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
-    }
-
-    @Override
-    protected void onStart() {
-        super.onStart();
-    }
-
-    @Override
-    protected void onStop() {
-        super.onStop();
-    }
-
-    @Override
-    public void onLocationChanged(Location location) {
     }
 
     private void getHeatmapData() {
@@ -222,11 +202,11 @@ public class Map extends AppCompatActivity implements OnMapReadyCallback, Activi
         requestQueue.add(secondPostRequest);
     }
 
-    public void displayHeatmap(View view) {
+    public void displayHeatmapPersonal(View view) {
         if (overlayPersonal == null && !overlayPersonalOn) {
             if (listPersonal.size() > 0) {
                 HeatmapTileProvider mProvider = new HeatmapTileProvider.Builder().data(listPersonal).build();
-                overlayPersonal = mMap.addTileOverlay(new TileOverlayOptions().tileProvider(mProvider));
+                overlayPersonal = this.googleMap.addTileOverlay(new TileOverlayOptions().tileProvider(mProvider));
                 overlayPersonalOn = true;
             } else {
                 Toast.makeText(getApplicationContext(), "No location data.", Toast.LENGTH_SHORT).show();
@@ -252,7 +232,7 @@ public class Map extends AppCompatActivity implements OnMapReadyCallback, Activi
         if (overlayAll == null && !overlayAllOn) {
             if (listAll.size() > 0) {
                 HeatmapTileProvider mProvider = new HeatmapTileProvider.Builder().data(listAll).gradient(gradient).build();
-                overlayAll = mMap.addTileOverlay(new TileOverlayOptions().tileProvider(mProvider));
+                overlayAll = this.googleMap.addTileOverlay(new TileOverlayOptions().tileProvider(mProvider));
                 overlayAllOn = true;
             } else {
                 Toast.makeText(getApplicationContext(), "No location data.", Toast.LENGTH_SHORT).show();

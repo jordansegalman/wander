@@ -112,7 +112,7 @@ public class FacebookLogin extends AppCompatActivity {
                                 Data.getInstance().loginFacebook();
                                 sendFirebaseRegistrationTokenToServer();
                                 startLocationCollectionService();
-                                Intent intent = new Intent(FacebookLogin.this, AppHome.class);
+                                Intent intent = new Intent(FacebookLogin.this, Home.class);
                                 startActivity(intent);
                             } else {
                                 Toast.makeText(getApplicationContext(), "Facebook login failed!", Toast.LENGTH_SHORT).show();

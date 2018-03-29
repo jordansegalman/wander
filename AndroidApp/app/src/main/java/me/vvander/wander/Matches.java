@@ -26,18 +26,20 @@ import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.Volley;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.gson.Gson;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
+import java.util.Map;
 import java.util.HashMap;
 import java.util.Iterator;
 
-public class MyMatches extends AppCompatActivity {
+public class Matches extends AppCompatActivity {
     ArrayList<MatchData> matchList;
-    java.util.Map matchMap;
+    Map<String, MatchData> matchMap;
     ListView matchListView;
     ProfileAdapter adapter;
     private RequestQueue requestQueue;
@@ -45,9 +47,9 @@ public class MyMatches extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_my_matches);
+        setContentView(R.layout.activity_matches);
         requestQueue = Volley.newRequestQueue(this);
-        matchMap = new HashMap<String, MatchData>();
+        matchMap = new HashMap<>();
         matchList = new ArrayList<>();
         requestAllMatches();
     }
@@ -58,8 +60,7 @@ public class MyMatches extends AppCompatActivity {
 
     private void requestAllMatches() {
         String url = Data.getInstance().getUrl() + "/getAllMatches";
-        java.util.Map params = new HashMap<>();
-        JsonObjectRequest postRequest = new JsonObjectRequest(Request.Method.POST, url, new JSONObject(params),
+        JsonObjectRequest postRequest = new JsonObjectRequest(Request.Method.POST, url, null,
                 new Response.Listener<JSONObject>() {
                     @Override
                     public void onResponse(JSONObject response) {
@@ -93,7 +94,7 @@ public class MyMatches extends AppCompatActivity {
 
     private void requestSingleMatch(String uid) {
         String url = Data.getInstance().getUrl() + "/getMatch";
-        java.util.Map params = new HashMap<>();
+        Map<String, String> params = new HashMap<>();
         params.put("uid", uid);
 
         JsonObjectRequest postRequest = new JsonObjectRequest(Request.Method.POST, url, new JSONObject(params),
@@ -157,7 +158,7 @@ public class MyMatches extends AppCompatActivity {
 
     private void approveUser(String uid) {
         String url = Data.getInstance().getUrl() + "/approveUser";
-        java.util.Map params = new HashMap<>();
+        Map<String, String> params = new HashMap<>();
         params.put("uid", uid);
 
         JsonObjectRequest postRequest = new JsonObjectRequest(Request.Method.POST, url, new JSONObject(params),
@@ -190,7 +191,7 @@ public class MyMatches extends AppCompatActivity {
 
     private void unapproveUser(String uid) {
         String url = Data.getInstance().getUrl() + "/unapproveUser";
-        java.util.Map params = new HashMap<>();
+        Map<String, String> params = new HashMap<>();
         params.put("uid", uid);
 
         JsonObjectRequest postRequest = new JsonObjectRequest(Request.Method.POST, url, new JSONObject(params),
@@ -223,7 +224,7 @@ public class MyMatches extends AppCompatActivity {
 
     private void getCrossLocations(String uid) {
         String url = Data.getInstance().getUrl() + "/getCrossLocations";
-        java.util.Map params = new HashMap<>();
+        Map<String, String> params = new HashMap<>();
         params.put("uid", uid);
 
         JsonObjectRequest postRequest = new JsonObjectRequest(Request.Method.POST, url, new JSONObject(params),
@@ -233,7 +234,7 @@ public class MyMatches extends AppCompatActivity {
                         try {
                             JSONArray array = response.getJSONArray("Cross Locations");
                             int length = array.length();
-                            ArrayList<LatLng> list = new ArrayList<>();
+                            ArrayList<LatLng> crossList = new ArrayList<>();
                             for (int i = 0; i < length; i++) {
                                 JSONObject object = array.getJSONObject(i);
                                 if (object.get("latitude") != null && object.get("longitude") != null) {
@@ -241,15 +242,15 @@ public class MyMatches extends AppCompatActivity {
                                     String longitude = String.valueOf(object.get("longitude"));
                                     if (latitude != null && longitude != null && !latitude.equals("null") && !longitude.equals("null")) {
                                         LatLng point = new LatLng(Double.parseDouble(latitude), Double.parseDouble(longitude));
-                                        list.add(point);
+                                        crossList.add(point);
                                     }
                                 }
                             }
-
-                            Intent i = new Intent(MyMatches.this, Map.class);
-                            i.putExtra("cross", list);
-                            ActivityCompat.startActivityForResult(MyMatches.this, i, 0, null);
-
+                            Gson gson = new Gson();
+                            String json = gson.toJson(crossList);
+                            Intent intent = new Intent(Matches.this, Map.class);
+                            intent.putExtra("Cross List", json);
+                            ActivityCompat.startActivityForResult(Matches.this, intent, 0, null);
                         } catch (JSONException j) {
                             j.printStackTrace();
                         }
@@ -314,7 +315,7 @@ public class MyMatches extends AppCompatActivity {
                 Log.d("This is the match data", matchData.getInterests());
                 Log.d("This is the match data", matchData.getPicture());
 
-                AlertDialog.Builder mBuilder = new AlertDialog.Builder(MyMatches.this);
+                AlertDialog.Builder mBuilder = new AlertDialog.Builder(Matches.this);
                 View mView = getLayoutInflater().inflate(R.layout.match_profile, null);
 
                 TextView name = mView.findViewById(R.id.name);

@@ -1,9 +1,12 @@
 package me.vvander.wander;
 
+import android.Manifest;
 import android.app.Dialog;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
@@ -27,11 +30,10 @@ import org.json.JSONObject;
 import java.util.HashMap;
 import java.util.Map;
 
-import static android.Manifest.permission.ACCESS_FINE_LOCATION;
-
 public class Login extends AppCompatActivity {
     private static final String TAG = Login.class.getSimpleName();
     private static final int GOOGLE_PLAY_SERVICES_REQUEST_CODE = 9999;
+    private static final int PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION = 1111;
     private RequestQueue requestQueue;
 
     @Override
@@ -39,17 +41,19 @@ public class Login extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
 
+        requestQueue = Volley.newRequestQueue(this);
+
         checkGooglePlayServices();
 
         Data.getInstance().initializeCookies(getApplicationContext());
         Data.getInstance().initializeFirebaseRegistrationToken();
         Data.getInstance().initializeLocationSchedule();
 
-        ActivityCompat.requestPermissions(this, new String[]{ACCESS_FINE_LOCATION}, 1);
-
-        requestQueue = Volley.newRequestQueue(this);
-
-        checkSession();
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED || ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION);
+        } else {
+            checkSession();
+        }
     }
 
     private void checkGooglePlayServices() {
@@ -67,6 +71,17 @@ public class Login extends AppCompatActivity {
                 errorDialog.show();
             } else {
                 finish();
+            }
+        }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        if (requestCode == PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION) {
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+                checkSession();
+            } else {
+                checkSession();
             }
         }
     }
@@ -95,19 +110,19 @@ public class Login extends AppCompatActivity {
                                 Data.getInstance().login();
                                 sendFirebaseRegistrationTokenToServer();
                                 startLocationCollectionService();
-                                Intent intent = new Intent(Login.this, AppHome.class);
+                                Intent intent = new Intent(Login.this, Home.class);
                                 startActivity(intent);
                             } else if (res.equalsIgnoreCase("google")) {
                                 Data.getInstance().loginGoogle();
                                 sendFirebaseRegistrationTokenToServer();
                                 startLocationCollectionService();
-                                Intent intent = new Intent(Login.this, AppHome.class);
+                                Intent intent = new Intent(Login.this, Home.class);
                                 startActivity(intent);
                             } else if (res.equalsIgnoreCase("facebook")) {
                                 Data.getInstance().loginFacebook();
                                 sendFirebaseRegistrationTokenToServer();
                                 startLocationCollectionService();
-                                Intent intent = new Intent(Login.this, AppHome.class);
+                                Intent intent = new Intent(Login.this, Home.class);
                                 startActivity(intent);
                             }
                         } catch (JSONException j) {
@@ -146,7 +161,7 @@ public class Login extends AppCompatActivity {
                                 Data.getInstance().login();
                                 sendFirebaseRegistrationTokenToServer();
                                 startLocationCollectionService();
-                                Intent intent = new Intent(Login.this, AppHome.class);
+                                Intent intent = new Intent(Login.this, Home.class);
                                 startActivity(intent);
                             } else {
                                 Toast.makeText(getApplicationContext(), "Login failed!", Toast.LENGTH_SHORT).show();

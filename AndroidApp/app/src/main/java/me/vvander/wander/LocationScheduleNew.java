@@ -34,7 +34,7 @@ public class LocationScheduleNew extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_schedule_new);
+        setContentView(R.layout.activity_location_schedule_new);
 
         nameEdit = findViewById(R.id.name);
         startHourText = findViewById(R.id.startHour);

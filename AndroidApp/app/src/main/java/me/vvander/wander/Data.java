@@ -82,47 +82,47 @@ public class Data {
         }
     }
 
-    String getFirebaseRegistrationToken() {
-        return firebaseRegistrationToken;
-    }
-
     void setFirebaseRegistrationToken(String token) {
         firebaseRegistrationToken = token;
     }
 
-    boolean getManualLocationSwitch() {
-        return manualLocationSwitch;
+    String getFirebaseRegistrationToken() {
+        return firebaseRegistrationToken;
     }
 
     void setManualLocationSwitch(boolean value) {
         manualLocationSwitch = value;
     }
 
-    boolean getScheduleLocationSwitch() {
-        return scheduleLocationSwitch;
+    boolean getManualLocationSwitch() {
+        return manualLocationSwitch;
     }
 
     void setScheduleLocationSwitch(boolean value) {
         scheduleLocationSwitch = value;
     }
 
-    boolean getActivityRecognitionLocationSwitch() {
-        return activityRecognitionLocationSwitch;
+    boolean getScheduleLocationSwitch() {
+        return scheduleLocationSwitch;
     }
 
     void setActivityRecognitionLocationSwitch(boolean value) {
         activityRecognitionLocationSwitch = value;
     }
 
+    boolean getActivityRecognitionLocationSwitch() {
+        return activityRecognitionLocationSwitch;
+    }
+
     void initializeLocationSchedule() {
         locationSchedule = new ArrayList<>();
     }
 
-    ArrayList<LocationScheduleItem> getLocationSchedule() {
-        return locationSchedule;
-    }
-
     void setLocationSchedule(ArrayList<LocationScheduleItem> locationSchedule) {
         this.locationSchedule = locationSchedule;
+    }
+
+    ArrayList<LocationScheduleItem> getLocationSchedule() {
+        return locationSchedule;
     }
 }
