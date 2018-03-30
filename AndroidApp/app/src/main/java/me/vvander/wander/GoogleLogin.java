@@ -98,7 +98,9 @@ public class GoogleLogin extends AppCompatActivity {
                                 sendFirebaseRegistrationTokenToServer();
                                 startLocationCollectionService();
                                 Intent intent = new Intent(GoogleLogin.this, Home.class);
+                                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
                                 startActivity(intent);
+                                finish();
                             } else {
                                 Toast.makeText(getApplicationContext(), "Google login failed!", Toast.LENGTH_SHORT).show();
                                 Intent intent = new Intent(GoogleLogin.this, Login.class);

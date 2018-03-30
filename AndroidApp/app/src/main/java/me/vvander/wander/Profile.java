@@ -314,11 +314,6 @@ public class Profile extends AppCompatActivity {
 
             i.putExtra("picture", encoded_picture);
         }
-
-
         startActivity(i);
-        this.finish();
-
-        //startActivity(new Intent(Profile.this, ProfileEdit.class));
     }
 }

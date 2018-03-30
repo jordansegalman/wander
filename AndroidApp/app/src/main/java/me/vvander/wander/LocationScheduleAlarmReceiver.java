@@ -32,7 +32,7 @@ public class LocationScheduleAlarmReceiver extends BroadcastReceiver {
         ArrayList<LocationScheduleItem> locationSchedule = Data.getInstance().getLocationSchedule();
         if (!locationSchedule.isEmpty()) {
             for (LocationScheduleItem locationScheduleItem : locationSchedule) {
-                if (locationScheduleItem.getDays()[day] && ((hour > locationScheduleItem.getStartHour() && hour < locationScheduleItem.getEndHour()) || (hour == locationScheduleItem.getStartHour() && minute > locationScheduleItem.getStartMinute()) || (hour == locationScheduleItem.getEndHour() && minute < locationScheduleItem.getEndMinute()))) {
+                if (locationScheduleItem.getDays()[day] && ((hour > locationScheduleItem.getStartHour() && hour < locationScheduleItem.getEndHour()) || (hour == locationScheduleItem.getStartHour() && minute >= locationScheduleItem.getStartMinute()) || (hour == locationScheduleItem.getEndHour() && minute <= locationScheduleItem.getEndMinute()))) {
                     return true;
                 }
             }

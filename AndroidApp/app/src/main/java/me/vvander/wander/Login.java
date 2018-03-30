@@ -39,7 +39,6 @@ public class Login extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_login);
 
         requestQueue = Volley.newRequestQueue(this);
 
@@ -111,22 +110,31 @@ public class Login extends AppCompatActivity {
                                 sendFirebaseRegistrationTokenToServer();
                                 startLocationCollectionService();
                                 Intent intent = new Intent(Login.this, Home.class);
+                                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
                                 startActivity(intent);
+                                finish();
                             } else if (res.equalsIgnoreCase("google")) {
                                 Data.getInstance().loginGoogle();
                                 sendFirebaseRegistrationTokenToServer();
                                 startLocationCollectionService();
                                 Intent intent = new Intent(Login.this, Home.class);
+                                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
                                 startActivity(intent);
+                                finish();
                             } else if (res.equalsIgnoreCase("facebook")) {
                                 Data.getInstance().loginFacebook();
                                 sendFirebaseRegistrationTokenToServer();
                                 startLocationCollectionService();
                                 Intent intent = new Intent(Login.this, Home.class);
+                                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
                                 startActivity(intent);
+                                finish();
+                            } else {
+                                setContentView(R.layout.activity_login);
                             }
                         } catch (JSONException j) {
                             j.printStackTrace();
+                            setContentView(R.layout.activity_login);
                         }
                     }
                 },
@@ -134,6 +142,7 @@ public class Login extends AppCompatActivity {
                     @Override
                     public void onErrorResponse(VolleyError error) {
                         Log.d(TAG, error.toString());
+                        setContentView(R.layout.activity_login);
                     }
                 }
         );
@@ -162,22 +171,21 @@ public class Login extends AppCompatActivity {
                                 sendFirebaseRegistrationTokenToServer();
                                 startLocationCollectionService();
                                 Intent intent = new Intent(Login.this, Home.class);
+                                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
                                 startActivity(intent);
+                                finish();
                             } else {
                                 Toast.makeText(getApplicationContext(), "Login failed!", Toast.LENGTH_SHORT).show();
                             }
                         } catch (JSONException j) {
                             j.printStackTrace();
                         }
-
-
                     }
                 },
                 new Response.ErrorListener() {
                     @Override
                     public void onErrorResponse(VolleyError error) {
                         Toast.makeText(getApplicationContext(), "Login failed!", Toast.LENGTH_SHORT).show();
-
                         Log.d(TAG, error.toString());
                     }
                 }

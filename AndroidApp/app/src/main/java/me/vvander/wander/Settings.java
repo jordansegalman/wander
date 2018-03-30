@@ -127,7 +127,10 @@ public class Settings extends AppCompatActivity {
                                 Data.getInstance().loginFacebook();
                                 Data.getInstance().removeAllCookies();
                                 Toast.makeText(getApplicationContext(), "Logged out!", Toast.LENGTH_SHORT).show();
-                                startActivity(new Intent(Settings.this, Login.class));
+                                Intent intent = new Intent(Settings.this, Login.class);
+                                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                                startActivity(intent);
+                                finish();
                             }
                         } catch (JSONException j) {
                             j.printStackTrace();
@@ -267,10 +270,5 @@ public class Settings extends AppCompatActivity {
                 DefaultRetryPolicy.DEFAULT_MAX_RETRIES,
                 DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
         requestQueue.add(postRequest);
-    }
-
-    @Override
-    public void onBackPressed() {
-        startActivity(new Intent(Settings.this, Home.class));
     }
 }

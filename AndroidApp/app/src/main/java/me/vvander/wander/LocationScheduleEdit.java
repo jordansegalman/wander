@@ -10,6 +10,7 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
+import android.widget.Toast;
 import android.widget.ToggleButton;
 
 import com.google.gson.Gson;
@@ -68,21 +69,69 @@ public class LocationScheduleEdit extends AppCompatActivity {
         endHourText.setText(String.valueOf(existingSchedule.getEndHour()));
         endMinuteText.setText(String.valueOf(existingSchedule.getEndMinute()));
 
-        if (existingSchedule.getStartMinute() < 10) {
-            String startButtonText = "Start Time: " + existingSchedule.getStartHour() + ":0" + existingSchedule.getStartMinute();
-            startButton.setText(startButtonText);
+        String timeText;
+        if (existingSchedule.getStartHour() < 12) {
+            if (existingSchedule.getStartHour() == 0) {
+                if (existingSchedule.getStartMinute() < 10) {
+                    timeText = existingSchedule.getStartHour() + 12 + ":0" + existingSchedule.getStartMinute() + " AM";
+                } else {
+                    timeText = existingSchedule.getStartHour() + 12 + ":" + existingSchedule.getStartMinute() + " AM";
+                }
+            } else {
+                if (existingSchedule.getStartMinute() < 10) {
+                    timeText = existingSchedule.getStartHour() % 12 + ":0" + existingSchedule.getStartMinute() + " AM";
+                } else {
+                    timeText = existingSchedule.getStartHour() % 12 + ":" + existingSchedule.getStartMinute() + " AM";
+                }
+            }
         } else {
-            String startButtonText = "Start Time: " + existingSchedule.getStartHour() + ":" + existingSchedule.getStartMinute();
-            startButton.setText(startButtonText);
+            if (existingSchedule.getStartHour() == 12) {
+                if (existingSchedule.getStartMinute() < 10) {
+                    timeText = existingSchedule.getStartHour() + ":0" + existingSchedule.getStartMinute() + " PM";
+                } else {
+                    timeText = existingSchedule.getStartHour() + ":" + existingSchedule.getStartMinute() + " PM";
+                }
+            } else {
+                if (existingSchedule.getStartMinute() < 10) {
+                    timeText = existingSchedule.getStartHour() % 12 + ":0" + existingSchedule.getStartMinute() + " PM";
+                } else {
+                    timeText = existingSchedule.getStartHour() % 12 + ":" + existingSchedule.getStartMinute() + " PM";
+                }
+            }
         }
-
-        if (existingSchedule.getEndMinute() < 10) {
-            String endButtonText = "End Time: " + existingSchedule.getEndHour() + ":0" + existingSchedule.getEndMinute();
-            endButton.setText(endButtonText);
+        String startButtonText = "Start Time: " + timeText;
+        startButton.setText(startButtonText);
+        if (existingSchedule.getEndHour() < 12) {
+            if (existingSchedule.getEndHour() == 0) {
+                if (existingSchedule.getEndMinute() < 10) {
+                    timeText = existingSchedule.getEndHour() + 12 + ":0" + existingSchedule.getEndMinute() + " AM";
+                } else {
+                    timeText = existingSchedule.getEndHour() + 12 + ":" + existingSchedule.getEndMinute() + " AM";
+                }
+            } else {
+                if (existingSchedule.getEndMinute() < 10) {
+                    timeText = existingSchedule.getEndHour() % 12 + ":0" + existingSchedule.getEndMinute() + " AM";
+                } else {
+                    timeText = existingSchedule.getEndHour() % 12 + ":" + existingSchedule.getEndMinute() + " AM";
+                }
+            }
         } else {
-            String endButtonText = "End Time: " + existingSchedule.getEndHour() + ":" + existingSchedule.getEndMinute();
-            endButton.setText(endButtonText);
+            if (existingSchedule.getEndHour() == 12) {
+                if (existingSchedule.getEndMinute() < 10) {
+                    timeText = existingSchedule.getEndHour() + ":0" + existingSchedule.getEndMinute() + " PM";
+                } else {
+                    timeText = existingSchedule.getEndHour() + ":" + existingSchedule.getEndMinute() + " PM";
+                }
+            } else {
+                if (existingSchedule.getEndMinute() < 10) {
+                    timeText = existingSchedule.getEndHour() % 12 + ":0" + existingSchedule.getEndMinute() + " PM";
+                } else {
+                    timeText = existingSchedule.getEndHour() % 12 + ":" + existingSchedule.getEndMinute() + " PM";
+                }
+            }
         }
+        String endButtonText = "End Time: " + timeText;
+        endButton.setText(endButtonText);
 
         day0.setChecked(existingSchedule.getDays()[0]);
         day1.setChecked(existingSchedule.getDays()[1]);
@@ -94,28 +143,38 @@ public class LocationScheduleEdit extends AppCompatActivity {
     }
 
     public void done(View view) {
-        String name = nameEdit.getText().toString();
-        int startHour = Integer.parseInt(startHourText.getText().toString());
-        int startMinute = Integer.parseInt(startMinuteText.getText().toString());
-        int endHour = Integer.parseInt(endHourText.getText().toString());
-        int endMinute = Integer.parseInt(endMinuteText.getText().toString());
-        boolean[] days = new boolean[7];
-        days[0] = day0.isChecked();
-        days[1] = day1.isChecked();
-        days[2] = day2.isChecked();
-        days[3] = day3.isChecked();
-        days[4] = day4.isChecked();
-        days[5] = day5.isChecked();
-        days[6] = day6.isChecked();
+        if (nameEdit.getText().toString().isEmpty()) {
+            Toast.makeText(getApplicationContext(), "Enter a schedule name.", Toast.LENGTH_SHORT).show();
+        } else if (startHourText.getText().toString().isEmpty() || startMinuteText.getText().toString().isEmpty()) {
+            Toast.makeText(getApplicationContext(), "Choose a start time.", Toast.LENGTH_SHORT).show();
+        } else if (endHourText.getText().toString().isEmpty() || endMinuteText.getText().toString().isEmpty()) {
+            Toast.makeText(getApplicationContext(), "Choose an end time.", Toast.LENGTH_SHORT).show();
+        } else if (!day0.isChecked() && !day1.isChecked() && !day2.isChecked() && !day3.isChecked() && !day4.isChecked() && !day5.isChecked() && !day6.isChecked()) {
+            Toast.makeText(getApplicationContext(), "Select at least one day.", Toast.LENGTH_SHORT).show();
+        } else {
+            String name = nameEdit.getText().toString();
+            int startHour = Integer.parseInt(startHourText.getText().toString());
+            int startMinute = Integer.parseInt(startMinuteText.getText().toString());
+            int endHour = Integer.parseInt(endHourText.getText().toString());
+            int endMinute = Integer.parseInt(endMinuteText.getText().toString());
+            boolean[] days = new boolean[7];
+            days[0] = day0.isChecked();
+            days[1] = day1.isChecked();
+            days[2] = day2.isChecked();
+            days[3] = day3.isChecked();
+            days[4] = day4.isChecked();
+            days[5] = day5.isChecked();
+            days[6] = day6.isChecked();
 
-        ArrayList<LocationScheduleItem> locationSchedule = Data.getInstance().getLocationSchedule();
+            ArrayList<LocationScheduleItem> locationSchedule = Data.getInstance().getLocationSchedule();
 
-        existingSchedule = new LocationScheduleItem(name, startHour, startMinute, endHour, endMinute, days);
-        locationSchedule.set(position, existingSchedule);
+            existingSchedule = new LocationScheduleItem(name, startHour, startMinute, endHour, endMinute, days);
+            locationSchedule.set(position, existingSchedule);
 
-        saveSchedule();
+            saveSchedule();
 
-        startActivity(new Intent(LocationScheduleEdit.this, LocationSchedule.class));
+            startActivity(new Intent(LocationScheduleEdit.this, LocationSchedule.class));
+        }
     }
 
     public void startTimeButton(View view) {
@@ -128,7 +187,7 @@ public class LocationScheduleEdit extends AppCompatActivity {
 
     public void endTimeButton(View view) {
         Bundle bundle = new Bundle();
-        bundle.putString("Time", "Start");
+        bundle.putString("Time", "End");
         DialogFragment newFragment = new LocationScheduleTimePickerFragment();
         newFragment.setArguments(bundle);
         newFragment.show(getFragmentManager(), "TimePicker");

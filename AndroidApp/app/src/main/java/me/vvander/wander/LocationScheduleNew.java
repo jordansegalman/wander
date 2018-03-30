@@ -52,11 +52,13 @@ public class LocationScheduleNew extends AppCompatActivity {
 
     public void done(View view) {
         if (nameEdit.getText().toString().isEmpty()) {
-            Toast.makeText(getApplicationContext(), "Please enter a schedule name.", Toast.LENGTH_SHORT).show();
+            Toast.makeText(getApplicationContext(), "Enter a schedule name.", Toast.LENGTH_SHORT).show();
         } else if (startHourText.getText().toString().isEmpty() || startMinuteText.getText().toString().isEmpty()) {
-            Toast.makeText(getApplicationContext(), "Please choose a start time.", Toast.LENGTH_SHORT).show();
+            Toast.makeText(getApplicationContext(), "Choose a start time.", Toast.LENGTH_SHORT).show();
         } else if (endHourText.getText().toString().isEmpty() || endMinuteText.getText().toString().isEmpty()) {
-            Toast.makeText(getApplicationContext(), "Please choose an end time.", Toast.LENGTH_SHORT).show();
+            Toast.makeText(getApplicationContext(), "Choose an end time.", Toast.LENGTH_SHORT).show();
+        } else if (!day0.isChecked() && !day1.isChecked() && !day2.isChecked() && !day3.isChecked() && !day4.isChecked() && !day5.isChecked() && !day6.isChecked()) {
+            Toast.makeText(getApplicationContext(), "Select at least one day.", Toast.LENGTH_SHORT).show();
         } else {
             String name = nameEdit.getText().toString();
             int startHour = Integer.parseInt(startHourText.getText().toString());
