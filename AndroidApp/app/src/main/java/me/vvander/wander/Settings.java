@@ -34,6 +34,7 @@ public class Settings extends AppCompatActivity {
     private static final String SP_LOCATION = "locationSwitch";
     private static final String SP_SCHEDULE = "locationSchedule";
     Switch locationSwitch;
+    Switch notificationSwitch;
     TextView radiusText;
     SeekBar seekBar;
     private RequestQueue requestQueue;
@@ -59,6 +60,7 @@ public class Settings extends AppCompatActivity {
 
         locationSwitch = findViewById(R.id.tracking);
         locationSwitch.setChecked(Data.getInstance().getManualLocationSwitch());
+        notificationSwitch = findViewById(R.id.notifcations);
 
         requestQueue = Volley.newRequestQueue(this);
 
@@ -83,6 +85,10 @@ public class Settings extends AppCompatActivity {
         }
     }
 
+    public void notificationToggle(View view){
+        boolean value = notificationSwitch.isChecked();
+        Data.getInstance().setDisableNotifications(value);
+    }
     public void delete(View view) {
         startActivity(new Intent(Settings.this, Delete.class));
     }
