@@ -88,6 +88,7 @@ public class Settings extends AppCompatActivity {
     public void notificationToggle(View view){
         boolean value = notificationSwitch.isChecked();
         Data.getInstance().setDisableNotifications(value);
+        Log.i("SWITCH", "Notifcations Switch");
     }
     public void delete(View view) {
         startActivity(new Intent(Settings.this, Delete.class));
