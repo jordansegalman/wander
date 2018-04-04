@@ -31,9 +31,7 @@ const crossRadius = "crossRadius";
 const latitude = "latitude";
 const longitude = "longitude";
 const time = "time";
-const firstName = "firstName";
-const lastName = "lastName";
-const loc = "loc";
+const name = "name";
 const about = "about";
 const interests = "interests";
 const picture = "picture";
@@ -646,8 +644,8 @@ app.post('/updateLinkedIn', function(request, response) {
 	// If the object request.body is null, respond with status 500 'Internal Server Error'
 	if (!request.body) return response.sendStatus(500);
 
-	// POST request must have 5 parameters (email, firstname, lastname, loc, and about)
-	if (Object.keys(request.body).length != 5 || !request.body.email || !request.body.firstName || !request.body.lastName || !request.body.loc || !request.body.about) {
+	// POST request must have 3 parameters (email, name, and about)
+	if (Object.keys(request.body).length != 3 || !request.body.email || !request.body.name || !request.body.about) {
 		return response.status(400).send("Invalid POST request\n");
 	}
 
@@ -657,12 +655,10 @@ app.post('/updateLinkedIn', function(request, response) {
 	} else {
 		return response.status(400).send("Email must be valid and have a minimum length of 3 characters and a maximum length of 255 characters.\n");
 	}
-	var f = request.body.firstName;
-	var l = request.body.lastName;
-	var lo = request.body.loc;
+	var n = request.body.name;
 	var a = request.body.about;
 
-	updateLinkedInProfile(e, f, l, lo, a, response);
+	updateLinkedInProfile(e, n, a, response);
 });
 
 // Called when a POST request is made to /updateProfile
@@ -670,8 +666,8 @@ app.post('/updateProfile', function(request, response){
 	// If the object request.body is null, respond with status 500 'Internal Server Error'
 	if (!request.body) return response.sendStatus(500);
 
-	// POST request must have 5 parameters (name, loc, about, interests, and picture)
-	if (Object.keys(request.body).length != 5 || !request.body.name || !request.body.loc || !request.body.about || !request.body.interests || !request.body.picture) {
+	// POST request must have 4 parameters (name, about, interests, and picture)
+	if (Object.keys(request.body).length != 4 || !request.body.name || !request.body.about || !request.body.interests || !request.body.picture) {
 		return response.status(400).send("Invalid POST request\n");
 	}
 
@@ -681,12 +677,11 @@ app.post('/updateProfile', function(request, response){
 	}
 
 	var n = request.body.name;
-	var l = request.body.loc;
 	var a = request.body.about;
 	var i = request.body.interests;
 	var p = request.body.picture;
 
-	updateProfile(n, l, a, i, p, request, response);
+	updateProfile(n, a, i, p, request, response);
 });
 
 // Called when a POST request is made to /getProfile
@@ -1788,7 +1783,7 @@ function addFirebaseRegistrationToken(token, request, response) {
 }
 
 // Updates LinkedIn profile information
-function updateLinkedInProfile(e, f, l, lo, a, response) {
+function updateLinkedInProfile(e, n, a, response) {
 	// Get profile for email
 	var sql = "SELECT * FROM ?? WHERE ??=?";
 	var post = [db_profiles, email, e];
@@ -1798,8 +1793,8 @@ function updateLinkedInProfile(e, f, l, lo, a, response) {
 			return response.status(400).send(JSON.stringify({"response":"fail"}));
 		} else {
 			// Update profile if already exists for email
-			var sql = "UPDATE ?? SET ??=?, ??=?, ??=?, ??=? WHERE ??=?";
-			var post = [db_profiles, firstName, f, lastName, l, loc, lo, about, a, email, e];
+			var sql = "UPDATE ?? SET ??=?, ??=? WHERE ??=?";
+			var post = [db_profiles, name, n, about, a, email, e];
 			dbConnection.query(sql, post, function(err, result) {
 				if (err) throw err;
 				console.log("LinkedIn profile updated."); 
@@ -1810,10 +1805,10 @@ function updateLinkedInProfile(e, f, l, lo, a, response) {
 }
 
 // Updates profile info
-function updateProfile(n, l, a, i, p, request, response) {
+function updateProfile(n, a, i, p, request, response) {
 	// Update profile for user ID
-	var sql = "UPDATE ?? SET ??=?, ??=?, ??=?, ??=?, ??=? WHERE ??=?";
-	var post = [db_profiles, firstName, n, loc, l, about, a, interests, i, picture, p, uid, request.session.uid];
+	var sql = "UPDATE ?? SET ??=?, ??=?, ??=?, ??=? WHERE ??=?";
+	var post = [db_profiles, name, n, about, a, interests, i, picture, p, uid, request.session.uid];
 	dbConnection.query(sql, post, function(err, result){
 		if (err) throw err;
 		console.log("Profile info updated.");
@@ -1831,13 +1826,11 @@ function getProfile(request, response) {
 		if (result.length == 0) {
 			return response.status(400).send("No profile.\n");
 		} else {
-			var f = result[0].firstName;
-			var l = result[0].lastName;
-			var lo = result[0].loc;
+			var n = result[0].name;
 			var a = result[0].about;
 			var i = result[0].interests;
 			var p = result[0].picture;
-			return response.status(200).send(JSON.stringify({"response":"pass", firstName:f, lastName:l, loc:lo, about:a, interests:i, picture:p}));
+			return response.status(200).send(JSON.stringify({"response":"pass", name:n, about:a, interests:i, picture:p}));
 		}
 	});
 }
@@ -2150,7 +2143,7 @@ function getMatch(u, request, response) {
 					var key = "Profile";
 					object[key] = [];
 					for (var j = 0; j < result.length; j++) {
-						var n = result[j].firstName;
+						var n = result[j].name;
 						var a = result[j].about;
 						var i = result[j].interests;
 						var p = result[j].picture;
