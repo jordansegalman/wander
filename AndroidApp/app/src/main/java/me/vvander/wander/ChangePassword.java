@@ -69,6 +69,7 @@ public class ChangePassword extends AppCompatActivity {
                                 Toast.makeText(getApplicationContext(), "Password changed!", Toast.LENGTH_SHORT).show();
                                 Intent intent = new Intent(ChangePassword.this, Settings.class);
                                 startActivity(intent);
+                                finish();
                             } else {
                                 Toast.makeText(getApplicationContext(), "Password change failed!", Toast.LENGTH_SHORT).show();
                             }
@@ -90,5 +91,11 @@ public class ChangePassword extends AppCompatActivity {
                 DefaultRetryPolicy.DEFAULT_MAX_RETRIES,
                 DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
         requestQueue.add(postRequest);
+    }
+
+    @Override
+    public void onBackPressed() {
+        startActivity(new Intent(ChangePassword.this, Settings.class));
+        finish();
     }
 }

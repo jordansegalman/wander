@@ -62,6 +62,7 @@ public class ChangeEmail extends AppCompatActivity {
                                 Toast.makeText(getApplicationContext(), "Email changed!", Toast.LENGTH_SHORT).show();
                                 Intent intent = new Intent(ChangeEmail.this, Settings.class);
                                 startActivity(intent);
+                                finish();
                             } else {
                                 Toast.makeText(getApplicationContext(), "Email change failed!", Toast.LENGTH_SHORT).show();
                             }
@@ -83,5 +84,11 @@ public class ChangeEmail extends AppCompatActivity {
                 DefaultRetryPolicy.DEFAULT_MAX_RETRIES,
                 DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
         requestQueue.add(postRequest);
+    }
+
+    @Override
+    public void onBackPressed() {
+        startActivity(new Intent(ChangeEmail.this, Settings.class));
+        finish();
     }
 }

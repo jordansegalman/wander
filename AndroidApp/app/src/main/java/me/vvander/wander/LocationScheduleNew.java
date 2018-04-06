@@ -82,6 +82,7 @@ public class LocationScheduleNew extends AppCompatActivity {
             saveSchedule();
 
             startActivity(new Intent(LocationScheduleNew.this, LocationSchedule.class));
+            finish();
         }
     }
 
@@ -108,5 +109,11 @@ public class LocationScheduleNew extends AppCompatActivity {
         String json = gson.toJson(Data.getInstance().getLocationSchedule());
         editor.putString("schedule", json);
         editor.apply();
+    }
+
+    @Override
+    public void onBackPressed() {
+        startActivity(new Intent(LocationScheduleNew.this, LocationSchedule.class));
+        finish();
     }
 }

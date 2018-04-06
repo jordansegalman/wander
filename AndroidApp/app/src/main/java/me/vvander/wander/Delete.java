@@ -224,7 +224,14 @@ public class Delete extends AppCompatActivity {
         }
     }
 
-    public void back(View view) {
+    public void cancel(View view) {
         startActivity(new Intent(Delete.this, Settings.class));
+        finish();
+    }
+
+    @Override
+    public void onBackPressed() {
+        startActivity(new Intent(Delete.this, Settings.class));
+        finish();
     }
 }

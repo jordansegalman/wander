@@ -85,6 +85,7 @@ public class Settings extends AppCompatActivity {
 
     public void delete(View view) {
         startActivity(new Intent(Settings.this, Delete.class));
+        finish();
     }
 
     public void logout(View view) {
@@ -94,18 +95,21 @@ public class Settings extends AppCompatActivity {
     public void changeEmail(View view) {
         if (Data.getInstance().getLoggedIn() && !Data.getInstance().getLoggedInGoogle() && !Data.getInstance().getLoggedInFacebook()) {
             startActivity(new Intent(Settings.this, ChangeEmail.class));
+            finish();
         }
     }
 
     public void changePassword(View view) {
         if (Data.getInstance().getLoggedIn() && !Data.getInstance().getLoggedInGoogle() && !Data.getInstance().getLoggedInFacebook()) {
             startActivity(new Intent(Settings.this, ChangePassword.class));
+            finish();
         }
     }
 
     public void changeUsername(View view) {
         if (Data.getInstance().getLoggedIn() && !Data.getInstance().getLoggedInGoogle() && !Data.getInstance().getLoggedInFacebook()) {
             startActivity(new Intent(Settings.this, ChangeUsername.class));
+            finish();
         }
     }
 
@@ -154,6 +158,7 @@ public class Settings extends AppCompatActivity {
 
     public void setSchedule(View view) {
         startActivity(new Intent(Settings.this, LocationSchedule.class));
+        finish();
     }
 
     private void resetManualLocationSwitch() {

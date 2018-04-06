@@ -62,6 +62,7 @@ public class ChangeUsername extends AppCompatActivity {
                                 Toast.makeText(getApplicationContext(), "Username changed!", Toast.LENGTH_SHORT).show();
                                 Intent intent = new Intent(ChangeUsername.this, Settings.class);
                                 startActivity(intent);
+                                finish();
                             } else {
                                 Toast.makeText(getApplicationContext(), "Username change failed!", Toast.LENGTH_SHORT).show();
                             }
@@ -83,5 +84,11 @@ public class ChangeUsername extends AppCompatActivity {
                 DefaultRetryPolicy.DEFAULT_MAX_RETRIES,
                 DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
         requestQueue.add(postRequest);
+    }
+
+    @Override
+    public void onBackPressed() {
+        startActivity(new Intent(ChangeUsername.this, Settings.class));
+        finish();
     }
 }

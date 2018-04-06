@@ -102,11 +102,10 @@
 
             <Spinner
                 android:id="@+id/spinner"
-                android:layout_width="fill_parent"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:entries="@array/interests_array"
                 android:prompt="@string/interests_prompt" />
-
 
             <Space
                 android:layout_width="match_parent"

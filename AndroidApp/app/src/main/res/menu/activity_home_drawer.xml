@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <group android:checkableBehavior="none">
+        <item
+            android:id="@+id/nav_map"
+            android:icon="@drawable/nav_map_icon"
+            android:title="Map" />
+        <item
+            android:id="@+id/nav_matches"
+            android:icon="@drawable/nav_matches_icon"
+            android:title="Matches" />
+        <item
+            android:id="@+id/nav_profile"
+            android:icon="@drawable/nav_profile_icon"
+            android:title="Profile" />
+        <item
+            android:id="@+id/nav_settings"
+            android:icon="@drawable/nav_settings_icon"
+            android:title="Settings" />
+    </group>
+</menu>

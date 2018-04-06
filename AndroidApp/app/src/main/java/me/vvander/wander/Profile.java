@@ -65,11 +65,6 @@ public class Profile extends AppCompatActivity {
         } else {
             getProfile();
         }
-
-        pictureImageView.setVisibility(View.VISIBLE);
-        nameTextView.setVisibility(View.VISIBLE);
-        interestsTextView.setVisibility(View.VISIBLE);
-        aboutTextView.setVisibility(View.VISIBLE);
     }
 
     public void edit(View view) {
@@ -79,6 +74,7 @@ public class Profile extends AppCompatActivity {
         intent.putExtra("interests", interestsTextView.getText().toString());
         intent.putExtra("picture", Utilities.encodeImage(((BitmapDrawable) pictureImageView.getDrawable()).getBitmap()));
         startActivity(intent);
+        finish();
     }
 
     public void update(View view) {
@@ -176,11 +172,10 @@ public class Profile extends AppCompatActivity {
     }
 
     public void importLinkedInProfile(View view) {
-        Intent intent = new Intent();
-        intent.setAction(Intent.ACTION_VIEW);
-        intent.addCategory(Intent.CATEGORY_BROWSABLE);
-        intent.setData(Uri.parse("https://vvander.me/linkedInProfile"));
-        startActivity(intent);
+        Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse("https://vvander.me/linkedInProfile"));
+        if (intent.resolveActivity(getPackageManager()) != null) {
+            startActivity(intent);
+        }
     }
 
     private void getProfile() {

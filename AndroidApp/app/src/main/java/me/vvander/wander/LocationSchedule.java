@@ -45,6 +45,7 @@ public class LocationSchedule extends AppCompatActivity {
                     Intent intent = new Intent(LocationSchedule.this, LocationScheduleEdit.class);
                     intent.putExtra("Position", position);
                     startActivity(intent);
+                    finish();
                 }
             });
         } else {
@@ -83,10 +84,12 @@ public class LocationSchedule extends AppCompatActivity {
 
     public void newSchedule(View view) {
         startActivity(new Intent(LocationSchedule.this, LocationScheduleNew.class));
+        finish();
     }
 
     @Override
     public void onBackPressed() {
         startActivity(new Intent(LocationSchedule.this, Settings.class));
+        finish();
     }
 }

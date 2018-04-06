@@ -31,7 +31,7 @@ import java.util.Map;
 
 public class ProfileEdit extends AppCompatActivity {
     private static final String TAG = ProfileEdit.class.getSimpleName();
-    private static final int SELECT_PICTURE = 1;
+    private static final int REQUEST_IMAGE_GET = 1;
     private RequestQueue requestQueue;
     private ImageView pictureImageView;
     private EditText nameEditText;
@@ -54,7 +54,7 @@ public class ProfileEdit extends AppCompatActivity {
             @Override
             public void onItemSelected(AdapterView<?> adapterView, View view, int position, long id) {
                 Object item = adapterView.getItemAtPosition(position);
-                if (item != null && !item.toString().equals("Select an interest")) {
+                if (item != null && !item.toString().equals("Select interest")) {
                     interestsEditText.setText(item.toString());
                 }
             }
@@ -73,20 +73,21 @@ public class ProfileEdit extends AppCompatActivity {
     }
 
     public void selectImage(View view) {
-        Intent intent = new Intent();
+        Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
         intent.setType("image/*");
-        intent.setAction(Intent.ACTION_GET_CONTENT);
-        startActivityForResult(Intent.createChooser(intent, "Select Profile Picture"), SELECT_PICTURE);
+        if (intent.resolveActivity(getPackageManager()) != null) {
+            startActivityForResult(intent, REQUEST_IMAGE_GET);
+        }
     }
 
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
-        if (requestCode == SELECT_PICTURE && resultCode == RESULT_OK && data != null && data.getData() != null) {
+        if (requestCode == REQUEST_IMAGE_GET && resultCode == RESULT_OK) {
             try {
                 Bitmap bitmap = MediaStore.Images.Media.getBitmap(getContentResolver(), data.getData());
                 pictureImageView.setImageBitmap(bitmap);
             } catch (IOException e) {
-                Log.d(TAG, e.toString());
+                e.printStackTrace();
             }
         }
     }
@@ -134,6 +135,12 @@ public class ProfileEdit extends AppCompatActivity {
                 DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
         requestQueue.add(postRequest);
         startActivity(intent);
+        finish();
+    }
+
+    @Override
+    public void onBackPressed() {
+        startActivity(new Intent(ProfileEdit.this, Profile.class));
         finish();
     }
 }
