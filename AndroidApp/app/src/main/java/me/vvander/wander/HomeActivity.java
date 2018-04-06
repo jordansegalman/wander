@@ -75,20 +75,10 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_home);
 
-        initializeManualLocationSwitch();
-        initializeScheduleLocationSwitch();
-        setupLocationScheduleAlarm();
-        setupActivityRecognition();
-
-        toolbar = findViewById(R.id.toolbar);
         requestQueue = Volley.newRequestQueue(this);
-        listPersonal = new ArrayList<>();
-        listAll = new ArrayList<>();
-        overlayPersonalOn = false;
-        overlayAllOn = false;
+        toolbar = findViewById(R.id.toolbar);
 
         setSupportActionBar(toolbar);
-        getHeatmapData();
 
         String json = getIntent().getStringExtra("Cross List");
         if (json != null) {
@@ -96,10 +86,27 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
             crossList = gson.fromJson(json, new TypeToken<ArrayList<LatLng>>() {}.getType());
         } else {
             setupDrawer();
+            initializeManualLocationSwitch();
+            initializeScheduleLocationSwitch();
+            setupLocationScheduleAlarm();
+            setupActivityRecognition();
         }
+
+        listPersonal = new ArrayList<>();
+        listAll = new ArrayList<>();
+        overlayPersonalOn = false;
+        overlayAllOn = false;
 
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        listPersonal.clear();
+        listAll.clear();
+        getHeatmapData();
     }
 
     private void setupDrawer() {

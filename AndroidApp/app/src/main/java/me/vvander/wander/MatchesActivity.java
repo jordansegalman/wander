@@ -31,6 +31,7 @@ public class MatchesActivity extends AppCompatActivity {
     private static final String TAG = MatchesActivity.class.getSimpleName();
     private RequestQueue requestQueue;
     private ArrayList<Match> matchList;
+    private int remainingMatchesToAdd;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -38,6 +39,13 @@ public class MatchesActivity extends AppCompatActivity {
         setContentView(R.layout.activity_matches);
         requestQueue = Volley.newRequestQueue(this);
         matchList = new ArrayList<>();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        matchList.clear();
+        remainingMatchesToAdd = 0;
         requestAllMatches();
     }
 
@@ -50,6 +58,7 @@ public class MatchesActivity extends AppCompatActivity {
                         try {
                             JSONArray array = response.getJSONArray("UIDs");
                             int length = array.length();
+                            remainingMatchesToAdd = length;
                             if (length == 0) {
                                 setupListView();
                             } else {
@@ -103,6 +112,7 @@ public class MatchesActivity extends AppCompatActivity {
 
                             Match match = new Match(uid, name, about, interests, picture, timesCrossed, approved);
                             matchList.add(match);
+                            remainingMatchesToAdd--;
                             setupListView();
                         } catch (JSONException j) {
                             j.printStackTrace();
@@ -130,7 +140,7 @@ public class MatchesActivity extends AppCompatActivity {
         Space noMatchesBottomSpace = findViewById(R.id.noMatchesBottomSpace);
         ListView matchListView = findViewById(R.id.matchList);
 
-        if (!matchList.isEmpty()) {
+        if (!matchList.isEmpty() && remainingMatchesToAdd == 0) {
             noMatchesTopSpace.setVisibility(View.GONE);
             noMatchesText.setVisibility(View.GONE);
             noMatchesBottomSpace.setVisibility(View.GONE);
@@ -153,7 +163,7 @@ public class MatchesActivity extends AppCompatActivity {
                     startActivity(intent);
                 }
             });
-        } else {
+        } else if (matchList.isEmpty()) {
             noMatchesTopSpace.setVisibility(View.VISIBLE);
             noMatchesText.setVisibility(View.VISIBLE);
             noMatchesBottomSpace.setVisibility(View.VISIBLE);
