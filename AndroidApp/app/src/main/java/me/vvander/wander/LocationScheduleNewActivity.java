@@ -16,7 +16,7 @@ import com.google.gson.Gson;
 
 import java.util.ArrayList;
 
-public class LocationScheduleNew extends AppCompatActivity {
+public class LocationScheduleNewActivity extends AppCompatActivity {
     private static final String SP_SCHEDULE = "locationSchedule";
     private EditText nameEdit;
     private TextView startHourText;
@@ -74,14 +74,14 @@ public class LocationScheduleNew extends AppCompatActivity {
             days[5] = day5.isChecked();
             days[6] = day6.isChecked();
 
-            ArrayList<LocationScheduleItem> locationSchedule = Data.getInstance().getLocationSchedule();
+            ArrayList<LocationSchedule> locationSchedule = Data.getInstance().getLocationSchedules();
 
-            LocationScheduleItem newSchedule = new LocationScheduleItem(name, startHour, startMinute, endHour, endMinute, days);
+            LocationSchedule newSchedule = new LocationSchedule(name, startHour, startMinute, endHour, endMinute, days);
             locationSchedule.add(newSchedule);
 
             saveSchedule();
 
-            startActivity(new Intent(LocationScheduleNew.this, LocationSchedule.class));
+            startActivity(new Intent(LocationScheduleNewActivity.this, LocationScheduleActivity.class));
             finish();
         }
     }
@@ -106,14 +106,14 @@ public class LocationScheduleNew extends AppCompatActivity {
         SharedPreferences sharedPreferences = getSharedPreferences(SP_SCHEDULE, Context.MODE_PRIVATE);
         SharedPreferences.Editor editor = sharedPreferences.edit();
         Gson gson = new Gson();
-        String json = gson.toJson(Data.getInstance().getLocationSchedule());
+        String json = gson.toJson(Data.getInstance().getLocationSchedules());
         editor.putString("schedule", json);
         editor.apply();
     }
 
     @Override
     public void onBackPressed() {
-        startActivity(new Intent(LocationScheduleNew.this, LocationSchedule.class));
+        startActivity(new Intent(LocationScheduleNewActivity.this, LocationScheduleActivity.class));
         finish();
     }
 }

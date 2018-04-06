@@ -22,8 +22,8 @@ import org.json.JSONObject;
 import java.util.HashMap;
 import java.util.Map;
 
-public class ForgotPassword extends AppCompatActivity {
-    private static final String TAG = ForgotPassword.class.getSimpleName();
+public class ForgotPasswordActivity extends AppCompatActivity {
+    private static final String TAG = ForgotPasswordActivity.class.getSimpleName();
     EditText emailEdit;
     EditText usernameEdit;
     private RequestQueue requestQueue;
@@ -59,7 +59,7 @@ public class ForgotPassword extends AppCompatActivity {
                             String res = response.getString("response");
                             if (res.equalsIgnoreCase("pass")) {
                                 Toast.makeText(getApplicationContext(), "Password reset email sent!", Toast.LENGTH_SHORT).show();
-                                Intent intent = new Intent(ForgotPassword.this, Login.class);
+                                Intent intent = new Intent(ForgotPasswordActivity.this, LoginActivity.class);
                                 startActivity(intent);
                                 finish();
                             } else {

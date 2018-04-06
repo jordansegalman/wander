@@ -22,47 +22,42 @@ import org.json.JSONObject;
 import java.util.HashMap;
 import java.util.Map;
 
-public class Registration extends AppCompatActivity {
-    private static final String TAG = Registration.class.getSimpleName();
-    EditText emailText;
-    EditText usernameText;
-    EditText passwordText;
-    EditText confirmPasswordText;
+public class ChangePasswordActivity extends AppCompatActivity {
+    private static final String TAG = ChangePasswordActivity.class.getSimpleName();
+    EditText oldPasswordEdit;
+    EditText newPasswordEdit;
+    EditText confirmPasswordEdit;
     private RequestQueue requestQueue;
-    private String url;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_registration);
+        setContentView(R.layout.activity_change_password);
 
-        emailText = findViewById(R.id.email);
-        usernameText = findViewById(R.id.username);
-        passwordText = findViewById(R.id.password);
-        confirmPasswordText = findViewById(R.id.confirmPassword);
-
+        oldPasswordEdit = findViewById(R.id.old_password);
+        newPasswordEdit = findViewById(R.id.password);
+        confirmPasswordEdit = findViewById(R.id.confirm);
         requestQueue = Volley.newRequestQueue(this);
-        url = Data.getInstance().getUrl() + "/registerAccount";
     }
 
-    public void submit(View view) {
-        String email = emailText.getText().toString();
-        String username = usernameText.getText().toString();
-        String password = passwordText.getText().toString();
-        String confirmPassword = confirmPasswordText.getText().toString();
+    public void done(View view) {
+        String oldPassword = oldPasswordEdit.getText().toString();
+        String newPassword = newPasswordEdit.getText().toString();
+        String confirmPassword = confirmPasswordEdit.getText().toString();
 
-        if (!password.equals(confirmPassword)) {
+        if (!newPassword.equals(confirmPassword)) {
             Toast.makeText(getApplicationContext(), "Passwords do not match.", Toast.LENGTH_SHORT).show();
         } else {
-            sendPOSTRequest(email, username, password);
+            sendPOSTRequest(newPassword, oldPassword);
         }
     }
 
-    private void sendPOSTRequest(String email, String username, String password) {
+    private void sendPOSTRequest(String newPassword, String password) {
         Map<String, String> params = new HashMap<>();
-        params.put("username", username);
+        params.put("newPassword", newPassword);
         params.put("password", password);
-        params.put("email", email);
+
+        String url = Data.getInstance().getUrl() + "/changePassword";
 
         JsonObjectRequest postRequest = new JsonObjectRequest(Request.Method.POST, url, new JSONObject(params),
                 new Response.Listener<JSONObject>() {
@@ -71,22 +66,22 @@ public class Registration extends AppCompatActivity {
                         try {
                             String res = response.getString("response");
                             if (res.equalsIgnoreCase("pass")) {
-                                Toast.makeText(getApplicationContext(), "Account successfully created!", Toast.LENGTH_SHORT).show();
-                                Intent intent = new Intent(Registration.this, Login.class);
+                                Toast.makeText(getApplicationContext(), "Password changed!", Toast.LENGTH_SHORT).show();
+                                Intent intent = new Intent(ChangePasswordActivity.this, SettingsActivity.class);
                                 startActivity(intent);
+                                finish();
                             } else {
-                                Toast.makeText(getApplicationContext(), "Registration failed!", Toast.LENGTH_SHORT).show();
+                                Toast.makeText(getApplicationContext(), "Password change failed!", Toast.LENGTH_SHORT).show();
                             }
                         } catch (JSONException j) {
                             j.printStackTrace();
                         }
-
                     }
                 },
                 new Response.ErrorListener() {
                     @Override
                     public void onErrorResponse(VolleyError error) {
-                        Toast.makeText(getApplicationContext(), "Error creating account!", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(getApplicationContext(), "Password change failed!", Toast.LENGTH_SHORT).show();
                         Log.d(TAG, error.toString());
                     }
                 }
@@ -96,5 +91,11 @@ public class Registration extends AppCompatActivity {
                 DefaultRetryPolicy.DEFAULT_MAX_RETRIES,
                 DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
         requestQueue.add(postRequest);
+    }
+
+    @Override
+    public void onBackPressed() {
+        startActivity(new Intent(ChangePasswordActivity.this, SettingsActivity.class));
+        finish();
     }
 }

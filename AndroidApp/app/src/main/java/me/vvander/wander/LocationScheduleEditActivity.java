@@ -17,7 +17,7 @@ import com.google.gson.Gson;
 
 import java.util.ArrayList;
 
-public class LocationScheduleEdit extends AppCompatActivity {
+public class LocationScheduleEditActivity extends AppCompatActivity {
     private static final String SP_SCHEDULE = "locationSchedule";
     private EditText nameEdit;
     private TextView startHourText;
@@ -31,7 +31,7 @@ public class LocationScheduleEdit extends AppCompatActivity {
     private ToggleButton day4;
     private ToggleButton day5;
     private ToggleButton day6;
-    private LocationScheduleItem existingSchedule;
+    private LocationSchedule existingSchedule;
     private int position;
 
     @Override
@@ -59,7 +59,7 @@ public class LocationScheduleEdit extends AppCompatActivity {
             finish();
         }
 
-        ArrayList<LocationScheduleItem> locationSchedule = Data.getInstance().getLocationSchedule();
+        ArrayList<LocationSchedule> locationSchedule = Data.getInstance().getLocationSchedules();
 
         existingSchedule = locationSchedule.get(position);
 
@@ -166,14 +166,14 @@ public class LocationScheduleEdit extends AppCompatActivity {
             days[5] = day5.isChecked();
             days[6] = day6.isChecked();
 
-            ArrayList<LocationScheduleItem> locationSchedule = Data.getInstance().getLocationSchedule();
+            ArrayList<LocationSchedule> locationSchedule = Data.getInstance().getLocationSchedules();
 
-            existingSchedule = new LocationScheduleItem(name, startHour, startMinute, endHour, endMinute, days);
+            existingSchedule = new LocationSchedule(name, startHour, startMinute, endHour, endMinute, days);
             locationSchedule.set(position, existingSchedule);
 
             saveSchedule();
 
-            startActivity(new Intent(LocationScheduleEdit.this, LocationSchedule.class));
+            startActivity(new Intent(LocationScheduleEditActivity.this, LocationScheduleActivity.class));
             finish();
         }
     }
@@ -195,10 +195,10 @@ public class LocationScheduleEdit extends AppCompatActivity {
     }
 
     public void delete(View view) {
-        ArrayList<LocationScheduleItem> locationSchedule = Data.getInstance().getLocationSchedule();
+        ArrayList<LocationSchedule> locationSchedule = Data.getInstance().getLocationSchedules();
         locationSchedule.remove(position);
         saveSchedule();
-        startActivity(new Intent(LocationScheduleEdit.this, LocationSchedule.class));
+        startActivity(new Intent(LocationScheduleEditActivity.this, LocationScheduleActivity.class));
         finish();
     }
 
@@ -206,14 +206,14 @@ public class LocationScheduleEdit extends AppCompatActivity {
         SharedPreferences sharedPreferences = getSharedPreferences(SP_SCHEDULE, Context.MODE_PRIVATE);
         SharedPreferences.Editor editor = sharedPreferences.edit();
         Gson gson = new Gson();
-        String json = gson.toJson(Data.getInstance().getLocationSchedule());
+        String json = gson.toJson(Data.getInstance().getLocationSchedules());
         editor.putString("schedule", json);
         editor.apply();
     }
 
     @Override
     public void onBackPressed() {
-        startActivity(new Intent(LocationScheduleEdit.this, LocationSchedule.class));
+        startActivity(new Intent(LocationScheduleEditActivity.this, LocationScheduleActivity.class));
         finish();
     }
 }

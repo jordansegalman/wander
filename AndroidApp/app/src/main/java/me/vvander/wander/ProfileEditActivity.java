@@ -29,8 +29,8 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
-public class ProfileEdit extends AppCompatActivity {
-    private static final String TAG = ProfileEdit.class.getSimpleName();
+public class ProfileEditActivity extends AppCompatActivity {
+    private static final String TAG = ProfileEditActivity.class.getSimpleName();
     private static final int REQUEST_IMAGE_GET = 1;
     private RequestQueue requestQueue;
     private ImageView pictureImageView;
@@ -64,7 +64,7 @@ public class ProfileEdit extends AppCompatActivity {
             }
         });
 
-        if (getCallingActivity() != null && getCallingActivity().getClassName().equalsIgnoreCase("me.vvander.wander.Profile")) {
+        if (getCallingActivity() != null && getCallingActivity().getClassName().equalsIgnoreCase("me.vvander.wander.ProfileActivity")) {
             nameEditText.setText(getIntent().getStringExtra("name"));
             aboutEditText.setText(getIntent().getStringExtra("about"));
             interestsEditText.setText(getIntent().getStringExtra("interests"));
@@ -95,7 +95,7 @@ public class ProfileEdit extends AppCompatActivity {
     public void done(View view) {
         String encodedImage = Utilities.encodeImage(((BitmapDrawable) pictureImageView.getDrawable()).getBitmap());
 
-        final Intent intent = new Intent(ProfileEdit.this, Profile.class);
+        final Intent intent = new Intent(ProfileEditActivity.this, ProfileActivity.class);
         intent.putExtra("name", nameEditText.getText().toString());
         intent.putExtra("about", aboutEditText.getText().toString());
         intent.putExtra("interests", interestsEditText.getText().toString());
@@ -140,7 +140,7 @@ public class ProfileEdit extends AppCompatActivity {
 
     @Override
     public void onBackPressed() {
-        startActivity(new Intent(ProfileEdit.this, Profile.class));
+        startActivity(new Intent(ProfileEditActivity.this, ProfileActivity.class));
         finish();
     }
 }

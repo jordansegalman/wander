@@ -20,7 +20,7 @@ public class Data {
     private boolean manualLocationSwitch = true;
     private boolean scheduleLocationSwitch = true;
     private boolean activityRecognitionLocationSwitch = false;
-    private ArrayList<LocationScheduleItem> locationSchedule;
+    private ArrayList<LocationSchedule> locationSchedules;
 
     static Data getInstance() {
         return data;
@@ -114,15 +114,15 @@ public class Data {
         activityRecognitionLocationSwitch = value;
     }
 
-    void initializeLocationSchedule() {
-        locationSchedule = new ArrayList<>();
+    void initializeLocationSchedules() {
+        locationSchedules = new ArrayList<>();
     }
 
-    ArrayList<LocationScheduleItem> getLocationSchedule() {
-        return locationSchedule;
+    ArrayList<LocationSchedule> getLocationSchedules() {
+        return locationSchedules;
     }
 
-    void setLocationSchedule(ArrayList<LocationScheduleItem> locationSchedule) {
-        this.locationSchedule = locationSchedule;
+    void setLocationSchedules(ArrayList<LocationSchedule> locationSchedules) {
+        this.locationSchedules = locationSchedules;
     }
 }

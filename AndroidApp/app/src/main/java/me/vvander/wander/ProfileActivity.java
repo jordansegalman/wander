@@ -29,8 +29,8 @@ import org.json.JSONObject;
 import java.util.HashMap;
 import java.util.Map;
 
-public class Profile extends AppCompatActivity {
-    private static final String TAG = Profile.class.getSimpleName();
+public class ProfileActivity extends AppCompatActivity {
+    private static final String TAG = ProfileActivity.class.getSimpleName();
     private RequestQueue requestQueue;
     private ImageView pictureImageView;
     private TextView nameTextView;
@@ -57,7 +57,7 @@ public class Profile extends AppCompatActivity {
         aboutTextView = findViewById(R.id.about);
         interestsTextView = findViewById(R.id.interests);
 
-        if (getCallingActivity() != null && getCallingActivity().getClassName().equalsIgnoreCase("me.vvander.wander.ProfileEdit")) {
+        if (getCallingActivity() != null && getCallingActivity().getClassName().equalsIgnoreCase("me.vvander.wander.ProfileEditActivity")) {
             nameTextView.setText(getIntent().getStringExtra("name"));
             aboutTextView.setText(getIntent().getStringExtra("about"));
             interestsTextView.setText(getIntent().getStringExtra("interests"));
@@ -68,17 +68,13 @@ public class Profile extends AppCompatActivity {
     }
 
     public void edit(View view) {
-        Intent intent = new Intent(Profile.this, ProfileEdit.class);
+        Intent intent = new Intent(ProfileActivity.this, ProfileEditActivity.class);
         intent.putExtra("name", nameTextView.getText().toString());
         intent.putExtra("about", aboutTextView.getText().toString());
         intent.putExtra("interests", interestsTextView.getText().toString());
         intent.putExtra("picture", Utilities.encodeImage(((BitmapDrawable) pictureImageView.getDrawable()).getBitmap()));
         startActivity(intent);
         finish();
-    }
-
-    public void update(View view) {
-        getProfile();
     }
 
     public void importFacebookProfile(View view) {

@@ -22,8 +22,8 @@ import org.json.JSONObject;
 import java.util.HashMap;
 import java.util.Map;
 
-public class ChangeEmail extends AppCompatActivity {
-    private static final String TAG = ChangeEmail.class.getSimpleName();
+public class ChangeEmailActivity extends AppCompatActivity {
+    private static final String TAG = ChangeEmailActivity.class.getSimpleName();
     EditText emailEdit;
     EditText passwordEdit;
     private RequestQueue requestQueue;
@@ -60,7 +60,7 @@ public class ChangeEmail extends AppCompatActivity {
                             String res = response.getString("response");
                             if (res.equalsIgnoreCase("pass")) {
                                 Toast.makeText(getApplicationContext(), "Email changed!", Toast.LENGTH_SHORT).show();
-                                Intent intent = new Intent(ChangeEmail.this, Settings.class);
+                                Intent intent = new Intent(ChangeEmailActivity.this, SettingsActivity.class);
                                 startActivity(intent);
                                 finish();
                             } else {
@@ -88,7 +88,7 @@ public class ChangeEmail extends AppCompatActivity {
 
     @Override
     public void onBackPressed() {
-        startActivity(new Intent(ChangeEmail.this, Settings.class));
+        startActivity(new Intent(ChangeEmailActivity.this, SettingsActivity.class));
         finish();
     }
 }

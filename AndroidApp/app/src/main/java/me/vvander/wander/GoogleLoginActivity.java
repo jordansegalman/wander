@@ -26,8 +26,8 @@ import org.json.JSONObject;
 import java.util.HashMap;
 import java.util.Map;
 
-public class GoogleLogin extends AppCompatActivity {
-    private static final String TAG = GoogleLogin.class.getSimpleName();
+public class GoogleLoginActivity extends AppCompatActivity {
+    private static final String TAG = GoogleLoginActivity.class.getSimpleName();
     private static final int RC_SIGN_IN = 0;
     GoogleSignInClient mGoogleSignInClient;
     private RequestQueue requestQueue;
@@ -76,7 +76,7 @@ public class GoogleLogin extends AppCompatActivity {
             String email = account.getEmail();
             attemptLogin(id, email);
         } catch (ApiException e) {
-            startActivity(new Intent(GoogleLogin.this, Login.class));
+            startActivity(new Intent(GoogleLoginActivity.this, LoginActivity.class));
         }
     }
 
@@ -97,13 +97,13 @@ public class GoogleLogin extends AppCompatActivity {
                                 Data.getInstance().loginGoogle();
                                 sendFirebaseRegistrationTokenToServer();
                                 startLocationCollectionService();
-                                Intent intent = new Intent(GoogleLogin.this, Home.class);
+                                Intent intent = new Intent(GoogleLoginActivity.this, HomeActivity.class);
                                 intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
                                 startActivity(intent);
                                 finish();
                             } else {
                                 Toast.makeText(getApplicationContext(), "Google login failed!", Toast.LENGTH_SHORT).show();
-                                Intent intent = new Intent(GoogleLogin.this, Login.class);
+                                Intent intent = new Intent(GoogleLoginActivity.this, LoginActivity.class);
                                 startActivity(intent);
                             }
                         } catch (JSONException j) {
@@ -116,7 +116,7 @@ public class GoogleLogin extends AppCompatActivity {
                     public void onErrorResponse(VolleyError error) {
                         Log.d(TAG, error.toString());
                         Toast.makeText(getApplicationContext(), "Google login failed!", Toast.LENGTH_SHORT).show();
-                        Intent intent = new Intent(GoogleLogin.this, Login.class);
+                        Intent intent = new Intent(GoogleLoginActivity.this, LoginActivity.class);
                         startActivity(intent);
                     }
                 }

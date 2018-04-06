@@ -29,8 +29,8 @@ import org.json.JSONObject;
 import java.util.HashMap;
 import java.util.Map;
 
-public class Settings extends AppCompatActivity {
-    private static final String TAG = Settings.class.getSimpleName();
+public class SettingsActivity extends AppCompatActivity {
+    private static final String TAG = SettingsActivity.class.getSimpleName();
     private static final String SP_LOCATION = "locationSwitch";
     private static final String SP_SCHEDULE = "locationSchedule";
     Switch locationSwitch;
@@ -84,7 +84,7 @@ public class Settings extends AppCompatActivity {
     }
 
     public void delete(View view) {
-        startActivity(new Intent(Settings.this, Delete.class));
+        startActivity(new Intent(SettingsActivity.this, DeleteActivity.class));
         finish();
     }
 
@@ -94,21 +94,21 @@ public class Settings extends AppCompatActivity {
 
     public void changeEmail(View view) {
         if (Data.getInstance().getLoggedIn() && !Data.getInstance().getLoggedInGoogle() && !Data.getInstance().getLoggedInFacebook()) {
-            startActivity(new Intent(Settings.this, ChangeEmail.class));
+            startActivity(new Intent(SettingsActivity.this, ChangeEmailActivity.class));
             finish();
         }
     }
 
     public void changePassword(View view) {
         if (Data.getInstance().getLoggedIn() && !Data.getInstance().getLoggedInGoogle() && !Data.getInstance().getLoggedInFacebook()) {
-            startActivity(new Intent(Settings.this, ChangePassword.class));
+            startActivity(new Intent(SettingsActivity.this, ChangePasswordActivity.class));
             finish();
         }
     }
 
     public void changeUsername(View view) {
         if (Data.getInstance().getLoggedIn() && !Data.getInstance().getLoggedInGoogle() && !Data.getInstance().getLoggedInFacebook()) {
-            startActivity(new Intent(Settings.this, ChangeUsername.class));
+            startActivity(new Intent(SettingsActivity.this, ChangeUsernameActivity.class));
             finish();
         }
     }
@@ -131,7 +131,7 @@ public class Settings extends AppCompatActivity {
                                 Data.getInstance().loginFacebook();
                                 Data.getInstance().removeAllCookies();
                                 Toast.makeText(getApplicationContext(), "Logged out!", Toast.LENGTH_SHORT).show();
-                                Intent intent = new Intent(Settings.this, Login.class);
+                                Intent intent = new Intent(SettingsActivity.this, LoginActivity.class);
                                 intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
                                 startActivity(intent);
                                 finish();
@@ -157,7 +157,7 @@ public class Settings extends AppCompatActivity {
 
 
     public void setSchedule(View view) {
-        startActivity(new Intent(Settings.this, LocationSchedule.class));
+        startActivity(new Intent(SettingsActivity.this, LocationScheduleActivity.class));
         finish();
     }
 

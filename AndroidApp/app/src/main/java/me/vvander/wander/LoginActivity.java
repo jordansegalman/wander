@@ -30,8 +30,8 @@ import org.json.JSONObject;
 import java.util.HashMap;
 import java.util.Map;
 
-public class Login extends AppCompatActivity {
-    private static final String TAG = Login.class.getSimpleName();
+public class LoginActivity extends AppCompatActivity {
+    private static final String TAG = LoginActivity.class.getSimpleName();
     private static final int GOOGLE_PLAY_SERVICES_REQUEST_CODE = 9999;
     private static final int PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION = 1111;
     private RequestQueue requestQueue;
@@ -46,7 +46,7 @@ public class Login extends AppCompatActivity {
 
         Data.getInstance().initializeCookies(getApplicationContext());
         Data.getInstance().initializeFirebaseRegistrationToken();
-        Data.getInstance().initializeLocationSchedule();
+        Data.getInstance().initializeLocationSchedules();
 
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED || ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION);
@@ -109,7 +109,7 @@ public class Login extends AppCompatActivity {
                                 Data.getInstance().login();
                                 sendFirebaseRegistrationTokenToServer();
                                 startLocationCollectionService();
-                                Intent intent = new Intent(Login.this, Home.class);
+                                Intent intent = new Intent(LoginActivity.this, HomeActivity.class);
                                 intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
                                 startActivity(intent);
                                 finish();
@@ -117,7 +117,7 @@ public class Login extends AppCompatActivity {
                                 Data.getInstance().loginGoogle();
                                 sendFirebaseRegistrationTokenToServer();
                                 startLocationCollectionService();
-                                Intent intent = new Intent(Login.this, Home.class);
+                                Intent intent = new Intent(LoginActivity.this, HomeActivity.class);
                                 intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
                                 startActivity(intent);
                                 finish();
@@ -125,7 +125,7 @@ public class Login extends AppCompatActivity {
                                 Data.getInstance().loginFacebook();
                                 sendFirebaseRegistrationTokenToServer();
                                 startLocationCollectionService();
-                                Intent intent = new Intent(Login.this, Home.class);
+                                Intent intent = new Intent(LoginActivity.this, HomeActivity.class);
                                 intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
                                 startActivity(intent);
                                 finish();
@@ -170,7 +170,7 @@ public class Login extends AppCompatActivity {
                                 Data.getInstance().login();
                                 sendFirebaseRegistrationTokenToServer();
                                 startLocationCollectionService();
-                                Intent intent = new Intent(Login.this, Home.class);
+                                Intent intent = new Intent(LoginActivity.this, HomeActivity.class);
                                 intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
                                 startActivity(intent);
                                 finish();
@@ -244,18 +244,18 @@ public class Login extends AppCompatActivity {
     }
 
     public void forgotPassword(View view) {
-        startActivity(new Intent(Login.this, ForgotPassword.class));
+        startActivity(new Intent(LoginActivity.this, ForgotPasswordActivity.class));
     }
 
     public void facebookButton(View view) {
-        startActivity(new Intent(Login.this, FacebookLogin.class));
+        startActivity(new Intent(LoginActivity.this, FacebookLoginActivity.class));
     }
 
     public void googleButton(View view) {
-        startActivity(new Intent(Login.this, GoogleLogin.class));
+        startActivity(new Intent(LoginActivity.this, GoogleLoginActivity.class));
     }
 
     public void registerButton(View view) {
-        startActivity(new Intent(Login.this, Registration.class));
+        startActivity(new Intent(LoginActivity.this, RegistrationActivity.class));
     }
 }

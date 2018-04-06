@@ -22,8 +22,8 @@ import org.json.JSONObject;
 import java.util.HashMap;
 import java.util.Map;
 
-public class ChangeUsername extends AppCompatActivity {
-    private static final String TAG = ChangeUsername.class.getSimpleName();
+public class ChangeUsernameActivity extends AppCompatActivity {
+    private static final String TAG = ChangeUsernameActivity.class.getSimpleName();
     EditText usernameEdit;
     EditText passwordEdit;
     private RequestQueue requestQueue;
@@ -60,7 +60,7 @@ public class ChangeUsername extends AppCompatActivity {
                             String res = response.getString("response");
                             if (res.equalsIgnoreCase("pass")) {
                                 Toast.makeText(getApplicationContext(), "Username changed!", Toast.LENGTH_SHORT).show();
-                                Intent intent = new Intent(ChangeUsername.this, Settings.class);
+                                Intent intent = new Intent(ChangeUsernameActivity.this, SettingsActivity.class);
                                 startActivity(intent);
                                 finish();
                             } else {
@@ -88,7 +88,7 @@ public class ChangeUsername extends AppCompatActivity {
 
     @Override
     public void onBackPressed() {
-        startActivity(new Intent(ChangeUsername.this, Settings.class));
+        startActivity(new Intent(ChangeUsernameActivity.this, SettingsActivity.class));
         finish();
     }
 }

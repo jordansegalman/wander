@@ -22,7 +22,7 @@ import com.google.gson.reflect.TypeToken;
 
 import java.util.ArrayList;
 
-public class Home extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener {
+public class HomeActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener {
     private static final String SP_LOCATION = "locationSwitch";
     private static final String SP_SCHEDULE = "locationSchedule";
     private static final int ACTIVITY_RECOGNITION_DETECTION_INTERVAL = 15000;
@@ -54,16 +54,16 @@ public class Home extends AppCompatActivity implements NavigationView.OnNavigati
     public boolean onNavigationItemSelected(@NonNull MenuItem item) {
         switch (item.getItemId()) {
             case R.id.nav_map:
-                startActivity(new Intent(Home.this, Map.class));
+                startActivity(new Intent(HomeActivity.this, MapActivity.class));
                 return true;
             case R.id.nav_matches:
-                startActivity(new Intent(Home.this, Matches.class));
+                startActivity(new Intent(HomeActivity.this, MatchesActivity.class));
                 return true;
             case R.id.nav_profile:
-                startActivity(new Intent(Home.this, Profile.class));
+                startActivity(new Intent(HomeActivity.this, ProfileActivity.class));
                 return true;
             case R.id.nav_settings:
-                startActivity(new Intent(Home.this, Settings.class));
+                startActivity(new Intent(HomeActivity.this, SettingsActivity.class));
                 return true;
         }
         return false;
@@ -79,7 +79,7 @@ public class Home extends AppCompatActivity implements NavigationView.OnNavigati
         String json = sharedPreferences.getString("schedule", null);
         if (json != null) {
             Gson gson = new Gson();
-            Data.getInstance().setLocationSchedule((ArrayList<LocationScheduleItem>) gson.fromJson(json, new TypeToken<ArrayList<LocationScheduleItem>>() {
+            Data.getInstance().setLocationSchedules((ArrayList<LocationSchedule>) gson.fromJson(json, new TypeToken<ArrayList<LocationSchedule>>() {
             }.getType()));
         }
     }

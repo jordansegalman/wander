@@ -42,8 +42,8 @@ import org.json.JSONObject;
 
 import java.util.ArrayList;
 
-public class Map extends AppCompatActivity implements OnMapReadyCallback, GoogleMap.OnMyLocationButtonClickListener {
-    private static final String TAG = Map.class.getSimpleName();
+public class MapActivity extends AppCompatActivity implements OnMapReadyCallback, GoogleMap.OnMyLocationButtonClickListener {
+    private static final String TAG = MapActivity.class.getSimpleName();
     private static final int PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION = 2222;
     private RequestQueue requestQueue;
     private GoogleMap googleMap;
@@ -65,14 +65,11 @@ public class Map extends AppCompatActivity implements OnMapReadyCallback, Google
         overlayPersonalOn = false;
         overlayAllOn = false;
         getHeatmapData();
-        if (getCallingActivity() != null) {
-            if (getCallingActivity().getClassName().equalsIgnoreCase("me.vvander.wander.MatchProfile")) {
-                Intent intent = getIntent();
-                String json = intent.getStringExtra("Cross List");
-                Gson gson = new Gson();
-                crossList = gson.fromJson(json, new TypeToken<ArrayList<LatLng>>() {
-                }.getType());
-            }
+        if (getCallingActivity() != null && getCallingActivity().getClassName().equalsIgnoreCase("me.vvander.wander.MatchProfileActivity")) {
+            Intent intent = getIntent();
+            String json = intent.getStringExtra("Cross List");
+            Gson gson = new Gson();
+            crossList = gson.fromJson(json, new TypeToken<ArrayList<LatLng>>() {}.getType());
         }
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);

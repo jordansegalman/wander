@@ -29,8 +29,8 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
-public class FacebookLogin extends AppCompatActivity {
-    private static final String TAG = FacebookLogin.class.getSimpleName();
+public class FacebookLoginActivity extends AppCompatActivity {
+    private static final String TAG = FacebookLoginActivity.class.getSimpleName();
     CallbackManager callbackManager;
     private RequestQueue requestQueue;
 
@@ -52,15 +52,15 @@ public class FacebookLogin extends AppCompatActivity {
 
                     @Override
                     public void onCancel() {
-                        startActivity(new Intent(FacebookLogin.this, Login.class));
+                        startActivity(new Intent(FacebookLoginActivity.this, LoginActivity.class));
                     }
 
                     @Override
                     public void onError(FacebookException error) {
-                        startActivity(new Intent(FacebookLogin.this, Login.class));
+                        startActivity(new Intent(FacebookLoginActivity.this, LoginActivity.class));
                     }
                 });
-        LoginManager.getInstance().logInWithReadPermissions(FacebookLogin.this, Arrays.asList("public_profile", "email"));
+        LoginManager.getInstance().logInWithReadPermissions(FacebookLoginActivity.this, Arrays.asList("public_profile", "email"));
     }
 
     @Override
@@ -85,7 +85,7 @@ public class FacebookLogin extends AppCompatActivity {
                             String email = object.getString("email");
                             attemptLogin(id, email);
                         } catch (JSONException e) {
-                            startActivity(new Intent(FacebookLogin.this, Login.class));
+                            startActivity(new Intent(FacebookLoginActivity.this, LoginActivity.class));
                         }
                     }
                 });
@@ -112,13 +112,13 @@ public class FacebookLogin extends AppCompatActivity {
                                 Data.getInstance().loginFacebook();
                                 sendFirebaseRegistrationTokenToServer();
                                 startLocationCollectionService();
-                                Intent intent = new Intent(FacebookLogin.this, Home.class);
+                                Intent intent = new Intent(FacebookLoginActivity.this, HomeActivity.class);
                                 intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
                                 startActivity(intent);
                                 finish();
                             } else {
                                 Toast.makeText(getApplicationContext(), "Facebook login failed!", Toast.LENGTH_SHORT).show();
-                                Intent intent = new Intent(FacebookLogin.this, Login.class);
+                                Intent intent = new Intent(FacebookLoginActivity.this, LoginActivity.class);
                                 startActivity(intent);
                             }
                         } catch (JSONException j) {
@@ -131,7 +131,7 @@ public class FacebookLogin extends AppCompatActivity {
                     public void onErrorResponse(VolleyError error) {
                         Log.d(TAG, error.toString());
                         Toast.makeText(getApplicationContext(), "Facebook login failed!", Toast.LENGTH_SHORT).show();
-                        Intent intent = new Intent(FacebookLogin.this, Login.class);
+                        Intent intent = new Intent(FacebookLoginActivity.this, LoginActivity.class);
                         startActivity(intent);
                     }
                 }

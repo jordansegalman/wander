@@ -28,7 +28,7 @@ public class WanderFirebaseMessagingService extends FirebaseMessagingService {
                         notificationChannel.setVibrationPattern(new long[]{100, 200, 300, 200, 100});
                         notificationManager.createNotificationChannel(notificationChannel);
                     }
-                    Intent intent = new Intent(getApplicationContext(), Matches.class);
+                    Intent intent = new Intent(getApplicationContext(), MatchesActivity.class);
                     PendingIntent pendingIntent = PendingIntent.getActivity(getApplicationContext(), 0, intent, 0);
                     NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(getApplicationContext(), channel_id)
                             .setContentTitle(remoteMessage.getData().get("title"))
@@ -52,7 +52,7 @@ public class WanderFirebaseMessagingService extends FirebaseMessagingService {
                         notificationChannel.setVibrationPattern(new long[]{100, 200, 300, 200, 100});
                         notificationManager.createNotificationChannel(notificationChannel);
                     }
-                    Intent intent = new Intent(getApplicationContext(), Matches.class);
+                    Intent intent = new Intent(getApplicationContext(), MatchesActivity.class);
                     PendingIntent pendingIntent = PendingIntent.getActivity(getApplicationContext(), 0, intent, 0);
                     NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(getApplicationContext(), channel_id)
                             .setContentTitle(remoteMessage.getData().get("title"))

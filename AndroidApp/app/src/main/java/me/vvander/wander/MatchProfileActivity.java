@@ -27,8 +27,8 @@ import org.json.JSONObject;
 import java.util.ArrayList;
 import java.util.HashMap;
 
-public class MatchProfile extends AppCompatActivity {
-    private static final String TAG = MatchProfile.class.getSimpleName();
+public class MatchProfileActivity extends AppCompatActivity {
+    private static final String TAG = MatchProfileActivity.class.getSimpleName();
     private RequestQueue requestQueue;
     private Button approveButton;
     private Button unapproveButton;
@@ -187,7 +187,7 @@ public class MatchProfile extends AppCompatActivity {
                             }
                             Gson gson = new Gson();
                             String json = gson.toJson(crossList);
-                            Intent intent = new Intent(MatchProfile.this, me.vvander.wander.Map.class);
+                            Intent intent = new Intent(MatchProfileActivity.this, MapActivity.class);
                             intent.putExtra("Cross List", json);
                             startActivity(intent);
                         } catch (JSONException j) {

@@ -13,7 +13,7 @@ public class LocationScheduleAlarmReceiver extends BroadcastReceiver {
 
     @Override
     public void onReceive(Context context, Intent intent) {
-        if (Data.getInstance().getLocationSchedule() != null) {
+        if (Data.getInstance().getLocationSchedules() != null) {
             Log.d(TAG, "Location schedule alarm broadcast received");
             Data.getInstance().setScheduleLocationSwitch(!locationScheduleActive());
             if (Data.getInstance().getManualLocationSwitch() && Data.getInstance().getScheduleLocationSwitch() && Data.getInstance().getActivityRecognitionLocationSwitch()) {
@@ -29,10 +29,10 @@ public class LocationScheduleAlarmReceiver extends BroadcastReceiver {
         int day = calendar.get(Calendar.DAY_OF_WEEK) - 1;
         int hour = calendar.get(Calendar.HOUR_OF_DAY);
         int minute = calendar.get(Calendar.MINUTE);
-        ArrayList<LocationScheduleItem> locationSchedule = Data.getInstance().getLocationSchedule();
-        if (!locationSchedule.isEmpty()) {
-            for (LocationScheduleItem locationScheduleItem : locationSchedule) {
-                if (locationScheduleItem.getDays()[day] && ((hour > locationScheduleItem.getStartHour() && hour < locationScheduleItem.getEndHour()) || (hour == locationScheduleItem.getStartHour() && minute >= locationScheduleItem.getStartMinute()) || (hour == locationScheduleItem.getEndHour() && minute <= locationScheduleItem.getEndMinute()))) {
+        ArrayList<LocationSchedule> locationSchedules = Data.getInstance().getLocationSchedules();
+        if (!locationSchedules.isEmpty()) {
+            for (LocationSchedule locationSchedule : locationSchedules) {
+                if (locationSchedule.getDays()[day] && ((hour > locationSchedule.getStartHour() && hour < locationSchedule.getEndHour()) || (hour == locationSchedule.getStartHour() && minute >= locationSchedule.getStartMinute()) || (hour == locationSchedule.getEndHour() && minute <= locationSchedule.getEndMinute()))) {
                     return true;
                 }
             }

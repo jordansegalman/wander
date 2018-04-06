@@ -27,10 +27,10 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
-public class Matches extends AppCompatActivity {
-    private static final String TAG = Matches.class.getSimpleName();
+public class MatchesActivity extends AppCompatActivity {
+    private static final String TAG = MatchesActivity.class.getSimpleName();
     private RequestQueue requestQueue;
-    private ArrayList<MatchData> matchList;
+    private ArrayList<Match> matchList;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -101,7 +101,7 @@ public class Matches extends AppCompatActivity {
                                 picture = Utilities.encodeImage(BitmapFactory.decodeResource(getResources(), R.drawable.default_profile));
                             }
 
-                            MatchData match = new MatchData(uid, name, about, interests, picture, timesCrossed, approved);
+                            Match match = new Match(uid, name, about, interests, picture, timesCrossed, approved);
                             matchList.add(match);
                             setupListView();
                         } catch (JSONException j) {
@@ -140,16 +140,16 @@ public class Matches extends AppCompatActivity {
             matchListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
                 @Override
                 public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                    final MatchData matchData = (MatchData) parent.getAdapter().getItem(position);
+                    final Match match = (Match) parent.getAdapter().getItem(position);
 
-                    Intent intent = new Intent(Matches.this, MatchProfile.class);
-                    intent.putExtra("uid", matchData.getUserID());
-                    intent.putExtra("name", matchData.getName());
-                    intent.putExtra("about", matchData.getAbout());
-                    intent.putExtra("interests", matchData.getInterests());
-                    intent.putExtra("picture", matchData.getPicture());
-                    intent.putExtra("timesCrossed", String.valueOf(matchData.getTimesCrossed()));
-                    intent.putExtra("approved", matchData.getApproved());
+                    Intent intent = new Intent(MatchesActivity.this, MatchProfileActivity.class);
+                    intent.putExtra("uid", match.getUserID());
+                    intent.putExtra("name", match.getName());
+                    intent.putExtra("about", match.getAbout());
+                    intent.putExtra("interests", match.getInterests());
+                    intent.putExtra("picture", match.getPicture());
+                    intent.putExtra("timesCrossed", String.valueOf(match.getTimesCrossed()));
+                    intent.putExtra("approved", match.getApproved());
                     startActivity(intent);
                 }
             });

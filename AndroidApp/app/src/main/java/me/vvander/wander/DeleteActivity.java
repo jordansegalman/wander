@@ -28,8 +28,8 @@ import org.json.JSONObject;
 import java.util.HashMap;
 import java.util.Map;
 
-public class Delete extends AppCompatActivity {
-    private static final String TAG = Delete.class.getSimpleName();
+public class DeleteActivity extends AppCompatActivity {
+    private static final String TAG = DeleteActivity.class.getSimpleName();
     private static final String SP_LOCATION = "locationSwitch";
     private static final String SP_SCHEDULE = "locationSchedule";
     EditText passwordEditText;
@@ -90,7 +90,7 @@ public class Delete extends AppCompatActivity {
                                     Data.getInstance().logout();
                                     Data.getInstance().removeAllCookies();
                                     Toast.makeText(getApplicationContext(), "Account deleted!", Toast.LENGTH_SHORT).show();
-                                    Intent intent = new Intent(Delete.this, Login.class);
+                                    Intent intent = new Intent(DeleteActivity.this, LoginActivity.class);
                                     intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
                                     startActivity(intent);
                                     finish();
@@ -132,7 +132,7 @@ public class Delete extends AppCompatActivity {
                                     Data.getInstance().logoutGoogle();
                                     Data.getInstance().removeAllCookies();
                                     Toast.makeText(getApplicationContext(), "Account deleted!", Toast.LENGTH_SHORT).show();
-                                    Intent intent = new Intent(Delete.this, Login.class);
+                                    Intent intent = new Intent(DeleteActivity.this, LoginActivity.class);
                                     intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
                                     startActivity(intent);
                                     finish();
@@ -174,7 +174,7 @@ public class Delete extends AppCompatActivity {
                                     Data.getInstance().logoutFacebook();
                                     Data.getInstance().removeAllCookies();
                                     Toast.makeText(getApplicationContext(), "Account deleted!", Toast.LENGTH_SHORT).show();
-                                    Intent intent = new Intent(Delete.this, Login.class);
+                                    Intent intent = new Intent(DeleteActivity.this, LoginActivity.class);
                                     intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
                                     startActivity(intent);
                                     finish();
@@ -225,13 +225,13 @@ public class Delete extends AppCompatActivity {
     }
 
     public void cancel(View view) {
-        startActivity(new Intent(Delete.this, Settings.class));
+        startActivity(new Intent(DeleteActivity.this, SettingsActivity.class));
         finish();
     }
 
     @Override
     public void onBackPressed() {
-        startActivity(new Intent(Delete.this, Settings.class));
+        startActivity(new Intent(DeleteActivity.this, SettingsActivity.class));
         finish();
     }
 }

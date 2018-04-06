@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context="me.vvander.wander.Profile">
+    tools:context="me.vvander.wander.ProfileActivity">
 
     <android.support.design.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
         xmlns:app="http://schemas.android.com/apk/res-auto"
@@ -112,6 +112,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_alignParentBottom="true"
+                android:gravity="bottom"
                 android:orientation="horizontal">
 
                 <LinearLayout
@@ -130,16 +131,6 @@
                         android:onClick="edit"
                         android:text="Edit" />
 
-                    <Button
-                        android:id="@+id/updateButton"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_gravity="end"
-                        android:layout_weight="0"
-                        android:backgroundTint="@color/colorAccent"
-                        android:onClick="update"
-                        android:text="Update" />
-
                 </LinearLayout>
 
                 <Space
@@ -154,16 +145,6 @@
                     android:orientation="vertical">
 
                     <Button
-                        android:id="@+id/importLinkedInButton"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_gravity="end"
-                        android:layout_weight="0"
-                        android:backgroundTint="@color/colorAccent"
-                        android:onClick="importLinkedInProfile"
-                        android:text="Import LinkedIn" />
-
-                    <Button
                         android:id="@+id/importFacebookButton"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
@@ -172,6 +153,16 @@
                         android:backgroundTint="@color/colorAccent"
                         android:onClick="importFacebookProfile"
                         android:text="Import Facebook" />
+
+                    <Button
+                        android:id="@+id/importLinkedInButton"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="end"
+                        android:layout_weight="0"
+                        android:backgroundTint="@color/colorAccent"
+                        android:onClick="importLinkedInProfile"
+                        android:text="Import LinkedIn" />
 
                 </LinearLayout>
 
