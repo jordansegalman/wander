@@ -64,12 +64,10 @@ public class ProfileEditActivity extends AppCompatActivity {
             }
         });
 
-        if (getCallingActivity() != null && getCallingActivity().getClassName().equalsIgnoreCase("me.vvander.wander.ProfileActivity")) {
-            nameEditText.setText(getIntent().getStringExtra("name"));
-            aboutEditText.setText(getIntent().getStringExtra("about"));
-            interestsEditText.setText(getIntent().getStringExtra("interests"));
-            pictureImageView.setImageBitmap(Utilities.decodeImage(getIntent().getStringExtra("picture")));
-        }
+        nameEditText.setText(getIntent().getStringExtra("name"));
+        aboutEditText.setText(getIntent().getStringExtra("about"));
+        interestsEditText.setText(getIntent().getStringExtra("interests"));
+        pictureImageView.setImageBitmap(Utilities.decodeImage(getIntent().getStringExtra("picture")));
     }
 
     public void selectImage(View view) {

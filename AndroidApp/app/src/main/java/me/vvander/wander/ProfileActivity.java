@@ -57,14 +57,7 @@ public class ProfileActivity extends AppCompatActivity {
         aboutTextView = findViewById(R.id.about);
         interestsTextView = findViewById(R.id.interests);
 
-        if (getCallingActivity() != null && getCallingActivity().getClassName().equalsIgnoreCase("me.vvander.wander.ProfileEditActivity")) {
-            nameTextView.setText(getIntent().getStringExtra("name"));
-            aboutTextView.setText(getIntent().getStringExtra("about"));
-            interestsTextView.setText(getIntent().getStringExtra("interests"));
-            pictureImageView.setImageBitmap(Utilities.decodeImage(getIntent().getStringExtra("picture")));
-        } else {
-            getProfile();
-        }
+        getProfile();
     }
 
     public void edit(View view) {

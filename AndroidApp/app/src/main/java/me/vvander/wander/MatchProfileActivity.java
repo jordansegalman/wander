@@ -187,7 +187,7 @@ public class MatchProfileActivity extends AppCompatActivity {
                             }
                             Gson gson = new Gson();
                             String json = gson.toJson(crossList);
-                            Intent intent = new Intent(MatchProfileActivity.this, MapActivity.class);
+                            Intent intent = new Intent(MatchProfileActivity.this, HomeActivity.class);
                             intent.putExtra("Cross List", json);
                             startActivity(intent);
                         } catch (JSONException j) {

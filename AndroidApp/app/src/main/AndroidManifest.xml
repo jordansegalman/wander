@@ -40,7 +40,6 @@
         <activity android:name=".LocationScheduleActivity" />
         <activity android:name=".LocationScheduleEditActivity" />
         <activity android:name=".LocationScheduleNewActivity" />
-        <activity android:name=".MapActivity" />
         <activity android:name=".DeleteActivity" />
         <activity android:name=".SettingsActivity" />
         <activity android:name=".ChangeEmailActivity" />
