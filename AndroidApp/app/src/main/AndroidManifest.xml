@@ -74,6 +74,7 @@
         <activity android:name="me.vvander.wander.ForgotPassword" />
         <activity android:name="me.vvander.wander.ChangePassword" />
         <activity android:name="me.vvander.wander.Matches" />
+        <activity android:name="me.vvander.wander.MatchProfile" />
 
         <meta-data
             android:name="com.facebook.sdk.ApplicationId"

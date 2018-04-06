@@ -73,7 +73,20 @@
                     android:textSize="25sp" />
 
                 <TextView
-                    android:id="@+id/interests"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="About Me:"
+                    android:textColor="#000000"
+                    android:textSize="20sp" />
+
+                <TextView
+                    android:id="@+id/about"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="No About"
+                    android:visibility="invisible" />
+
+                <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:inputType="none"
@@ -81,84 +94,11 @@
                     android:textColor="#000000"
                     android:textSize="20sp" />
 
-                <EditText
-                    android:id="@+id/interests_text"
-                    android:layout_width="fill_parent"
+                <TextView
+                    android:id="@+id/interests"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:background="@android:color/transparent"
-                    android:clickable="false"
-                    android:cursorVisible="false"
-                    android:focusable="false"
-                    android:focusableInTouchMode="false"
                     android:text="No Interests"
-                    android:textColor="#606060"
-                    android:textSize="14sp"
-                    android:visibility="invisible" />
-
-                <TextView
-                    android:id="@+id/about"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="About Me:"
-                    android:textColor="#000000"
-                    android:textSize="20sp" />
-
-                <EditText
-                    android:id="@+id/about_text"
-                    android:layout_width="fill_parent"
-                    android:layout_height="wrap_content"
-                    android:background="@android:color/transparent"
-                    android:clickable="false"
-                    android:cursorVisible="false"
-                    android:focusable="false"
-                    android:focusableInTouchMode="false"
-                    android:text="No About"
-                    android:textColor="#606060"
-                    android:textSize="14sp"
-                    android:visibility="invisible" />
-
-                <TextView
-                    android:id="@+id/location"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="Location"
-                    android:textColor="#000000"
-                    android:textSize="20sp" />
-
-                <EditText
-                    android:id="@+id/location_text"
-                    android:layout_width="fill_parent"
-                    android:layout_height="wrap_content"
-                    android:background="@android:color/transparent"
-                    android:clickable="false"
-                    android:cursorVisible="false"
-                    android:focusable="false"
-                    android:focusableInTouchMode="false"
-                    android:text="No Location"
-                    android:textColor="#606060"
-                    android:textSize="14sp"
-                    android:visibility="invisible" />
-
-                <TextView
-                    android:id="@+id/email"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="Email"
-                    android:textColor="#000000"
-                    android:textSize="20sp" />
-
-                <EditText
-                    android:id="@+id/email_text"
-                    android:layout_width="fill_parent"
-                    android:layout_height="wrap_content"
-                    android:background="@android:color/transparent"
-                    android:clickable="false"
-                    android:cursorVisible="false"
-                    android:focusable="false"
-                    android:focusableInTouchMode="false"
-                    android:text="No Email"
-                    android:textColor="#606060"
-                    android:textSize="14sp"
                     android:visibility="invisible" />
 
 

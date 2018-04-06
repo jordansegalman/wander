@@ -3,14 +3,11 @@
     <string name="drawer_open">Open navigation drawer</string>
     <string name="drawer_close">Close navigation drawer</string>
     <string name="title_activity_app_home">AppHome</string>
-
     <string name="navigation_drawer_open">Open navigation drawer</string>
     <string name="navigation_drawer_close">Close navigation drawer</string>
-
     <string name="action_settings">Settings</string>
     <string name="title_activity_my_location">My Location</string>
     <string name="title_activity_forgot_password">Forgot Password</string>
-
     <string name="facebook_app_id">***REMOVED***</string>
     <string name="fb_login_protocol_scheme">fb***REMOVED***</string>
     <string name="wander_logo">Wander Logo</string>
@@ -19,7 +16,7 @@
     <string name="login">Login</string>
     <string name="google_logo">Google Logo</string>
     <string name="facebook_logo">Facebook Logo</string>
-    <string name="interests_prompt">Select or type in your interests</string>>
+    <string name="interests_prompt">Select or type in your interests</string>
     <string-array name="interests_array">
         <item>Select an interest</item>
         <item>Reading</item>
@@ -29,4 +26,6 @@
         <item>Video Games</item>
         <item>Sports</item>
     </string-array>
+    <string name="approve">Approve</string>
+    <string name="unapprove">Unapprove</string>
 </resources>

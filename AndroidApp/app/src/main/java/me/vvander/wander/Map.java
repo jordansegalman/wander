@@ -66,7 +66,7 @@ public class Map extends AppCompatActivity implements OnMapReadyCallback, Google
         overlayAllOn = false;
         getHeatmapData();
         if (getCallingActivity() != null) {
-            if (getCallingActivity().getClassName().equalsIgnoreCase("me.vvander.wander.Matches")) {
+            if (getCallingActivity().getClassName().equalsIgnoreCase("me.vvander.wander.MatchProfile")) {
                 Intent intent = getIntent();
                 String json = intent.getStringExtra("Cross List");
                 Gson gson = new Gson();
@@ -222,8 +222,8 @@ public class Map extends AppCompatActivity implements OnMapReadyCallback, Google
 
     public void displayHeatmapAll(View view) {
         int[] colors = {
-                Color.rgb(102, 225, 0),
-                Color.rgb(255, 0, 0)
+                Color.rgb(0, 225, 215),
+                Color.rgb(125, 0, 225)
         };
         float[] startPoints = {
                 0.2f, 1f

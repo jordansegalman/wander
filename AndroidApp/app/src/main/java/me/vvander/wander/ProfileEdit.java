@@ -2,19 +2,16 @@ package me.vvander.wander;
 
 import android.content.Intent;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.graphics.drawable.BitmapDrawable;
 import android.os.Bundle;
-import android.support.v4.app.ActivityCompat;
+import android.provider.MediaStore;
 import android.support.v7.app.AppCompatActivity;
-import android.util.Base64;
 import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.Spinner;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import com.android.volley.DefaultRetryPolicy;
@@ -28,22 +25,18 @@ import com.android.volley.toolbox.Volley;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
 
 public class ProfileEdit extends AppCompatActivity {
     private static final String TAG = ProfileEdit.class.getSimpleName();
-    private static final int FINISHED = 1;
-    private EditText etInterests;
-    private EditText etAbout;
-    private EditText etLocation;
-    private EditText etEmail;
-    private TextView etName;
-    private ImageView etPicture;
+    private static final int SELECT_PICTURE = 1;
     private RequestQueue requestQueue;
+    private ImageView pictureImageView;
+    private EditText nameEditText;
+    private EditText aboutEditText;
+    private EditText interestsEditText;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -52,106 +45,67 @@ public class ProfileEdit extends AppCompatActivity {
 
         requestQueue = Volley.newRequestQueue(this);
 
-        etInterests = findViewById(R.id.interests_text);
-        etAbout = findViewById(R.id.about_text);
-        etLocation = findViewById(R.id.location_text);
-        etEmail = findViewById(R.id.email_text);
-        etName = findViewById(R.id.name);
+        pictureImageView = findViewById(R.id.picture);
+        nameEditText = findViewById(R.id.name);
+        aboutEditText = findViewById(R.id.about);
+        interestsEditText = findViewById(R.id.interests);
         Spinner spinner = findViewById(R.id.spinner);
         spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> adapterView, View view, int position, long id) {
                 Object item = adapterView.getItemAtPosition(position);
                 if (item != null && !item.toString().equals("Select an interest")) {
-                    etInterests.setText(item.toString());
+                    interestsEditText.setText(item.toString());
                 }
             }
 
             @Override
             public void onNothingSelected(AdapterView<?> adapterView) {
-
             }
         });
 
-        etPicture = findViewById(R.id.picture);
-
-        Intent in = getIntent();
-        String loc = in.getExtras().getString("location");
-        String about = in.getExtras().getString("about");
-        String interests = in.getExtras().getString("interests");
-        String name = in.getExtras().getString("name");
-        String email = in.getExtras().getString("email");
-        String picture = in.getExtras().getString("picture");
-
-        etInterests.setText(interests);
-        etAbout.setText(about);
-        etLocation.setText(loc);
-        etName.setText(name);
-        etEmail.setText(email);
-
-        if (picture != null) {
-            byte[] decoded_string = Base64.decode(picture, Base64.DEFAULT);
-            if (decoded_string == null) {
-                Log.d(TAG, "ERROR!");
-            }
-            Bitmap decoded_byte = BitmapFactory.decodeByteArray(decoded_string, 0, decoded_string.length);
-            etPicture.setImageBitmap(decoded_byte);
+        if (getCallingActivity() != null && getCallingActivity().getClassName().equalsIgnoreCase("me.vvander.wander.Profile")) {
+            nameEditText.setText(getIntent().getStringExtra("name"));
+            aboutEditText.setText(getIntent().getStringExtra("about"));
+            interestsEditText.setText(getIntent().getStringExtra("interests"));
+            pictureImageView.setImageBitmap(Utilities.decodeImage(getIntent().getStringExtra("picture")));
         }
     }
 
     public void selectImage(View view) {
-        Intent intent = new Intent(Intent.ACTION_PICK);
+        Intent intent = new Intent();
         intent.setType("image/*");
-        startActivityForResult(intent.createChooser(intent, "Select Profile Picture"), FINISHED);
+        intent.setAction(Intent.ACTION_GET_CONTENT);
+        startActivityForResult(Intent.createChooser(intent, "Select Profile Picture"), SELECT_PICTURE);
     }
 
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
-        //super.onActivityResult(requestCode, resultCode, data);
-        if (data != null && requestCode == FINISHED) {
+        if (requestCode == SELECT_PICTURE && resultCode == RESULT_OK && data != null && data.getData() != null) {
             try {
-                InputStream inputStream = getApplicationContext().getContentResolver().openInputStream(data.getData());
-                ImageView imageView = findViewById(R.id.picture);
-                imageView.setImageBitmap(BitmapFactory.decodeStream(inputStream));
+                Bitmap bitmap = MediaStore.Images.Media.getBitmap(getContentResolver(), data.getData());
+                pictureImageView.setImageBitmap(bitmap);
             } catch (IOException e) {
                 Log.d(TAG, e.toString());
             }
-
         }
     }
 
     public void done(View view) {
-        etInterests = findViewById(R.id.interests_text);
-        etAbout = findViewById(R.id.about_text);
-        etLocation = findViewById(R.id.location_text);
-        etEmail = findViewById(R.id.email_text);
-        etName = findViewById(R.id.name);
+        String encodedImage = Utilities.encodeImage(((BitmapDrawable) pictureImageView.getDrawable()).getBitmap());
 
-        BitmapDrawable drawable = (BitmapDrawable) etPicture.getDrawable();
-        Bitmap bitmap = drawable.getBitmap();
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        bitmap.compress(Bitmap.CompressFormat.JPEG, 90, baos);
-        byte[] b = baos.toByteArray();
-        String encoded_picture = Base64.encodeToString(b, Base64.DEFAULT);
-        Log.d(TAG, encoded_picture);
-
-
-        Intent i = new Intent(ProfileEdit.this, Profile.class);
-        i.putExtra("location", etLocation.getText().toString());
-        i.putExtra("about", etAbout.getText().toString());
-        i.putExtra("interests", etInterests.getText().toString());
-        i.putExtra("email", etEmail.getText().toString());
-        i.putExtra("name", etName.getText().toString());
-        i.putExtra("picture", encoded_picture);
+        final Intent intent = new Intent(ProfileEdit.this, Profile.class);
+        intent.putExtra("name", nameEditText.getText().toString());
+        intent.putExtra("about", aboutEditText.getText().toString());
+        intent.putExtra("interests", interestsEditText.getText().toString());
+        intent.putExtra("picture", encodedImage);
 
         String url = Data.getInstance().getUrl() + "/updateProfile";
         Map<String, String> params = new HashMap<>();
-        params.put("name", etName.getText().toString());
-        //params.put("email", etEmail.getText().toString());
-        params.put("loc", etLocation.getText().toString());
-        params.put("about", etAbout.getText().toString());
-        params.put("interests", etInterests.getText().toString());
-        params.put("picture", encoded_picture);
+        params.put("name", nameEditText.getText().toString());
+        params.put("about", aboutEditText.getText().toString());
+        params.put("interests", interestsEditText.getText().toString());
+        params.put("picture", encodedImage);
 
         JsonObjectRequest postRequest = new JsonObjectRequest(Request.Method.POST, url, new JSONObject(params),
                 new Response.Listener<JSONObject>() {
@@ -160,8 +114,7 @@ public class ProfileEdit extends AppCompatActivity {
                         try {
                             String res = response.getString("response");
                             if (res.equalsIgnoreCase("pass")) {
-                                Toast.makeText(getApplicationContext(), "User data stored", Toast.LENGTH_SHORT).show();
-
+                                Toast.makeText(getApplicationContext(), "Profile updated!", Toast.LENGTH_SHORT).show();
                             }
                         } catch (JSONException j) {
                             j.printStackTrace();
@@ -180,10 +133,7 @@ public class ProfileEdit extends AppCompatActivity {
                 DefaultRetryPolicy.DEFAULT_MAX_RETRIES,
                 DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
         requestQueue.add(postRequest);
-
-
-        ActivityCompat.startActivityForResult(this, i, 0, null);
-        this.finish();
-        //startActivity(i);
+        startActivity(intent);
+        finish();
     }
 }

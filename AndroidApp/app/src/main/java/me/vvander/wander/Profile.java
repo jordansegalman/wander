@@ -1,13 +1,10 @@
 package me.vvander.wander;
 
 import android.content.Intent;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.graphics.drawable.BitmapDrawable;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
-import android.util.Base64;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
@@ -29,30 +26,23 @@ import com.facebook.GraphResponse;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.ByteArrayOutputStream;
 import java.util.HashMap;
 import java.util.Map;
 
 public class Profile extends AppCompatActivity {
     private static final String TAG = Profile.class.getSimpleName();
     private RequestQueue requestQueue;
-    private TextView nameText;
-    private TextView interestText;
-    private TextView aboutText;
-    private TextView locationText;
-    private TextView emailText;
-    private ImageView profilePicture;
-
-    private TextView nameText_input;
-    private TextView interestText_input;
-    private TextView aboutText_input;
-    private TextView locationText_input;
-    private TextView emailText_input;
+    private ImageView pictureImageView;
+    private TextView nameTextView;
+    private TextView aboutTextView;
+    private TextView interestsTextView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_profile);
+
+        requestQueue = Volley.newRequestQueue(this);
 
         Button importFacebookButton = findViewById(R.id.importFacebookButton);
 
@@ -62,66 +52,37 @@ public class Profile extends AppCompatActivity {
             importFacebookButton.setVisibility(View.VISIBLE);
         }
 
-        requestQueue = Volley.newRequestQueue(this);
+        pictureImageView = findViewById(R.id.picture);
+        nameTextView = findViewById(R.id.name);
+        aboutTextView = findViewById(R.id.about);
+        interestsTextView = findViewById(R.id.interests);
 
-        String name = "Name";
-        String interests = "Interests";
-        String about = "About";
-        String location = "Location";
-        String email = "Email";
-
-        profilePicture = findViewById(R.id.picture);
-        nameText = findViewById(R.id.name);
-        interestText = findViewById(R.id.interests);
-        aboutText = findViewById(R.id.about);
-        locationText = findViewById(R.id.location);
-        emailText = findViewById(R.id.email);
-
-        nameText_input = findViewById(R.id.name);
-        interestText_input = findViewById(R.id.interests_text);
-        aboutText_input = findViewById(R.id.about_text);
-        locationText_input = findViewById(R.id.location_text);
-        emailText_input = findViewById(R.id.email_text);
-
-
-        if (getCallingActivity() != null) {
-            Log.d(TAG, getCallingActivity().getClassName());
-            if (getCallingActivity().getClassName().equalsIgnoreCase("me.vvander.wander.ProfileEdit")) {
-                Intent in = getIntent();
-                nameText_input.setText(in.getExtras().getString("name"));
-                interestText_input.setText(in.getExtras().getString("interests"));
-                aboutText_input.setText(in.getExtras().getString("about"));
-                emailText_input.setText(in.getExtras().getString("email"));
-                locationText_input.setText(in.getExtras().getString("location"));
-                if (in.getExtras().getString("picture") != null) {
-                    byte[] decoded_string = Base64.decode(in.getExtras().getString("picture"), Base64.DEFAULT);
-                    if (decoded_string == null) {
-                        Log.d(TAG, "ERROR!");
-                    }
-                    Bitmap decoded_byte = BitmapFactory.decodeByteArray(decoded_string, 0, decoded_string.length);
-                    profilePicture.setImageBitmap(decoded_byte);
-                } else {
-                    Bitmap icon = BitmapFactory.decodeResource(getResources(), R.drawable.default_profile);
-                    profilePicture.setImageBitmap(icon);
-                }
-            }
+        if (getCallingActivity() != null && getCallingActivity().getClassName().equalsIgnoreCase("me.vvander.wander.ProfileEdit")) {
+            nameTextView.setText(getIntent().getStringExtra("name"));
+            aboutTextView.setText(getIntent().getStringExtra("about"));
+            interestsTextView.setText(getIntent().getStringExtra("interests"));
+            pictureImageView.setImageBitmap(Utilities.decodeImage(getIntent().getStringExtra("picture")));
         } else {
             getProfile();
         }
 
-        nameText_input.setVisibility(View.VISIBLE);
-        interestText_input.setVisibility(View.VISIBLE);
-        aboutText_input.setVisibility(View.VISIBLE);
-        locationText_input.setVisibility(View.VISIBLE);
-        emailText_input.setVisibility(View.VISIBLE);
-        profilePicture.setVisibility(View.VISIBLE);
+        pictureImageView.setVisibility(View.VISIBLE);
+        nameTextView.setVisibility(View.VISIBLE);
+        interestsTextView.setVisibility(View.VISIBLE);
+        aboutTextView.setVisibility(View.VISIBLE);
+    }
 
-        //profilePicture.setBackground();
-        //nameText.setText(name);
-        //interestText.setText(interests);
-        //aboutText.setText(about);
-        //locationText.setText(location);
-        //emailText.setText(email);
+    public void edit(View view) {
+        Intent intent = new Intent(Profile.this, ProfileEdit.class);
+        intent.putExtra("name", nameTextView.getText().toString());
+        intent.putExtra("about", aboutTextView.getText().toString());
+        intent.putExtra("interests", interestsTextView.getText().toString());
+        intent.putExtra("picture", Utilities.encodeImage(((BitmapDrawable) pictureImageView.getDrawable()).getBitmap()));
+        startActivity(intent);
+    }
+
+    public void update(View view) {
+        getProfile();
     }
 
     public void importFacebookProfile(View view) {
@@ -153,14 +114,12 @@ public class Profile extends AppCompatActivity {
                         try {
                             String res = response.getString("response");
                             if (res.equalsIgnoreCase("pass")) {
-                                String location = response.getString("loc");
                                 String about = response.getString("about");
                                 String interests = response.getString("interests");
                                 String picture = response.getString("picture");
 
                                 Map<String, String> params = new HashMap<>();
                                 params.put("name", name);
-                                params.put("loc", location);
                                 params.put("about", about);
                                 params.put("interests", interests);
                                 params.put("picture", picture);
@@ -174,6 +133,7 @@ public class Profile extends AppCompatActivity {
                                                 try {
                                                     String res = response.getString("response");
                                                     if (res.equalsIgnoreCase("pass")) {
+                                                        getProfile();
                                                         Toast.makeText(getApplicationContext(), "Facebook profile imported!", Toast.LENGTH_SHORT).show();
                                                     }
                                                 } catch (JSONException j) {
@@ -194,7 +154,6 @@ public class Profile extends AppCompatActivity {
                                         DefaultRetryPolicy.DEFAULT_MAX_RETRIES,
                                         DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
                                 requestQueue.add(postRequest);
-                                getProfile();
                             }
                         } catch (JSONException j) {
                             j.printStackTrace();
@@ -224,10 +183,6 @@ public class Profile extends AppCompatActivity {
         startActivity(intent);
     }
 
-    public void update(View view) {
-        getProfile();
-    }
-
     private void getProfile() {
         String url = Data.getInstance().getUrl() + "/getProfile";
 
@@ -238,36 +193,17 @@ public class Profile extends AppCompatActivity {
                         try {
                             String res = response.getString("response");
                             if (res.equalsIgnoreCase("pass")) {
-                                String first = response.getString("firstName");
-                                //String last = response.getString("lastName");
-                                //String e = response.getString("email");
-                                String location = response.getString("loc");
+                                String name = response.getString("name");
                                 String about = response.getString("about");
                                 String interests = response.getString("interests");
                                 String picture = response.getString("picture");
 
-                                Log.d(TAG, picture);
-                                //String name = first + " " + last;
-
-                                nameText_input.setText(first);
-                                locationText_input.setText(location);
-                                //emailText_input.setText(e);
-                                aboutText_input.setText(about);
-                                interestText_input.setText(interests);
+                                nameTextView.setText(name);
+                                aboutTextView.setText(about);
+                                interestsTextView.setText(interests);
                                 if (picture != null && !picture.equalsIgnoreCase("null")) {
-                                    byte[] decoded_string = Base64.decode(picture.getBytes(), Base64.DEFAULT);
-                                    if (decoded_string == null) {
-                                        Log.d(TAG, "ERROR!");
-                                    }
-                                    Log.d(TAG, decoded_string.toString());
-                                    Bitmap decoded_byte = BitmapFactory.decodeByteArray(decoded_string, 0, decoded_string.length);
-                                    profilePicture.setImageBitmap(decoded_byte);
-                                } else {
-                                    Bitmap icon = BitmapFactory.decodeResource(getResources(), R.drawable.default_profile);
-                                    profilePicture.setImageBitmap(icon);
+                                    pictureImageView.setImageBitmap(Utilities.decodeImage(picture));
                                 }
-
-                                //Toast.makeText(getApplicationContext(), "Profile Updated!", Toast.LENGTH_SHORT).show();
                             }
                         } catch (JSONException j) {
                             j.printStackTrace();
@@ -287,33 +223,5 @@ public class Profile extends AppCompatActivity {
                 DefaultRetryPolicy.DEFAULT_MAX_RETRIES,
                 DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
         requestQueue.add(postRequest);
-    }
-
-    public void edit(View view) {
-        /*
-        EditText etInterests = (EditText) findViewById(R.id.interests_text);
-        EditText etAbout = (EditText) findViewById(R.id.about_text);
-        EditText etLocation = (EditText) findViewById(R.id.location_text);
-        EditText etEmail = (EditText) findViewById(R.id.location_text);
-        EditText etName = (EditText) findViewById(R.id.name);
-        */
-        Intent i = new Intent(Profile.this, ProfileEdit.class);
-        i.putExtra("location", locationText_input.getText().toString());
-        i.putExtra("about", aboutText_input.getText().toString());
-        i.putExtra("interests", interestText_input.getText().toString());
-        i.putExtra("email", emailText_input.getText().toString());
-        i.putExtra("name", nameText_input.getText().toString());
-
-        BitmapDrawable drawable = (BitmapDrawable) profilePicture.getDrawable();
-        if (drawable != null) {
-            Bitmap bitmap = drawable.getBitmap();
-            ByteArrayOutputStream baos = new ByteArrayOutputStream();
-            bitmap.compress(Bitmap.CompressFormat.JPEG, 90, baos);
-            byte[] b = baos.toByteArray();
-            String encoded_picture = Base64.encodeToString(b, Base64.DEFAULT);
-
-            i.putExtra("picture", encoded_picture);
-        }
-        startActivity(i);
     }
 }

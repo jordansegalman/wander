@@ -85,7 +85,7 @@ public class Home extends AppCompatActivity {
     }
 
     private void addDrawerItems() {
-        String[] osArray = {"My Matches", "Profile", "Popular Locations", "History", "Settings", "Map"};
+        String[] osArray = {"Map", "Matches", "Profile", "Settings"};
         ArrayAdapter<String> mAdapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, osArray);
         mDrawerList.setAdapter(mAdapter);
 
@@ -93,19 +93,16 @@ public class Home extends AppCompatActivity {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 if (position == 0) {
+                    startActivity(new Intent(Home.this, Map.class));
+                }
+                if (position == 1) {
                     startActivity(new Intent(Home.this, Matches.class));
                 }
-
-                if (position == 1) {
+                if (position == 2) {
                     startActivity(new Intent(Home.this, Profile.class));
                 }
-
-                if (position == 4) {
+                if (position == 3) {
                     startActivity(new Intent(Home.this, Settings.class));
-                }
-
-                if (position == 5) {
-                    startActivity(new Intent(Home.this, Map.class));
                 }
             }
         });

@@ -42,9 +42,9 @@ public class LocationSchedule extends AppCompatActivity {
             scheduleListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
                 @Override
                 public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                    Intent edit = new Intent(LocationSchedule.this, LocationScheduleEdit.class);
-                    edit.putExtra("Position", position);
-                    startActivity(edit);
+                    Intent intent = new Intent(LocationSchedule.this, LocationScheduleEdit.class);
+                    intent.putExtra("Position", position);
+                    startActivity(intent);
                 }
             });
         } else {

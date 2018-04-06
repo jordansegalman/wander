@@ -1,10 +1,7 @@
 package me.vvander.wander;
 
 import android.content.Context;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.util.Base64;
-import android.util.Log;
+import android.support.annotation.NonNull;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -15,30 +12,23 @@ import android.widget.TextView;
 import java.util.ArrayList;
 
 public class ProfileAdapter extends ArrayAdapter<MatchData> {
-
-    ProfileAdapter(Context context, ArrayList<MatchData> items) {
-        super(context, 0, items);
+    ProfileAdapter(Context context, ArrayList<MatchData> matchList) {
+        super(context, 0, matchList);
     }
 
+    @NonNull
     @Override
-    public View getView(int position, View convertView, ViewGroup parent) {
+    public View getView(int position, View convertView, @NonNull ViewGroup parent) {
         if (convertView == null) {
-            convertView = LayoutInflater.from(this.getContext()).inflate(R.layout.profile_list, parent, false);
+            convertView = LayoutInflater.from(getContext()).inflate(R.layout.match_list_item, parent, false);
         }
 
         MatchData matchData = getItem(position);
         if (matchData != null) {
             TextView name = convertView.findViewById(R.id.name);
             name.setText(matchData.getName());
-            ImageView imageView = convertView.findViewById(R.id.picture);
-            if (matchData.getPicture() != null) {
-                byte[] decoded_string = Base64.decode(matchData.getPicture(), Base64.DEFAULT);
-                if (decoded_string == null) {
-                    Log.d("TAG", "ERROR!");
-                }
-                Bitmap decoded_byte = BitmapFactory.decodeByteArray(decoded_string, 0, decoded_string.length);
-                imageView.setImageBitmap(decoded_byte);
-            }
+            ImageView picture = convertView.findViewById(R.id.picture);
+            picture.setImageBitmap(Utilities.decodeImage(matchData.getPicture()));
         }
         return convertView;
     }
