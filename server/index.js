@@ -2149,8 +2149,7 @@ function getMatch(u, request, response) {
 						var p = result[j].picture;
 						var t = matchGraph.edge(request.session.uid, result[j].uid, "timesCrossed");
 						var ap = matchGraph.edge(request.session.uid, result[j].uid, "approved");
-						var oap = matchGraph.edge(result[j].uid, request.session.uid, "approved");
-						var data = {uid: result[j].uid, name: n, about: a, interests: i, picture: p, timesCrossed: t, approved: ap, otherApproved: oap};
+						var data = {uid: result[j].uid, name: n, about: a, interests: i, picture: p, timesCrossed: t, approved: ap};
 						object[key].push(data);
 					}
 					return response.status(200).send(JSON.stringify(object));
@@ -2162,11 +2161,11 @@ function getMatch(u, request, response) {
 
 // Gets all location coordinates where users crossed paths
 function getCrossLocations(u, request, response) {
-	if (matchGraph.hasEdge(request.session.uid, u, "crossLocations") && matchGraph.hasEdge(u, request.session.uid, "crossLocations")) {
+	if (matchGraph.hasEdge(request.session.uid, u, "crossLocations") && matchGraph.hasEdge(u, request.session.uid, "crossLocations") && matchGraph.hasEdge(request.session.uid, u, "approved") && matchGraph.hasEdge(u, request.session.uid, "approved") && matchGraph.edge(request.session.uid, u, "approved") == true && matchGraph.edge(u, request.session.uid, "approved") == true) {
 		console.log("Cross locations sent.");
 		return response.status(200).send(matchGraph.edge(request.session.uid, u, "crossLocations"));
 	}
-	return response.status(500).send("Error getting cross locations.\n");
+	return response.status(400).send("Not approved.\n");
 }
 
 // Writes the match graph to a file
