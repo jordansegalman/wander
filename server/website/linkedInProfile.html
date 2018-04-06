@@ -17,20 +17,14 @@
 		function startUp() {
 			IN.Event.on(IN, "auth", obtainUserData);
 		}
-
-		// API call wrapper to request LinkedIn profile data
 		function obtainUserData() {
-			IN.API.Profile("me").fields("id", "first-name", "last-name", "headline", "location", "picture-url", "public-profile-url", "email-address").result(displayProfileData).error(onError);
+			IN.API.Profile("me").fields("email-address", "first-name", "headline", "public-profile-url").result(displayProfileData).error(onError);
 		}
-
-		// Handle successful return from API call
-		function displayProfileData(data){
+		function displayProfileData(data) {
 			var user = data.values[0];
-			document.getElementById("picture").innerHTML = '<img src="'+user.pictureUrl+'" />';
-			document.getElementById("name").innerHTML = user.firstName+' '+user.lastName;
-			document.getElementById("about").innerHTML = user.headline;
 			document.getElementById("email").innerHTML = user.emailAddress;
-			document.getElementById("location").innerHTML = user.location.name;
+			document.getElementById("name").innerHTML = user.firstName;
+			document.getElementById("about").innerHTML = user.headline;
 			document.getElementById("link").innerHTML = '<a href="'+user.publicProfileUrl+'" target="_blank">View LinkedIn Profile</a>';
 			document.getElementById('profileData').style.display = 'block';
 
@@ -38,25 +32,19 @@
 			var xhr = new XMLHttpRequest();
 			xhr.open('POST', "https://vvander.me/updateLinkedIn", true);
 			xhr.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
-			xhr.send(JSON.stringify({email: user.emailAddress, firstName: user.firstName, lastName: user.lastName, loc: locat.name, about: user.headline}));
+			xhr.send(JSON.stringify({email: user.emailAddress, name: user.firstName, about: user.headline}));
 			xhr.onloadend = function () {
 				alert("LinkedIn profile data sent to Wander!");
 				console.log("LinkedIn profile data sent to Wander!");
 			}
 		}
-
-		// Handle error response from API call
 		function onError(error) {
 			console.log(error);
 		}
-
-		// Destroy LinkedIn session
-		function logout(){
+		function logout() {
 			IN.User.logout(deleteData);
 		}
-
-		// Remove profile data from page
-		function deleteData(){
+		function deleteData() {
 			document.getElementById('profileData').remove();
 		}
 		</script>
@@ -69,15 +57,13 @@
 			<div class="row justify-content-center">
 				<script type="in/Login"></script>
 				<div id="profileData" class="text-center" style="display: none;">
-					<p><a href="javascript:void(0);" onclick="logout()">Logout</a></p>
-					<div id="picture"></div>
 					<div class="info">
+						<p id="email"></p>
 						<p id="name"></p>
 						<p id="about"></p>
-						<p id="email"></p>
-						<p id="location"></p>
 						<p id="link"></p>
 					</div>
+					<p><a href="javascript:void(0);" onclick="logout()">Logout</a></p>
 				</div>
 			</div>
 		</div>
