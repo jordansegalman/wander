@@ -36,6 +36,7 @@ public class WanderFirebaseMessagingService extends FirebaseMessagingService {
                             .setSmallIcon(R.drawable.match_notification_icon)
                             .setAutoCancel(true)
                             .setContentIntent(pendingIntent);
+                    if(Data.getInstance().getNotificationStatus())
                     notificationManager.notify(1, notificationBuilder.build());
                 }
             } else if (remoteMessage.getData().get("title").equals("You just crossed paths with one of your matches!")) {
@@ -60,6 +61,7 @@ public class WanderFirebaseMessagingService extends FirebaseMessagingService {
                             .setSmallIcon(R.drawable.cross_notification_icon)
                             .setAutoCancel(true)
                             .setContentIntent(pendingIntent);
+                    if(Data.getInstance().getNotificationStatus())
                     notificationManager.notify(1, notificationBuilder.build());
                 }
             }
