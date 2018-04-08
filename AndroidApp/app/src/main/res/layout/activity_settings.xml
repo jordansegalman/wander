@@ -99,6 +99,13 @@
                 android:progress="150" />
 
             <Button
+                android:id="@+id/Customize"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:onClick="customize"
+                android:text="Customize App" />
+
+            <Button
                 android:id="@+id/changeEmail"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"

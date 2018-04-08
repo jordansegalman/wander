@@ -237,6 +237,10 @@ public class SettingsActivity extends AppCompatActivity {
         requestQueue.add(postRequest);
     }
 
+    private void customize(View view){
+        startActivity(new Intent(SettingsActivity.this, CustomizeAppActivity.class));
+    }
+
     private void getCrossRadius() {
         String url = Data.getInstance().getUrl() + "/getCrossRadius";
 
