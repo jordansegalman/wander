@@ -87,7 +87,7 @@ public class Settings extends AppCompatActivity {
 
     public void notificationToggle(View view){
         boolean value = notificationSwitch.isChecked();
-        Data.getInstance().setDisableNotifications(value);
+        Data.getInstance().setNotificationStatus(value);
         Log.i("SWITCH", "Notifcations Switch");
     }
     public void delete(View view) {

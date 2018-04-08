@@ -40,6 +40,7 @@ public class WanderFirebaseMessagingService extends FirebaseMessagingService {
                         .setContentText(remoteMessage.getData().get("body"))
                         .setAutoCancel(true)
                         .setContentIntent(pendingIntent);
+                if(Data.getInstance().getNotificationStatus())
                 notificationManager.notify(1, notificationBuilder.build());
             }
         }
