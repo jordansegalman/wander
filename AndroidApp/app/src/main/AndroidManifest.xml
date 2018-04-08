@@ -22,63 +22,32 @@
         android:label="@string/app_name"
         android:roundIcon="@mipmap/wander_launcher_round"
         android:theme="@style/AppTheme">
-        <activity android:name="me.vvander.wander.Login">
+        <activity android:name=".LoginActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
+
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name="me.vvander.wander.Registration" />
-        <activity android:name="me.vvander.wander.FacebookLogin" />
-        <activity android:name="me.vvander.wander.GoogleLogin" />
-        <activity android:name="me.vvander.wander.Home" />
-        <activity android:name="me.vvander.wander.Profile" />
-        <activity android:name="me.vvander.wander.ProfileEdit" />
-        <activity android:name="me.vvander.wander.LocationSchedule" />
-        <activity android:name="me.vvander.wander.LocationScheduleEdit" />
-        <activity android:name="me.vvander.wander.LocationScheduleNew" />
-
-        <meta-data
-            android:name="com.google.android.gms.version"
-            android:value="@integer/google_play_services_version" />
-
-        <meta-data
-            android:name="com.google.android.geo.API_KEY"
-            android:value="@string/google_maps_key" />
-
-        <activity android:name="me.vvander.wander.Map" />
-
-        <service android:name="me.vvander.wander.LocationCollectionService" />
-        <service android:name="me.vvander.wander.ActivityRecognitionIntentService" />
-        <service
-            android:name="me.vvander.wander.WanderFirebaseInstanceIdService"
-            android:exported="false">
-            <intent-filter>
-                <action android:name="com.google.firebase.INSTANCE_ID_EVENT" />
-            </intent-filter>
-        </service>
-        <service
-            android:name="me.vvander.wander.WanderFirebaseMessagingService"
-            android:exported="false">
-            <intent-filter>
-                <action android:name="com.google.firebase.MESSAGING_EVENT" />
-            </intent-filter>
-        </service>
-
-        <receiver android:name="me.vvander.wander.LocationScheduleAlarmReceiver" />
-
-        <activity android:name="me.vvander.wander.Delete" />
-        <activity android:name="me.vvander.wander.Settings" />
-        <activity android:name="me.vvander.wander.ChangeEmail" />
-        <activity android:name="me.vvander.wander.ChangeUsername" />
-        <activity android:name="me.vvander.wander.ForgotPassword" />
-        <activity android:name="me.vvander.wander.ChangePassword" />
-        <activity android:name="me.vvander.wander.Matches" />
-
-        <meta-data
-            android:name="com.facebook.sdk.ApplicationId"
-            android:value="@string/facebook_app_id" />
-
+        <activity android:name=".RegistrationActivity" />
+        <activity android:name=".FacebookLoginActivity" />
+        <activity android:name=".GoogleLoginActivity" />
+        <activity
+            android:name=".HomeActivity"
+            android:theme="@style/AppTheme.NoActionBar" />
+        <activity android:name=".ProfileActivity" />
+        <activity android:name=".ProfileEditActivity" />
+        <activity android:name=".LocationScheduleActivity" />
+        <activity android:name=".LocationScheduleEditActivity" />
+        <activity android:name=".LocationScheduleNewActivity" />
+        <activity android:name=".DeleteActivity" />
+        <activity android:name=".SettingsActivity" />
+        <activity android:name=".ChangeEmailActivity" />
+        <activity android:name=".ChangeUsernameActivity" />
+        <activity android:name=".ForgotPasswordActivity" />
+        <activity android:name=".ChangePasswordActivity" />
+        <activity android:name=".MatchesActivity" />
+        <activity android:name=".MatchProfileActivity" />
         <activity
             android:name="com.facebook.FacebookActivity"
             android:configChanges="keyboard|keyboardHidden|screenLayout|screenSize|orientation"
@@ -95,5 +64,35 @@
                 <data android:scheme="@string/fb_login_protocol_scheme" />
             </intent-filter>
         </activity>
+
+        <meta-data
+            android:name="com.google.android.gms.version"
+            android:value="@integer/google_play_services_version" />
+        <meta-data
+            android:name="com.google.android.geo.API_KEY"
+            android:value="@string/google_maps_key" />
+        <meta-data
+            android:name="com.facebook.sdk.ApplicationId"
+            android:value="@string/facebook_app_id" />
+
+        <service android:name=".LocationCollectionService" />
+        <service android:name=".ActivityRecognitionIntentService" />
+        <service
+            android:name=".WanderFirebaseInstanceIdService"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.google.firebase.INSTANCE_ID_EVENT" />
+            </intent-filter>
+        </service>
+        <service
+            android:name=".WanderFirebaseMessagingService"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.google.firebase.MESSAGING_EVENT" />
+            </intent-filter>
+        </service>
+
+        <receiver android:name=".LocationScheduleAlarmReceiver" />
     </application>
+
 </manifest>
