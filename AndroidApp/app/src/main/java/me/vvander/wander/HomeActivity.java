@@ -14,6 +14,7 @@ import android.location.LocationManager;
 import android.os.Bundle;
 import android.os.SystemClock;
 import android.support.annotation.NonNull;
+import android.support.design.widget.BottomSheetDialog;
 import android.support.design.widget.NavigationView;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.view.GravityCompat;
@@ -21,9 +22,14 @@ import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.text.InputType;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
+import android.widget.Button;
+import android.widget.EditText;
 import android.widget.Toast;
 
 import com.android.volley.DefaultRetryPolicy;
@@ -57,6 +63,8 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 
 public class HomeActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener, OnMapReadyCallback, GoogleMap.OnMyLocationButtonClickListener, GoogleMap.OnMarkerDragListener, GoogleMap.OnMarkerClickListener{
     private static final String TAG = HomeActivity.class.getSimpleName();
@@ -76,7 +84,8 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
     private boolean overlayAllOn;
     private ArrayList<LatLng> crossList;
     private Marker draggedMarker;
-    private ArrayList<Marker> markers;
+    //private ArrayList<Marker> markers;
+    private Map<Marker, TagData> markers;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -104,7 +113,8 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
         listAll = new ArrayList<>();
         overlayPersonalOn = false;
         overlayAllOn = false;
-        markers = new ArrayList<>();
+        //markers = new ArrayList<>();
+        markers = new HashMap<Marker, TagData>();
         draggedMarker = null;
 
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map);
@@ -395,7 +405,7 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
             if (resultCode == RESULT_OK) {
                 Place place = PlacePicker.getPlace(this , data);
                 Marker marker = googleMap.addMarker(new MarkerOptions().position(place.getLatLng()).draggable(true));
-                markers.add(marker);
+                markers.put(marker, new TagData());
                 this.googleMap.animateCamera(CameraUpdateFactory.newLatLngZoom(place.getLatLng(), 15));
             }
         }
@@ -403,6 +413,58 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
 
     @Override
     public boolean onMarkerClick(Marker marker) {
+        final BottomSheetDialog dialog = new BottomSheetDialog(this);
+        View sheetView = this.getLayoutInflater().inflate(R.layout.popup_review, null);
+        dialog.setContentView(sheetView);
+        dialog.show();
+
+        final Button edit = (Button) dialog.findViewById(R.id.edit_button);
+        final Button delete = (Button) dialog.findViewById(R.id.delete_button);
+        final EditText tag_title = (EditText) dialog.findViewById(R.id.tag_title);
+        final EditText tag_review = (EditText) dialog.findViewById(R.id.tag_review);
+
+        tag_title.setEnabled(false);
+        tag_review.setEnabled(false);
+
+        final Marker m = marker;
+
+        final TagData td = markers.get(marker);
+        if (td == null) Log.d("NullForAll", "NULLNULL");
+        else {
+            tag_title.setText(td.getTagTitle());
+            tag_review.setText(td.getTagReview());
+        }
+
+        // Setting the information in the review from the info stored in hash map
+
+        edit.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (edit.getText().equals("Edit Review")) {
+                    tag_title.setInputType(InputType.TYPE_CLASS_TEXT);
+                    tag_review.setInputType(InputType.TYPE_CLASS_TEXT);
+                    tag_title.setEnabled(true);
+                    tag_review.setEnabled(true);
+                    edit.setText("Done");
+                } else if (edit.getText().equals("Done")) {
+                    tag_title.setInputType(InputType.TYPE_NULL);
+                    tag_review.setInputType(InputType.TYPE_NULL);
+                    edit.setText("Edit Review");
+                    td.setTagTitle(tag_title.getText().toString());
+                    td.setTagReview(tag_review.getText().toString());
+                    markers.put(m, td);
+                }
+            }
+        });
+
+        delete.setOnClickListener(new View.OnClickListener(){
+            @Override
+            public void onClick(View v) {
+                m.remove();
+                dialog.dismiss();
+            }
+        });
+
 
         return false;
     }
