@@ -34,11 +34,13 @@ import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.Volley;
 import com.google.android.gms.location.ActivityRecognitionClient;
+import com.google.android.gms.location.places.ui.PlacePicker;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.TileOverlay;
 import com.google.android.gms.maps.model.TileOverlayOptions;
@@ -46,6 +48,9 @@ import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import com.google.maps.android.heatmaps.Gradient;
 import com.google.maps.android.heatmaps.HeatmapTileProvider;
+import com.google.android.gms.location.places.Place;
+import com.google.android.gms.common.GooglePlayServicesNotAvailableException;
+import com.google.android.gms.common.GooglePlayServicesRepairableException;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -53,10 +58,11 @@ import org.json.JSONObject;
 
 import java.util.ArrayList;
 
-public class HomeActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener, OnMapReadyCallback, GoogleMap.OnMyLocationButtonClickListener {
+public class HomeActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener, OnMapReadyCallback, GoogleMap.OnMyLocationButtonClickListener, GoogleMap.OnMarkerDragListener, GoogleMap.OnMarkerClickListener{
     private static final String TAG = HomeActivity.class.getSimpleName();
     private static final int ACTIVITY_RECOGNITION_DETECTION_INTERVAL = 15000;
     private static final int PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION = 2222;
+    private static final int PLACE_PICKER_REUQEST = 7789;
     private static final String SP_LOCATION = "locationSwitch";
     private static final String SP_SCHEDULE = "locationSchedule";
     private Toolbar toolbar;
@@ -69,6 +75,8 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
     private boolean overlayPersonalOn;
     private boolean overlayAllOn;
     private ArrayList<LatLng> crossList;
+    private Marker draggedMarker;
+    private ArrayList<Marker> markers;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -96,6 +104,8 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
         listAll = new ArrayList<>();
         overlayPersonalOn = false;
         overlayAllOn = false;
+        markers = new ArrayList<>();
+        draggedMarker = null;
 
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
@@ -153,6 +163,9 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
             case R.id.popular_locations:
                 displayHeatmapAll();
                 return true;
+            case R.id.add_tag:
+                addTag();
+                return true;
         }
         return super.onOptionsItemSelected(item);
     }
@@ -204,6 +217,8 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
         } else {
             this.googleMap.setMyLocationEnabled(true);
             this.googleMap.setOnMyLocationButtonClickListener(this);
+            this.googleMap.setOnMarkerDragListener(this);
+            this.googleMap.setOnMarkerClickListener(this);
             if (crossList == null) {
                 LocationManager locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
                 if (locationManager != null) {
@@ -353,6 +368,53 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
             overlayAll.setVisible(false);
             overlayAllOn = false;
         }
+    }
+
+    public void addTag() {
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED || ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION);
+        } else {
+            try {
+                PlacePicker.IntentBuilder builder = new PlacePicker.IntentBuilder();
+                startActivityForResult(builder.build(this), PLACE_PICKER_REUQEST);
+            } catch (GooglePlayServicesNotAvailableException e) {
+                e.printStackTrace();
+            } catch (GooglePlayServicesRepairableException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    @Override
+    public void onMarkerDrag(Marker marker) {
+
+    }
+
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if (requestCode == PLACE_PICKER_REUQEST) {
+            if (resultCode == RESULT_OK) {
+                Place place = PlacePicker.getPlace(this , data);
+                Marker marker = googleMap.addMarker(new MarkerOptions().position(place.getLatLng()).draggable(true));
+                markers.add(marker);
+                this.googleMap.animateCamera(CameraUpdateFactory.newLatLngZoom(place.getLatLng(), 15));
+            }
+        }
+    }
+
+    @Override
+    public boolean onMarkerClick(Marker marker) {
+
+        return false;
+    }
+
+    @Override
+    public void onMarkerDragStart(Marker marker) {
+        draggedMarker = marker;
+    }
+
+    @Override
+    public void onMarkerDragEnd(Marker marker) {
+        draggedMarker = null;
     }
 
     @Override
