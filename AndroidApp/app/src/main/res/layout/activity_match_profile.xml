@@ -110,33 +110,44 @@
             android:layout_weight="0">
 
             <Button
+                android:id="@+id/chatButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="0"
+                android:backgroundTint="@color/colorAccent"
+                android:onClick="chat"
+                android:text="Chat" />
+
+            <Button
                 android:id="@+id/approveButton"
-                android:layout_width="match_parent"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="end"
                 android:layout_weight="0"
                 android:backgroundTint="@color/colorAccent"
+                android:onClick="approveUser"
                 android:text="Approve"
                 android:visibility="visible" />
 
             <Button
                 android:id="@+id/unapproveButton"
-                android:layout_width="match_parent"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="end"
                 android:layout_weight="0"
                 android:backgroundTint="@color/colorAccent"
+                android:onClick="unapproveUser"
                 android:text="Unapprove"
                 android:visibility="gone" />
 
             <Button
                 android:id="@+id/crossedPathsButton"
-                android:layout_width="match_parent"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="end"
                 android:layout_weight="0"
                 android:backgroundTint="@color/colorAccent"
-                android:onClick="crossed"
+                android:onClick="getCrossLocations"
                 android:text="View Crossed Paths" />
 
         </LinearLayout>

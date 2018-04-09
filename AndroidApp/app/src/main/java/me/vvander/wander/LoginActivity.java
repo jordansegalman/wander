@@ -105,8 +105,10 @@ public class LoginActivity extends AppCompatActivity {
                     public void onResponse(JSONObject response) {
                         try {
                             String res = response.getString("response");
+                            String uid = response.getString("uid");
                             if (res.equalsIgnoreCase("pass")) {
                                 Data.getInstance().login();
+                                Data.getInstance().setUid(uid);
                                 sendFirebaseRegistrationTokenToServer();
                                 startLocationCollectionService();
                                 Intent intent = new Intent(LoginActivity.this, HomeActivity.class);
@@ -115,6 +117,7 @@ public class LoginActivity extends AppCompatActivity {
                                 finish();
                             } else if (res.equalsIgnoreCase("google")) {
                                 Data.getInstance().loginGoogle();
+                                Data.getInstance().setUid(uid);
                                 sendFirebaseRegistrationTokenToServer();
                                 startLocationCollectionService();
                                 Intent intent = new Intent(LoginActivity.this, HomeActivity.class);
@@ -123,6 +126,7 @@ public class LoginActivity extends AppCompatActivity {
                                 finish();
                             } else if (res.equalsIgnoreCase("facebook")) {
                                 Data.getInstance().loginFacebook();
+                                Data.getInstance().setUid(uid);
                                 sendFirebaseRegistrationTokenToServer();
                                 startLocationCollectionService();
                                 Intent intent = new Intent(LoginActivity.this, HomeActivity.class);
@@ -165,9 +169,11 @@ public class LoginActivity extends AppCompatActivity {
                     public void onResponse(JSONObject response) {
                         try {
                             String res = response.getString("response");
+                            String uid = response.getString("uid");
                             if (res.equalsIgnoreCase("pass")) {
                                 Toast.makeText(getApplicationContext(), "Login successful!", Toast.LENGTH_SHORT).show();
                                 Data.getInstance().login();
+                                Data.getInstance().setUid(uid);
                                 sendFirebaseRegistrationTokenToServer();
                                 startLocationCollectionService();
                                 Intent intent = new Intent(LoginActivity.this, HomeActivity.class);

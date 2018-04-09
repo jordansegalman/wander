@@ -12,6 +12,7 @@ import java.util.ArrayList;
 public class Data {
     private static final String url = "https://vvander.me";
     private static final Data data = new Data();
+    private String uid;
     private boolean loggedIn = false;
     private boolean loggedInGoogle = false;
     private boolean loggedInFacebook = false;
@@ -30,12 +31,21 @@ public class Data {
         return url;
     }
 
+    String getUid() {
+        return uid;
+    }
+
+    void setUid(String uid) {
+        this.uid = uid;
+    }
+
     void login() {
         loggedIn = true;
     }
 
     void logout() {
         loggedIn = false;
+        uid = null;
     }
 
     boolean getLoggedIn() {
@@ -48,6 +58,7 @@ public class Data {
 
     void logoutGoogle() {
         loggedInGoogle = false;
+        uid = null;
     }
 
     boolean getLoggedInGoogle() {
@@ -60,6 +71,7 @@ public class Data {
 
     void logoutFacebook() {
         loggedInFacebook = false;
+        uid = null;
     }
 
     boolean getLoggedInFacebook() {

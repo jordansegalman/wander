@@ -145,8 +145,8 @@ public class MatchesActivity extends AppCompatActivity {
             noMatchesText.setVisibility(View.GONE);
             noMatchesBottomSpace.setVisibility(View.GONE);
             matchListView.setVisibility(View.VISIBLE);
-            ProfileAdapter profileAdapter = new ProfileAdapter(this, matchList);
-            matchListView.setAdapter(profileAdapter);
+            MatchAdapter matchAdapter = new MatchAdapter(this, matchList);
+            matchListView.setAdapter(matchAdapter);
             matchListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
                 @Override
                 public void onItemClick(AdapterView<?> parent, View view, int position, long id) {

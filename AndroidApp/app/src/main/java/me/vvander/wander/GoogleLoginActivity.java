@@ -92,9 +92,11 @@ public class GoogleLoginActivity extends AppCompatActivity {
                     public void onResponse(JSONObject response) {
                         try {
                             String res = response.getString("response");
+                            String uid = response.getString("uid");
                             if (res.equalsIgnoreCase("pass")) {
                                 Toast.makeText(getApplicationContext(), "Google login successful!", Toast.LENGTH_SHORT).show();
                                 Data.getInstance().loginGoogle();
+                                Data.getInstance().setUid(uid);
                                 sendFirebaseRegistrationTokenToServer();
                                 startLocationCollectionService();
                                 Intent intent = new Intent(GoogleLoginActivity.this, HomeActivity.class);

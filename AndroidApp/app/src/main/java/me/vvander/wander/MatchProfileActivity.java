@@ -33,6 +33,8 @@ public class MatchProfileActivity extends AppCompatActivity {
     private Button approveButton;
     private Button unapproveButton;
     private Button crossedPathsButton;
+    private String uid;
+    private String name;
 
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -45,8 +47,9 @@ public class MatchProfileActivity extends AppCompatActivity {
         TextView interests = findViewById(R.id.interests);
         TextView timesCrossed = findViewById(R.id.timesCrossed);
 
-        final String uid = getIntent().getStringExtra("uid");
-        name.setText(getIntent().getStringExtra("name"));
+        uid = getIntent().getStringExtra("uid");
+        this.name = getIntent().getStringExtra("name");
+        name.setText(this.name);
         about.setText(getIntent().getStringExtra("about"));
         interests.setText(getIntent().getStringExtra("interests"));
         picture.setImageBitmap(Utilities.decodeImage(getIntent().getStringExtra("picture")));
@@ -56,27 +59,6 @@ public class MatchProfileActivity extends AppCompatActivity {
         approveButton = findViewById(R.id.approveButton);
         unapproveButton = findViewById(R.id.unapproveButton);
         crossedPathsButton = findViewById(R.id.crossedPathsButton);
-
-        approveButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                approveUser(uid);
-            }
-        });
-
-        unapproveButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                unapproveUser(uid);
-            }
-        });
-
-        crossedPathsButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                getCrossLocations(uid);
-            }
-        });
 
         if (approved) {
             approveButton.setVisibility(View.GONE);
@@ -89,7 +71,14 @@ public class MatchProfileActivity extends AppCompatActivity {
         }
     }
 
-    private void approveUser(String uid) {
+    public void chat(View view) {
+        Intent intent = new Intent(MatchProfileActivity.this, ChatActivity.class);
+        intent.putExtra("UID", uid);
+        intent.putExtra("name", name);
+        startActivity(intent);
+    }
+
+    public void approveUser(View view) {
         String url = Data.getInstance().getUrl() + "/approveUser";
         java.util.Map<String, String> params = new HashMap<>();
         params.put("uid", uid);
@@ -125,7 +114,7 @@ public class MatchProfileActivity extends AppCompatActivity {
         requestQueue.add(postRequest);
     }
 
-    private void unapproveUser(String uid) {
+    public void unapproveUser(View view) {
         String url = Data.getInstance().getUrl() + "/unapproveUser";
         java.util.Map<String, String> params = new HashMap<>();
         params.put("uid", uid);
@@ -161,7 +150,7 @@ public class MatchProfileActivity extends AppCompatActivity {
         requestQueue.add(postRequest);
     }
 
-    private void getCrossLocations(String uid) {
+    public void getCrossLocations(View view) {
         String url = Data.getInstance().getUrl() + "/getCrossLocations";
         java.util.Map<String, String> params = new HashMap<>();
         params.put("uid", uid);

@@ -11,8 +11,8 @@ import android.widget.TextView;
 
 import java.util.ArrayList;
 
-public class ProfileAdapter extends ArrayAdapter<Match> {
-    ProfileAdapter(Context context, ArrayList<Match> matchList) {
+public class MatchAdapter extends ArrayAdapter<Match> {
+    MatchAdapter(Context context, ArrayList<Match> matchList) {
         super(context, 0, matchList);
     }
 

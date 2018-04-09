@@ -127,8 +127,8 @@ public class SettingsActivity extends AppCompatActivity {
                                 resetScheduleLocationSwitch();
                                 cancelLocationScheduleAlarm();
                                 Data.getInstance().logout();
-                                Data.getInstance().loginGoogle();
-                                Data.getInstance().loginFacebook();
+                                Data.getInstance().logoutGoogle();
+                                Data.getInstance().logoutFacebook();
                                 Data.getInstance().removeAllCookies();
                                 Toast.makeText(getApplicationContext(), "Logged out!", Toast.LENGTH_SHORT).show();
                                 Intent intent = new Intent(SettingsActivity.this, LoginActivity.class);

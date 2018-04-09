@@ -107,9 +107,11 @@ public class FacebookLoginActivity extends AppCompatActivity {
                     public void onResponse(JSONObject response) {
                         try {
                             String res = response.getString("response");
+                            String uid = response.getString("uid");
                             if (res.equalsIgnoreCase("pass")) {
                                 Toast.makeText(getApplicationContext(), "Facebook login successful!", Toast.LENGTH_SHORT).show();
                                 Data.getInstance().loginFacebook();
+                                Data.getInstance().setUid(uid);
                                 sendFirebaseRegistrationTokenToServer();
                                 startLocationCollectionService();
                                 Intent intent = new Intent(FacebookLoginActivity.this, HomeActivity.class);
