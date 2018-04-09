@@ -217,7 +217,7 @@ function setupSocketIO() {
 				dbConnection.query(sql, post, function(err, result){
 					if (err) throw err;
 					var sql = "SELECT ?? FROM ?? WHERE ??=?";
-					var post = [name, db_profiles, uid, parsedData['to']];
+					var post = [name, db_profiles, uid, parsedData['from']];
 					dbConnection.query(sql, post, function(err, result) {
 						if (err) throw err;
 						if (connectedSockets.hasOwnProperty(parsedData['to'])) {
@@ -2082,82 +2082,63 @@ function findCrossedPaths(lat, lon, currentTime, request, response) {
 							console.log('Users matched.');
 						} else if (matchGraph.edge(request.session.uid, uidOther, "timesCrossed") >= MATCH_THRESHOLD && matchGraph.edge(uidOther, request.session.uid, "timesCrossed") >= MATCH_THRESHOLD && matchGraph.hasEdge(request.session.uid, uidOther, "matched") && matchGraph.hasEdge(uidOther, request.session.uid, "matched") && matchGraph.hasEdge(request.session.uid, uidOther, "approved") && matchGraph.hasEdge(uidOther, request.session.uid, "approved") && matchGraph.edge(request.session.uid, uidOther, "approved") == true && matchGraph.edge(uidOther, request.session.uid, "approved") == true) {
 							// If crossed and already matched, notify users
-							var tc = matchGraph.edge(request.session.uid, uidOther, "timesCrossed");
-							var ap = matchGraph.edge(request.session.uid, uidOther, "approved");
-							var sql = "SELECT ??,??,??,?? FROM ?? WHERE ??=?";
-							var post = [name, about, interests, picture, db_profiles, uid, uidOther];
+							var sql = "SELECT ?? FROM ?? WHERE ??=?";
+							var post = [registrationToken, db_firebase, uid, request.session.uid];
 							dbConnection.query(sql, post, function(err, result) {
 								if (err) throw err;
-								var sql = "SELECT ?? FROM ?? WHERE ??=?";
-								var post = [registrationToken, db_firebase, uid, request.session.uid];
-								dbConnection.query(sql, post, function(err, res) {
-									if (err) throw err;
-									if (res.length > 0) {
-										for (var i = 0; i < res.length; i++) {
-											var message = {
-												data: {
-													type: 'Crossed Paths',
-													title: 'You just crossed paths with one of your matches!',
-													body: 'Tap to see who you crossed paths with.',
-													uid: uidOther,
-													name: result[0].name,
-													about: result[0].about,
-													interests: result[0].interests,
-													picture: result[0].picture,
-													timesCrossed: tc.toString(),
-													approved: ap.toString()
-												},
-												token: res[i].registrationToken,
-												android: {
-													ttl: 3600000,
-													priority: 'high',
-												}
-											};
-											admin.messaging().send(message)
-												.then((response) => {
-													console.log('Successfully sent crossed paths notification.');
-												})
-											.catch((error) => {
-												console.log(error);
-											});
-										}
+								if (result.length > 0) {
+									for (var i = 0; i < result.length; i++) {
+										var message = {
+											data: {
+												type: 'Crossed Paths',
+												title: 'You just crossed paths with one of your matches!',
+												body: 'Tap to see who you crossed paths with.',
+												uid: uidOther
+											},
+											token: result[i].registrationToken,
+											android: {
+												ttl: 3600000,
+												priority: 'high',
+											}
+										};
+										admin.messaging().send(message)
+											.then((response) => {
+												console.log('Successfully sent crossed paths notification.');
+											})
+										.catch((error) => {
+											console.log(error);
+										});
 									}
-								});
-								var sql = "SELECT ?? FROM ?? WHERE ??=?";
-								var post = [registrationToken, db_firebase, uid, uidOther];
-								dbConnection.query(sql, post, function(err, res) {
-									if (err) throw err;
-									if (res.length > 0) {
-										for (var i = 0; i < res.length; i++) {
-											var message = {
-												data: {
-													type: 'Crossed Paths',
-													title: 'You just crossed paths with one of your matches!',
-													body: 'Tap to see who you crossed paths with.',
-													uid: request.session.uid,
-													name: result[0].name,
-													about: result[0].about,
-													interests: result[0].interests,
-													picture: result[0].picture,
-													timesCrossed: tc.toString(),
-													approved: ap.toString()
-												},
-												token: res[i].registrationToken,
-												android: {
-													ttl: 3600000,
-													priority: 'high',
-												}
-											};
-											admin.messaging().send(message)
-												.then((response) => {
-													console.log('Successfully sent crossed paths notification.');
-												})
-											.catch((error) => {
-												console.log(error);
-											});
-										}
+								}
+							});
+							var sql = "SELECT ?? FROM ?? WHERE ??=?";
+							var post = [registrationToken, db_firebase, uid, uidOther];
+							dbConnection.query(sql, post, function(err, result) {
+								if (err) throw err;
+								if (result.length > 0) {
+									for (var i = 0; i < result.length; i++) {
+										var message = {
+											data: {
+												type: 'Crossed Paths',
+												title: 'You just crossed paths with one of your matches!',
+												body: 'Tap to see who you crossed paths with.',
+												uid: request.session.uid
+											},
+											token: result[i].registrationToken,
+											android: {
+												ttl: 3600000,
+												priority: 'high',
+											}
+										};
+										admin.messaging().send(message)
+											.then((response) => {
+												console.log('Successfully sent crossed paths notification.');
+											})
+										.catch((error) => {
+											console.log(error);
+										});
 									}
-								});
+								}
 							});
 						}
 					}
@@ -2169,57 +2150,54 @@ function findCrossedPaths(lat, lon, currentTime, request, response) {
 	});
 }
 
-// Notifies users who have matched
+// Notifies all users that have new matches, then removes newMatch edges
 function notifyMatches() {
-	// Notify all users that have new matches, then remove newMatch edges
 	var edges = matchGraph.edges();
-	var edgesToRemove = [];
+	var toNotify = {};
 	for (var i = 0; i < matchGraph.edgeCount(); i++) {
+		// Find all new matches
 		if (edges[i] != null && edges[i].name === "newMatch") {
+			if (toNotify.hasOwnProperty(edges[i].v)) {
+				var index = toNotify[edges[i].v].indexOf(edges[i].w);
+				if (index == -1) {
+					toNotify[edges[i].v].push(edges[i].w);
+				}
+			} else {
+				toNotify[edges[i].v] = [];
+				toNotify[edges[i].v].push(edges[i].w);
+			}
 			// Create matched, approved, unmatched, and blocked edges
 			matchGraph.setEdge(edges[i].v, edges[i].w, true, "matched");
-			matchGraph.setEdge(edges[i].w, edges[i].v, true, "matched");
 			matchGraph.setEdge(edges[i].v, edges[i].w, false, "approved");
-			matchGraph.setEdge(edges[i].w, edges[i].v, false, "approved");
 			matchGraph.setEdge(edges[i].v, edges[i].w, false, "unmatched");
-			matchGraph.setEdge(edges[i].w, edges[i].v, false, "unmatched");
 			matchGraph.setEdge(edges[i].v, edges[i].w, false, "blocked");
-			matchGraph.setEdge(edges[i].w, edges[i].v, false, "blocked");
-			// Notify user ID edges[i].v of match with user ID edges[i].w
-			var tc = matchGraph.edge(edges[i].v, edges[i].w, "timesCrossed");
-			var ap = matchGraph.edge(edges[i].v, edges[i].w, "approved");
-			var sql = "SELECT ??,??,??,?? FROM ?? WHERE ??=?";
-			var post = [name, about, interests, picture, db_profiles, uid, edges[i].w];
-			dbConnection.query(sql, post, function(err, result) {
-				if (err) throw err;
+		}
+	}
+	for (var key in toNotify) {
+		if (toNotify.hasOwnProperty(key)) {
+			if (toNotify[key].length == 1) {
+				// Notify user of match
 				var sql = "SELECT ?? FROM ?? WHERE ??=?";
-				var post = [registrationToken, db_firebase, uid, edges[i].v];
-				dbConnection.query(sql, post, function(err, res) {
+				var post = [registrationToken, db_firebase, uid, key];
+				dbConnection.query(sql, post, function(err, result) {
 					if (err) throw err;
-					if (res.length > 0) {
-						for (var j = 0; j < res.length; j++) {
+					if (result.length > 0) {
+						for (var j = 0; j < result.length; j++) {
 							var message = {
 								data: {
-									type: 'New Match',
+									type: 'New Matches',
 									title: 'You have a new match!',
-									body: 'Tap to see who you matched with.',
-									uid: edges[i].w,
-									name: result[0].name,
-									about: result[0].about,
-									interests: result[0].interests,
-									picture: result[0].picture,
-									timesCrossed: tc.toString(),
-									approved: ap.toString()
+									body: 'Tap to see who you matched with.'
 								},
-								token: res[j].registrationToken,
+								token: result[j].registrationToken,
 								android: {
 									ttl: 3600000,
-									priority: 'high',
+									priority: 'high'
 								}
 							};
 							admin.messaging().send(message)
 								.then((response) => {
-									console.log('Successfully sent match notification.');
+									console.log('Successfully sent new match notification.');
 								})
 							.catch((error) => {
 								console.log(error);
@@ -2227,12 +2205,42 @@ function notifyMatches() {
 						}
 					}
 				});
-				edgesToRemove.push([edges[i].v, edges[i].w]);
-			});
+			} else if (toNotify[key].length > 1) {
+				// Notify user of multiple matches
+				var sql = "SELECT ?? FROM ?? WHERE ??=?";
+				var post = [registrationToken, db_firebase, uid, key];
+				dbConnection.query(sql, post, function(err, result) {
+					if (err) throw err;
+					if (result.length > 0) {
+						for (var j = 0; j < result.length; j++) {
+							var message = {
+								data: {
+									type: 'New Matches',
+									title: 'You have new matches!',
+									body: 'Tap to see who you matched with.'
+								},
+								token: result[j].registrationToken,
+								android: {
+									ttl: 3600000,
+									priority: 'high'
+								}
+							};
+							admin.messaging().send(message)
+								.then((response) => {
+									console.log('Successfully sent new matches notification.');
+								})
+							.catch((error) => {
+								console.log(error);
+							});
+						}
+					}
+				});
+			}
+			// Remove newMatch edges
+			for (var i = 0; i < toNotify[key].length; i++) {
+				matchGraph.removeEdge(key, toNotify[key][i], "newMatch");
+			}
 		}
-	}
-	for (var i = 0; i < edgesToRemove.length; i++) {
-		matchGraph.removeEdge(edgesToRemove[i][0], edgesToRemove[i][1], "newMatch");
 	}
 	writeMatchGraph();
 	console.log('Matches notified.');
@@ -2309,33 +2317,30 @@ function getAllMatches(request, response) {
 
 // Gets information of a single match
 function getMatch(u, request, response) {
-	var edges = matchGraph.outEdges(request.session.uid, u);
-	for (var i = 0; i < edges.length; i++) {
-		if (edges[i].name === "matched") {
-			var sql = "SELECT * FROM ?? WHERE ??=?";
-			var post = [db_profiles, uid, edges[i].w];
-			dbConnection.query(sql, post, function(err, result) {
-				if (err) throw err;
-				if (result.length == 0) {
-					return response.status(500).send("Error getting match information.\n");
-				} else {
-					var object = {};
-					var key = "Profile";
-					object[key] = [];
-					for (var j = 0; j < result.length; j++) {
-						var n = result[j].name;
-						var a = result[j].about;
-						var i = result[j].interests;
-						var p = result[j].picture;
-						var t = matchGraph.edge(request.session.uid, result[j].uid, "timesCrossed");
-						var ap = matchGraph.edge(request.session.uid, result[j].uid, "approved");
-						var data = {uid: result[j].uid, name: n, about: a, interests: i, picture: p, timesCrossed: t, approved: ap};
-						object[key].push(data);
-					}
-					return response.status(200).send(JSON.stringify(object));
+	if (matchGraph.hasEdge(request.session.uid, u, "matched")) {
+		var sql = "SELECT * FROM ?? WHERE ??=?";
+		var post = [db_profiles, uid, u];
+		dbConnection.query(sql, post, function(err, result) {
+			if (err) throw err;
+			if (result.length == 0) {
+				return response.status(500).send("Error getting match information.\n");
+			} else {
+				var object = {};
+				var key = "Profile";
+				object[key] = [];
+				for (var j = 0; j < result.length; j++) {
+					var n = result[j].name;
+					var a = result[j].about;
+					var i = result[j].interests;
+					var p = result[j].picture;
+					var t = matchGraph.edge(request.session.uid, result[j].uid, "timesCrossed");
+					var ap = matchGraph.edge(request.session.uid, result[j].uid, "approved");
+					var data = {uid: result[j].uid, name: n, about: a, interests: i, picture: p, timesCrossed: t, approved: ap};
+					object[key].push(data);
 				}
-			});
-		}
+				return response.status(200).send(JSON.stringify(object));
+			}
+		});
 	}
 }
 
