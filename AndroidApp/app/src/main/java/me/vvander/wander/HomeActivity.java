@@ -14,6 +14,7 @@ import android.location.LocationManager;
 import android.os.Bundle;
 import android.os.SystemClock;
 import android.support.annotation.NonNull;
+import android.support.design.widget.BottomSheetDialog;
 import android.support.design.widget.NavigationView;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.view.GravityCompat;
@@ -21,9 +22,13 @@ import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.text.InputType;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
+import android.widget.Button;
+import android.widget.EditText;
 import android.widget.Toast;
 
 import com.android.volley.DefaultRetryPolicy;
@@ -34,11 +39,13 @@ import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.Volley;
 import com.google.android.gms.location.ActivityRecognitionClient;
+import com.google.android.gms.location.places.ui.PlacePicker;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.TileOverlay;
 import com.google.android.gms.maps.model.TileOverlayOptions;
@@ -46,17 +53,23 @@ import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import com.google.maps.android.heatmaps.Gradient;
 import com.google.maps.android.heatmaps.HeatmapTileProvider;
+import com.google.android.gms.location.places.Place;
+import com.google.android.gms.common.GooglePlayServicesNotAvailableException;
+import com.google.android.gms.common.GooglePlayServicesRepairableException;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 
-public class HomeActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener, OnMapReadyCallback, GoogleMap.OnMyLocationButtonClickListener {
+public class HomeActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener, OnMapReadyCallback, GoogleMap.OnMyLocationButtonClickListener, GoogleMap.OnMarkerDragListener, GoogleMap.OnMarkerClickListener{
     private static final String TAG = HomeActivity.class.getSimpleName();
     private static final int ACTIVITY_RECOGNITION_DETECTION_INTERVAL = 15000;
     private static final int PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION = 2222;
+    private static final int PLACE_PICKER_REQUEST = 3333;
     private static final String SP_LOCATION = "locationSwitch";
     private static final String SP_SCHEDULE = "locationSchedule";
     private Toolbar toolbar;
@@ -69,6 +82,9 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
     private boolean overlayPersonalOn;
     private boolean overlayAllOn;
     private ArrayList<LatLng> crossList;
+    private Marker draggedMarker;
+    //private ArrayList<Marker> markers;
+    private Map<Marker, LocationTag> markers;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -96,6 +112,9 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
         listAll = new ArrayList<>();
         overlayPersonalOn = false;
         overlayAllOn = false;
+        //markers = new ArrayList<>();
+        markers = new HashMap<Marker, LocationTag>();
+        draggedMarker = null;
 
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
@@ -153,6 +172,9 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
             case R.id.popular_locations:
                 displayHeatmapAll();
                 return true;
+            case R.id.tag_location:
+                addTag();
+                return true;
         }
         return super.onOptionsItemSelected(item);
     }
@@ -204,6 +226,8 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
         } else {
             this.googleMap.setMyLocationEnabled(true);
             this.googleMap.setOnMyLocationButtonClickListener(this);
+            this.googleMap.setOnMarkerDragListener(this);
+            this.googleMap.setOnMarkerClickListener(this);
             if (crossList == null) {
                 LocationManager locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
                 if (locationManager != null) {
@@ -353,6 +377,105 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
             overlayAll.setVisible(false);
             overlayAllOn = false;
         }
+    }
+
+    public void addTag() {
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED || ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION);
+        } else {
+            try {
+                PlacePicker.IntentBuilder builder = new PlacePicker.IntentBuilder();
+                startActivityForResult(builder.build(this), PLACE_PICKER_REQUEST);
+            } catch (GooglePlayServicesNotAvailableException e) {
+                e.printStackTrace();
+            } catch (GooglePlayServicesRepairableException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    @Override
+    public void onMarkerDrag(Marker marker) {
+
+    }
+
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if (requestCode == PLACE_PICKER_REQUEST) {
+            if (resultCode == RESULT_OK) {
+                Place place = PlacePicker.getPlace(this , data);
+                Marker marker = googleMap.addMarker(new MarkerOptions().position(place.getLatLng()).draggable(true));
+                markers.put(marker, new LocationTag());
+                this.googleMap.animateCamera(CameraUpdateFactory.newLatLngZoom(place.getLatLng(), 15));
+            }
+        }
+    }
+
+    @Override
+    public boolean onMarkerClick(Marker marker) {
+        final BottomSheetDialog dialog = new BottomSheetDialog(this);
+        View sheetView = this.getLayoutInflater().inflate(R.layout.activity_location_tag, null);
+        dialog.setContentView(sheetView);
+        dialog.show();
+
+        final Button edit = (Button) dialog.findViewById(R.id.edit_button);
+        final Button delete = (Button) dialog.findViewById(R.id.delete_button);
+        final EditText tag_title = (EditText) dialog.findViewById(R.id.tag_title);
+        final EditText tag_review = (EditText) dialog.findViewById(R.id.tag_review);
+
+        tag_title.setEnabled(false);
+        tag_review.setEnabled(false);
+
+        final Marker m = marker;
+
+        final LocationTag td = markers.get(marker);
+        if (td == null) Log.d("NullForAll", "NULLNULL");
+        else {
+            tag_title.setText(td.getTagTitle());
+            tag_review.setText(td.getTagReview());
+        }
+
+        // Setting the information in the review from the info stored in hash map
+
+        edit.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (edit.getText().equals("Edit")) {
+                    tag_title.setInputType(InputType.TYPE_CLASS_TEXT);
+                    tag_review.setInputType(InputType.TYPE_CLASS_TEXT);
+                    tag_title.setEnabled(true);
+                    tag_review.setEnabled(true);
+                    edit.setText("Done");
+                } else if (edit.getText().equals("Done")) {
+                    tag_title.setInputType(InputType.TYPE_NULL);
+                    tag_review.setInputType(InputType.TYPE_NULL);
+                    edit.setText("Edit");
+                    td.setTagTitle(tag_title.getText().toString());
+                    td.setTagReview(tag_review.getText().toString());
+                    markers.put(m, td);
+                }
+            }
+        });
+
+        delete.setOnClickListener(new View.OnClickListener(){
+            @Override
+            public void onClick(View v) {
+                m.remove();
+                dialog.dismiss();
+            }
+        });
+
+
+        return false;
+    }
+
+    @Override
+    public void onMarkerDragStart(Marker marker) {
+        draggedMarker = marker;
+    }
+
+    @Override
+    public void onMarkerDragEnd(Marker marker) {
+        draggedMarker = null;
     }
 
     @Override
