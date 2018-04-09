@@ -40,6 +40,9 @@ const googleID = "googleID";
 const facebookID = "facebookID";
 const timesCrossed = "timesCrossed";
 const approved = "approved";
+const message = "message";
+const uidFrom = "uidFrom";
+const uidTo = "uidTo";
 
 // Constants used for MySQL
 const db_host = process.env.DB_HOST;
@@ -50,6 +53,7 @@ const db_accounts = "accounts";
 const db_profiles = "profiles";
 const db_locations = "locations";
 const db_firebase = "firebase";
+const db_messages = "messages";
 
 // Constant used for password hashing
 const saltRounds = 10;
@@ -91,7 +95,7 @@ app.use(session({
 	name: 'wander-cookie',
 	secret: crypto.randomBytes(16).toString('hex'),
 	resave: false,
-	saveUninitialized: true,
+	saveUninitialized: false,
 	cookie: { domain: '.vvander.me', httpOnly: true, secure: true, maxAge: 31536000000 }
 }));
 
@@ -104,13 +108,9 @@ var dbConnection = mysql.createConnection({
 });
 
 // Setup server
+var httpServer;
 var matchGraph;
 startServer();
-
-// Setup schedule for notifying users who have matched
-schedule.scheduleJob(MATCH_NOTIFY_CRON, function() {
-	notifyMatches();
-});
 
 // Starts the server
 function startServer() {
@@ -124,8 +124,13 @@ function startServer() {
 		dbConnection.query(sql, post, function(err, result) {
 			if (err) throw err;
 			console.log('Firebase registration tokens deleted.');
+			// Create HTTP server
+			httpServer = http.createServer(app);
+			// Setup Socket.IO
+			setupSocketIO();
+			// Schedule match notifications
+			scheduleMatchNotifications();
 			// Start HTTP server
-			var httpServer = http.createServer(app);
 			httpServer.listen(port, (err) => {
 				if (err) {
 					return console.log('Server listen error!', err);
@@ -151,8 +156,13 @@ function startServer() {
 			dbConnection.query(sql, post, function(err, result) {
 				if (err) throw err;
 				console.log('Firebase registration tokens deleted.');
+				// Create HTTP server
+				httpServer = http.createServer(app);
+				// Setup Socket.IO
+				setupSocketIO();
+				// Schedule match notifications
+				scheduleMatchNotifications();
 				// Start HTTP server
-				var httpServer = http.createServer(app);
 				httpServer.listen(port, (err) => {
 					if (err) {
 						return console.log('Server listen error!', err);
@@ -162,6 +172,106 @@ function startServer() {
 			});
 		});
 	}
+}
+
+// Setup Socket.IO
+function setupSocketIO() {
+	var io = require('socket.io')(httpServer);
+	var connectedSockets = {};
+	io.on('connection', (socket) => {
+		socket.on('disconnect', () => {
+		});
+		socket.on('initialize', (incomingData) => {
+			var parsedData = JSON.parse(incomingData);
+			if (validateUid(parsedData['uid'])) {
+				if (connectedSockets.hasOwnProperty(parsedData['uid'])) {
+					var index = connectedSockets[parsedData['uid']].indexOf(socket);
+					if (index == -1) {
+						connectedSockets[parsedData['uid']].push(socket);
+					}
+				} else {
+					connectedSockets[parsedData['uid']] = [];
+					connectedSockets[parsedData['uid']].push(socket);
+				}
+			}
+		});
+		socket.on('terminate', (incomingData) => {
+			var parsedData = JSON.parse(incomingData);
+			if (validateUid(parsedData['uid'])) {
+				if (connectedSockets.hasOwnProperty(parsedData['uid'])) {
+					var index = connectedSockets[parsedData['uid']].indexOf(socket);
+					if (index > -1) {
+						connectedSockets[parsedData['uid']].splice(index, 1);
+					}
+					if (connectedSockets[parsedData['uid']].length == 0) {
+						delete connectedSockets[parsedData['uid']];
+					}
+				}
+			}
+		});
+		socket.on('message', (incomingData) => {
+			var parsedData = JSON.parse(incomingData);
+			if (validateUid(parsedData['from']) && validateUid(parsedData['to'])) {
+				var sql = "INSERT INTO ?? SET ??=?, ??=?, ??=?, ??=?";
+				var post = [db_messages, uidFrom, parsedData['from'], uidTo, parsedData['to'], message, parsedData['message'], time, parsedData['time']];
+				dbConnection.query(sql, post, function(err, result){
+					if (err) throw err;
+					var sql = "SELECT ?? FROM ?? WHERE ??=?";
+					var post = [name, db_profiles, uid, parsedData['from']];
+					dbConnection.query(sql, post, function(err, result) {
+						if (err) throw err;
+						if (connectedSockets.hasOwnProperty(parsedData['to'])) {
+							for (var i = 0; i < connectedSockets[parsedData['to']].length; i++) {
+								var outgoingData = {};
+								outgoingData['from'] = parsedData['from'];
+								outgoingData['message'] = parsedData['message'];
+								outgoingData['time'] = parsedData['time'];
+								outgoingData['name'] = result[0].name;
+								connectedSockets[parsedData['to']][i].emit('message', JSON.stringify(outgoingData));
+							}
+						} else {
+							var sql = "SELECT ?? FROM ?? WHERE ??=?";
+							var post = [registrationToken, db_firebase, uid, parsedData['to']];
+							dbConnection.query(sql, post, function(err, res) {
+								if (err) throw err;
+								if (res.length > 0) {
+									for (var i = 0; i < res.length; i++) {
+										var message = {
+											data: {
+												type: 'Chat Message',
+												title: result[0].name,
+												body: parsedData['message'],
+												uid: parsedData['from']
+											},
+											token: res[i].registrationToken,
+											android: {
+												ttl: 3600000,
+												priority: 'high',
+											}
+										};
+										admin.messaging().send(message)
+											.then((response) => {
+												console.log('Successfully sent message notification.');
+											})
+										.catch((error) => {
+											console.log(error);
+										});
+									}
+								}
+							});
+						}
+					});
+				});
+			}
+		});
+	});
+}
+
+// Setup schedule for notifying users who have matched
+function scheduleMatchNotifications() {
+	schedule.scheduleJob(MATCH_NOTIFY_CRON, function() {
+		notifyMatches();
+	});
 }
 
 // Serve 'website' directory
@@ -313,11 +423,11 @@ app.post('/verifySession', function(request, response) {
 	}
 
 	if (request.session && request.session.googleAuthenticated && request.session.googleAuthenticated === true) {
-		return response.status(200).send(JSON.stringify({"response":"google"}));
+		return response.status(200).send(JSON.stringify({"response":"google","uid":request.session.uid}));
 	} else if (request.session && request.session.facebookAuthenticated && request.session.facebookAuthenticated === true) {
-		return response.status(200).send(JSON.stringify({"response":"facebook"}));
+		return response.status(200).send(JSON.stringify({"response":"facebook","uid":request.session.uid}));
 	} else {
-		return response.status(200).send(JSON.stringify({"response":"pass"}));
+		return response.status(200).send(JSON.stringify({"response":"pass","uid":request.session.uid}));
 	}
 });
 
@@ -882,6 +992,31 @@ app.post('/getCrossLocations', function(request, response){
 	getCrossLocations(u, request, response);
 });
 
+// Called when a POST request is made to /getMessages
+app.post('/getMessages', function(request, response){
+	// If the object request.body is null, respond with status 500 'Internal Server Error'
+	if (!request.body) return response.sendStatus(500);
+
+	// POST request must have 1 parameter (uid)
+	if (Object.keys(request.body).length != 1 || !request.body.uid) {
+		return response.status(400).send("Invalid POST request\n");
+	}
+
+	// If session not authenticated
+	if (!request.session || ((!request.session.authenticated || request.session.authenticated === false) && (!request.session.googleAuthenticated || request.session.googleAuthenticated === false) && (!request.session.facebookAuthenticated || request.session.facebookAuthenticated === false))) {
+		return response.status(400).send("User not logged in.\n");
+	}
+
+	// Validate uid
+	if (validateUid(request.body.uid)) {
+		var u = request.body.uid;
+	} else {
+		return response.status(400).send("Invalid user ID.\n");
+	}
+
+	getMessages(u, request, response);
+});
+
 // Validates a user ID
 function validateUid(uid) {
 	return !validator.isEmpty(uid) && validator.isHexadecimal(uid) && validator.isLength(uid, {min: 16, max: 16});
@@ -953,6 +1088,7 @@ function register(u, p, e, response) {
 							var post = [db_profiles, uid, userID, email, e];
 							dbConnection.query(sql, post, function(err, result){
 								if (err) throw err;
+								setDefaultProfilePicture(userID);
 								// Send registration confirm email
 								const msg = {
 									to: e,
@@ -975,6 +1111,16 @@ function register(u, p, e, response) {
 	});
 }
 
+// Sets the default profile picture for a profile
+function setDefaultProfilePicture(u) {
+	var defaultProfilePicture = fs.readFileSync('default_profile.png', {encoding: 'base64'});
+	var sql = "UPDATE ?? SET ??=? WHERE ??=?";
+	var post = [db_profiles, picture, defaultProfilePicture, uid, u];
+	dbConnection.query(sql, post, function(err, result){
+		if (err) throw err;
+	});
+}
+
 // Verifies user has an account and logs them in
 function login(u, p, request, response) {
 	// Get password hash and email for username
@@ -993,7 +1139,7 @@ function login(u, p, request, response) {
 					request.session.username = u;
 					request.session.email = result[0].email;
 					console.log("User logged in.");
-					return response.status(200).send(JSON.stringify({"response":"pass"}));
+					return response.status(200).send(JSON.stringify({"response":"pass","uid":request.session.uid}));
 				} else {
 					return response.status(400).send("Invalid username or password. Try again.\n");
 				}
@@ -1037,6 +1183,7 @@ function googleLogin(id, e, request, response) {
 								var post = [db_profiles, uid, userID, email, e];
 								dbConnection.query(sql, post, function(err, result){
 									if (err) throw err;
+									setDefaultProfilePicture(userID);
 									// Send registration confirm email
 									const msg = {
 										to: e,
@@ -1052,7 +1199,7 @@ function googleLogin(id, e, request, response) {
 									request.session.uid = userID;
 									request.session.email = e;
 									console.log("Account created and logged in with Google.");
-									return response.status(200).send(JSON.stringify({"response":"pass"}));
+									return response.status(200).send(JSON.stringify({"response":"pass","uid":request.session.uid}));
 								});
 							});
 						}
@@ -1065,7 +1212,7 @@ function googleLogin(id, e, request, response) {
 				request.session.uid = result[0].uid;
 				request.session.email = result[0].email;
 				console.log("User logged in with Google.");
-				return response.status(200).send(JSON.stringify({"response":"pass"}));
+				return response.status(200).send(JSON.stringify({"response":"pass","uid":request.session.uid}));
 			} else {
 				request.session.googleAuthenticated = true;
 				request.session.uid = result[0].uid;
@@ -1081,7 +1228,7 @@ function googleLogin(id, e, request, response) {
 					dbConnection.query(sql, post, function(err, result) {
 						if (err) throw err;
 						console.log("User logged in with Google.");
-						return response.status(200).send(JSON.stringify({"response":"pass"}));
+						return response.status(200).send(JSON.stringify({"response":"pass","uid":request.session.uid}));
 					});
 				});
 			}
@@ -1126,6 +1273,7 @@ function facebookLogin(id, e, request, response) {
 								var post = [db_profiles, uid, userID, email, e];
 								dbConnection.query(sql, post, function(err, result){
 									if (err) throw err;
+									setDefaultProfilePicture(userID);
 									// Send registration confirm email
 									const msg = {
 										to: e,
@@ -1141,7 +1289,7 @@ function facebookLogin(id, e, request, response) {
 									request.session.uid = userID;
 									request.session.email = e;
 									console.log("Account created and logged in with Facebook.");
-									return response.status(200).send(JSON.stringify({"response":"pass"}));
+									return response.status(200).send(JSON.stringify({"response":"pass","uid":request.session.uid}));
 								});
 							});
 						}
@@ -1154,7 +1302,7 @@ function facebookLogin(id, e, request, response) {
 				request.session.uid = result[0].uid;
 				request.session.email = result[0].email;
 				console.log("User logged in with Facebook.");
-				return response.status(200).send(JSON.stringify({"response":"pass"}));
+				return response.status(200).send(JSON.stringify({"response":"pass","uid":request.session.uid}));
 			} else {
 				request.session.facebookAuthenticated = true;
 				request.session.uid = result[0].uid;
@@ -1170,7 +1318,7 @@ function facebookLogin(id, e, request, response) {
 					dbConnection.query(sql, post, function(err, result) {
 						if (err) throw err;
 						console.log("User logged in with Facebook.");
-						return response.status(200).send(JSON.stringify({"response":"pass"}));
+						return response.status(200).send(JSON.stringify({"response":"pass","uid":request.session.uid}));
 					});
 				});
 			}
@@ -1457,13 +1605,11 @@ function changePassword(p, n, request, response) {
 	dbConnection.query(sql, post, function(err, result) {
 		if (err) throw err;
 		if (result.length != 1) {
-			console.log("err 1");
 			return response.status(500).send("User ID not found.\n");
 		} else {
 			// Compare sent password hash to account password hash
 			bcrypt.compare(p, result[0].password, function(err, res) {
 				if (res !== true) {
-					console.log("err 2");
 					return response.status(400).send("Invalid password. Try again.\n");
 				} else {
 					// Hash new password and update password for user ID
@@ -1488,7 +1634,6 @@ function changePassword(p, n, request, response) {
 								// For testing purposes only
 								return reponse.status(500).send("Error changed multiple account passwords.\n");
 							} else if (result.affectedRows == 0) {
-								console.log("err 3");
 								return response.status(500).send("Failed to change password.\n");
 							}
 						});
@@ -1929,70 +2074,72 @@ function findCrossedPaths(lat, lon, currentTime, request, response) {
 							matchGraph.setEdge(request.session.uid, uidOther, JSON.stringify(object), "crossLocations");
 							matchGraph.setEdge(uidOther, request.session.uid, JSON.stringify(object), "crossLocations");
 							console.log('Users crossed paths again.');
-							if (matchGraph.edge(request.session.uid, uidOther, "timesCrossed") >= MATCH_THRESHOLD && matchGraph.edge(uidOther, request.session.uid, "timesCrossed") >= MATCH_THRESHOLD && !matchGraph.hasEdge(request.session.uid, uidOther, "matched") && !matchGraph.hasEdge(uidOther, request.session.uid, "matched")) {
-								// If crossed greater than or equal to match threshold times and not already matched, create matched, approved, unmatched, blocked, and newMatch edges
-								matchGraph.setEdge(request.session.uid, uidOther, true, "newMatch");
-								matchGraph.setEdge(uidOther, request.session.uid, true, "newMatch");
-								console.log('Users matched.');
-							} else if (matchGraph.edge(request.session.uid, uidOther, "timesCrossed") >= MATCH_THRESHOLD && matchGraph.edge(uidOther, request.session.uid, "timesCrossed") >= MATCH_THRESHOLD && matchGraph.hasEdge(request.session.uid, uidOther, "matched") && matchGraph.hasEdge(uidOther, request.session.uid, "matched") && matchGraph.hasEdge(request.session.uid, uidOther, "approved") && matchGraph.hasEdge(uidOther, request.session.uid, "approved") && matchGraph.edge(request.session.uid, uidOther, "approved") == true && matchGraph.edge(uidOther, request.session.uid, "approved") == true) {
-								// If crossed and already matched, notify users
-								var sql = "SELECT ?? FROM ?? WHERE ??=?";
-								var post = [registrationToken, db_firebase, uid, request.session.uid];
-								dbConnection.query(sql, post, function(err, result) {
-									if (err) throw err;
-									if (result.length > 0) {
-										for (var i = 0; i < result.length; i++) {
-											var message = {
-												data: {
-													title: 'You just crossed paths with one of your matches!',
-													body: 'Tap to see who you crossed paths with.',
-													uid: uidOther
-												},
-												token: result[i].registrationToken,
-												android: {
-													ttl: 3600000,
-													priority: 'high',
-												}
-											};
-											admin.messaging().send(message)
-												.then((response) => {
-													console.log('Successfully sent existing match crossed paths notification.');
-												})
-											.catch((error) => {
-												console.log(error);
-											});
-										}
+						}
+						if (matchGraph.edge(request.session.uid, uidOther, "timesCrossed") >= MATCH_THRESHOLD && matchGraph.edge(uidOther, request.session.uid, "timesCrossed") >= MATCH_THRESHOLD && !matchGraph.hasEdge(request.session.uid, uidOther, "matched") && !matchGraph.hasEdge(uidOther, request.session.uid, "matched") && !matchGraph.hasEdge(request.session.uid, uidOther, "newMatch") && !matchGraph.hasEdge(uidOther, request.session.uid, "newMatch")) {
+							// If crossed greater than or equal to match threshold times and not already matched, create matched, approved, unmatched, blocked, and newMatch edges
+							matchGraph.setEdge(request.session.uid, uidOther, true, "newMatch");
+							matchGraph.setEdge(uidOther, request.session.uid, true, "newMatch");
+							console.log('Users matched.');
+						} else if (matchGraph.edge(request.session.uid, uidOther, "timesCrossed") >= MATCH_THRESHOLD && matchGraph.edge(uidOther, request.session.uid, "timesCrossed") >= MATCH_THRESHOLD && matchGraph.hasEdge(request.session.uid, uidOther, "matched") && matchGraph.hasEdge(uidOther, request.session.uid, "matched") && matchGraph.hasEdge(request.session.uid, uidOther, "approved") && matchGraph.hasEdge(uidOther, request.session.uid, "approved") && matchGraph.edge(request.session.uid, uidOther, "approved") == true && matchGraph.edge(uidOther, request.session.uid, "approved") == true) {
+							// If crossed and already matched, notify users
+							var sql = "SELECT ?? FROM ?? WHERE ??=?";
+							var post = [registrationToken, db_firebase, uid, request.session.uid];
+							dbConnection.query(sql, post, function(err, result) {
+								if (err) throw err;
+								if (result.length > 0) {
+									for (var i = 0; i < result.length; i++) {
+										var message = {
+											data: {
+												type: 'Crossed Paths',
+												title: 'You just crossed paths with one of your matches!',
+												body: 'Tap to see who you crossed paths with.',
+												uid: uidOther
+											},
+											token: result[i].registrationToken,
+											android: {
+												ttl: 3600000,
+												priority: 'high',
+											}
+										};
+										admin.messaging().send(message)
+											.then((response) => {
+												console.log('Successfully sent crossed paths notification.');
+											})
+										.catch((error) => {
+											console.log(error);
+										});
 									}
-								});
-								var sql = "SELECT ?? FROM ?? WHERE ??=?";
-								var post = [registrationToken, db_firebase, uid, uidOther];
-								dbConnection.query(sql, post, function(err, result) {
-									if (err) throw err;
-									if (result.length > 0) {
-										for (var i = 0; i < result.length; i++) {
-											var message = {
-												data: {
-													title: 'You just crossed paths with one of your matches!',
-													body: 'Tap to see who you crossed paths with.',
-													uid: request.session.uid
-												},
-												token: result[i].registrationToken,
-												android: {
-													ttl: 3600000,
-													priority: 'high',
-												}
-											};
-											admin.messaging().send(message)
-												.then((response) => {
-													console.log('Successfully sent existing match crossed paths notification.');
-												})
-											.catch((error) => {
-												console.log(error);
-											});
-										}
+								}
+							});
+							var sql = "SELECT ?? FROM ?? WHERE ??=?";
+							var post = [registrationToken, db_firebase, uid, uidOther];
+							dbConnection.query(sql, post, function(err, result) {
+								if (err) throw err;
+								if (result.length > 0) {
+									for (var i = 0; i < result.length; i++) {
+										var message = {
+											data: {
+												type: 'Crossed Paths',
+												title: 'You just crossed paths with one of your matches!',
+												body: 'Tap to see who you crossed paths with.',
+												uid: request.session.uid
+											},
+											token: result[i].registrationToken,
+											android: {
+												ttl: 3600000,
+												priority: 'high',
+											}
+										};
+										admin.messaging().send(message)
+											.then((response) => {
+												console.log('Successfully sent crossed paths notification.');
+											})
+										.catch((error) => {
+											console.log(error);
+										});
 									}
-								});
-							}
+								}
+							});
 						}
 					}
 
@@ -2003,56 +2150,97 @@ function findCrossedPaths(lat, lon, currentTime, request, response) {
 	});
 }
 
-// Notifies users who have matched
+// Notifies all users that have new matches, then removes newMatch edges
 function notifyMatches() {
-	// Notify all users that have new matches, then remove newMatch edges
 	var edges = matchGraph.edges();
-	var edgesToRemove = [];
+	var toNotify = {};
 	for (var i = 0; i < matchGraph.edgeCount(); i++) {
+		// Find all new matches
 		if (edges[i] != null && edges[i].name === "newMatch") {
+			if (toNotify.hasOwnProperty(edges[i].v)) {
+				var index = toNotify[edges[i].v].indexOf(edges[i].w);
+				if (index == -1) {
+					toNotify[edges[i].v].push(edges[i].w);
+				}
+			} else {
+				toNotify[edges[i].v] = [];
+				toNotify[edges[i].v].push(edges[i].w);
+			}
 			// Create matched, approved, unmatched, and blocked edges
 			matchGraph.setEdge(edges[i].v, edges[i].w, true, "matched");
-			matchGraph.setEdge(edges[i].w, edges[i].v, true, "matched");
 			matchGraph.setEdge(edges[i].v, edges[i].w, false, "approved");
-			matchGraph.setEdge(edges[i].w, edges[i].v, false, "approved");
 			matchGraph.setEdge(edges[i].v, edges[i].w, false, "unmatched");
-			matchGraph.setEdge(edges[i].w, edges[i].v, false, "unmatched");
 			matchGraph.setEdge(edges[i].v, edges[i].w, false, "blocked");
-			matchGraph.setEdge(edges[i].w, edges[i].v, false, "blocked");
-			// Notify user ID edges[i].v of match with user ID edges[i].w
-			var sql = "SELECT ?? FROM ?? WHERE ??=?";
-			var post = [registrationToken, db_firebase, uid, edges[i].v];
-			dbConnection.query(sql, post, function(err, result) {
-				if (err) throw err;
-				if (result.length > 0) {
-					for (var j = 0; j < result.length; j++) {
-						var message = {
-							data: {
-								title: 'You have a new match!',
-								body: 'Tap to see who you matched with.',
-								uid: edges[i].w
-							},
-							token: result[j].registrationToken,
-							android: {
-								ttl: 3600000,
-								priority: 'high',
-							}
-						};
-						admin.messaging().send(message)
-							.then((response) => {
-								console.log('Successfully sent match notification.');
-							})
-						.catch((error) => {
-							console.log(error);
-						});
-					}
-				}
-			});
-			edgesToRemove.push([edges[i].v, edges[i].w]);
 		}
 	}
-	for (var i = 0; i < edgesToRemove.length; i++) {
-		matchGraph.removeEdge(edgesToRemove[i][0], edgesToRemove[i][1], "newMatch");
+	for (var key in toNotify) {
+		if (toNotify.hasOwnProperty(key)) {
+			if (toNotify[key].length == 1) {
+				// Notify user of match
+				var sql = "SELECT ?? FROM ?? WHERE ??=?";
+				var post = [registrationToken, db_firebase, uid, key];
+				dbConnection.query(sql, post, function(err, result) {
+					if (err) throw err;
+					if (result.length > 0) {
+						for (var j = 0; j < result.length; j++) {
+							var message = {
+								data: {
+									type: 'New Matches',
+									title: 'You have a new match!',
+									body: 'Tap to see who you matched with.'
+								},
+								token: result[j].registrationToken,
+								android: {
+									ttl: 3600000,
+									priority: 'high'
+								}
+							};
+							admin.messaging().send(message)
+								.then((response) => {
+									console.log('Successfully sent new match notification.');
+								})
+							.catch((error) => {
+								console.log(error);
+							});
+						}
+					}
+				});
+			} else if (toNotify[key].length > 1) {
+				// Notify user of multiple matches
+				var sql = "SELECT ?? FROM ?? WHERE ??=?";
+				var post = [registrationToken, db_firebase, uid, key];
+				dbConnection.query(sql, post, function(err, result) {
+					if (err) throw err;
+					if (result.length > 0) {
+						for (var j = 0; j < result.length; j++) {
+							var message = {
+								data: {
+									type: 'New Matches',
+									title: 'You have new matches!',
+									body: 'Tap to see who you matched with.'
+								},
+								token: result[j].registrationToken,
+								android: {
+									ttl: 3600000,
+									priority: 'high'
+								}
+							};
+							admin.messaging().send(message)
+								.then((response) => {
+									console.log('Successfully sent new matches notification.');
+								})
+							.catch((error) => {
+								console.log(error);
+							});
+						}
+					}
+				});
+			}
+			// Remove newMatch edges
+			for (var i = 0; i < toNotify[key].length; i++) {
+				matchGraph.removeEdge(key, toNotify[key][i], "newMatch");
+			}
+		}
 	}
 	writeMatchGraph();
 	console.log('Matches notified.');
@@ -2129,33 +2317,30 @@ function getAllMatches(request, response) {
 
 // Gets information of a single match
 function getMatch(u, request, response) {
-	var edges = matchGraph.outEdges(request.session.uid, u);
-	for (var i = 0; i < edges.length; i++) {
-		if (edges[i].name === "matched") {
-			var sql = "SELECT * FROM ?? WHERE ??=?";
-			var post = [db_profiles, uid, edges[i].w];
-			dbConnection.query(sql, post, function(err, result) {
-				if (err) throw err;
-				if (result.length == 0) {
-					return response.status(500).send("Error getting match information.\n");
-				} else {
-					var object = {};
-					var key = "Profile";
-					object[key] = [];
-					for (var j = 0; j < result.length; j++) {
-						var n = result[j].name;
-						var a = result[j].about;
-						var i = result[j].interests;
-						var p = result[j].picture;
-						var t = matchGraph.edge(request.session.uid, result[j].uid, "timesCrossed");
-						var ap = matchGraph.edge(request.session.uid, result[j].uid, "approved");
-						var data = {uid: result[j].uid, name: n, about: a, interests: i, picture: p, timesCrossed: t, approved: ap};
-						object[key].push(data);
-					}
-					return response.status(200).send(JSON.stringify(object));
+	if (matchGraph.hasEdge(request.session.uid, u, "matched")) {
+		var sql = "SELECT * FROM ?? WHERE ??=?";
+		var post = [db_profiles, uid, u];
+		dbConnection.query(sql, post, function(err, result) {
+			if (err) throw err;
+			if (result.length == 0) {
+				return response.status(500).send("Error getting match information.\n");
+			} else {
+				var object = {};
+				var key = "Profile";
+				object[key] = [];
+				for (var j = 0; j < result.length; j++) {
+					var n = result[j].name;
+					var a = result[j].about;
+					var i = result[j].interests;
+					var p = result[j].picture;
+					var t = matchGraph.edge(request.session.uid, result[j].uid, "timesCrossed");
+					var ap = matchGraph.edge(request.session.uid, result[j].uid, "approved");
+					var data = {uid: result[j].uid, name: n, about: a, interests: i, picture: p, timesCrossed: t, approved: ap};
+					object[key].push(data);
 				}
-			});
-		}
+				return response.status(200).send(JSON.stringify(object));
+			}
+		});
 	}
 }
 
@@ -2166,6 +2351,22 @@ function getCrossLocations(u, request, response) {
 		return response.status(200).send(matchGraph.edge(request.session.uid, u, "crossLocations"));
 	}
 	return response.status(400).send("Not approved.\n");
+}
+
+// Gets all messages for chat with a match
+function getMessages(u, request, response) {
+	var sql = "SELECT * FROM ?? WHERE ??=? AND ??=? OR ??=? AND ??=? ORDER BY ?? LIMIT 100";
+	var post = [db_messages, uidFrom, request.session.uid, uidTo, u, uidFrom, u, uidTo, request.session.uid, time];
+	dbConnection.query(sql, post, function(err, result) {
+		if (err) throw err;
+		var object = {};
+		var key = "Messages";
+		object[key] = [];
+		for (var i = 0; i < result.length; i++) {
+			object[key].push({uidFrom: result[i].uidFrom, uidTo: result[i].uidTo, message: result[i].message, time: result[i].time});
+		}
+		return response.status(200).send(JSON.stringify(object));
+	});
 }
 
 // Writes the match graph to a file
