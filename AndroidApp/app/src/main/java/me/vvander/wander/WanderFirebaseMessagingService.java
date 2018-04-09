@@ -8,16 +8,31 @@ import android.os.Build;
 import android.support.v4.app.NotificationCompat;
 import android.util.Log;
 
+import com.android.volley.DefaultRetryPolicy;
+import com.android.volley.Request;
+import com.android.volley.RequestQueue;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
+import com.android.volley.toolbox.JsonObjectRequest;
+import com.android.volley.toolbox.Volley;
 import com.google.firebase.messaging.FirebaseMessagingService;
 import com.google.firebase.messaging.RemoteMessage;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.util.HashMap;
+import java.util.Map;
+
 public class WanderFirebaseMessagingService extends FirebaseMessagingService {
+    private static final String TAG = WanderFirebaseMessagingService.class.getSimpleName();
+
     @Override
     public void onMessageReceived(RemoteMessage remoteMessage) {
         if (remoteMessage.getData().size() > 0) {
             switch (remoteMessage.getData().get("type")) {
-                case "New Match": {
-                    Log.d("FirebaseMessagingServer", "NEW MATCH");
+                case "New Matches": {
                     NotificationManager notificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
                     if (notificationManager != null) {
                         String channel_id = "new_matches_id";
@@ -33,18 +48,11 @@ public class WanderFirebaseMessagingService extends FirebaseMessagingService {
                         }
                         Intent intent;
                         if (Data.getInstance().getLoggedIn() || Data.getInstance().getLoggedInGoogle() || Data.getInstance().getLoggedInFacebook()) {
-                            intent = new Intent(getApplicationContext(), MatchProfileActivity.class);
-                            intent.putExtra("uid", remoteMessage.getData().get("uid"));
-                            intent.putExtra("name", remoteMessage.getData().get("name"));
-                            intent.putExtra("about", remoteMessage.getData().get("about"));
-                            intent.putExtra("interests", remoteMessage.getData().get("interests"));
-                            intent.putExtra("picture", remoteMessage.getData().get("picture"));
-                            intent.putExtra("timesCrossed", remoteMessage.getData().get("timesCrossed"));
-                            intent.putExtra("approved", remoteMessage.getData().get("approved"));
+                            intent = new Intent(getApplicationContext(), MatchesActivity.class);
                         } else {
                             intent = new Intent(getApplicationContext(), LoginActivity.class);
                         }
-                        PendingIntent pendingIntent = PendingIntent.getActivity(getApplicationContext(), 0, intent, 0);
+                        PendingIntent pendingIntent = PendingIntent.getActivity(getApplicationContext(), 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
                         NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(getApplicationContext(), channel_id)
                                 .setContentTitle(remoteMessage.getData().get("title"))
                                 .setContentText(remoteMessage.getData().get("body"))
@@ -56,46 +64,10 @@ public class WanderFirebaseMessagingService extends FirebaseMessagingService {
                     break;
                 }
                 case "Crossed Paths": {
-                    Log.d("FirebaseMessagingServer", "CROSSED PATHS");
-                    NotificationManager notificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
-                    if (notificationManager != null) {
-                        String channel_id = "crossed_paths_id";
-                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                            CharSequence channel_name = "Crossed Paths";
-                            int importance = NotificationManager.IMPORTANCE_HIGH;
-                            NotificationChannel notificationChannel = new NotificationChannel(channel_id, channel_name, importance);
-                            notificationChannel.enableLights(true);
-                            notificationChannel.setLightColor(R.color.colorAccent);
-                            notificationChannel.enableVibration(true);
-                            notificationChannel.setVibrationPattern(new long[]{100, 200, 300, 200, 100});
-                            notificationManager.createNotificationChannel(notificationChannel);
-                        }
-                        Intent intent;
-                        if (Data.getInstance().getLoggedIn() || Data.getInstance().getLoggedInGoogle() || Data.getInstance().getLoggedInFacebook()) {
-                            intent = new Intent(getApplicationContext(), MatchProfileActivity.class);
-                            intent.putExtra("uid", remoteMessage.getData().get("uid"));
-                            intent.putExtra("name", remoteMessage.getData().get("name"));
-                            intent.putExtra("about", remoteMessage.getData().get("about"));
-                            intent.putExtra("interests", remoteMessage.getData().get("interests"));
-                            intent.putExtra("picture", remoteMessage.getData().get("picture"));
-                            intent.putExtra("timesCrossed", remoteMessage.getData().get("timesCrossed"));
-                            intent.putExtra("approved", remoteMessage.getData().get("approved"));
-                        } else {
-                            intent = new Intent(getApplicationContext(), LoginActivity.class);
-                        }
-                        PendingIntent pendingIntent = PendingIntent.getActivity(getApplicationContext(), 0, intent, 0);
-                        NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(getApplicationContext(), channel_id)
-                                .setContentTitle(remoteMessage.getData().get("title"))
-                                .setContentText(remoteMessage.getData().get("body"))
-                                .setSmallIcon(R.drawable.cross_notification_icon)
-                                .setAutoCancel(true)
-                                .setContentIntent(pendingIntent);
-                        notificationManager.notify(1, notificationBuilder.build());
-                    }
+                    setupMatchProfileIntent(remoteMessage.getData().get("title"), remoteMessage.getData().get("body"), remoteMessage.getData().get("uid"));
                     break;
                 }
                 case "Chat Message": {
-                    Log.d("FirebaseMessagingServer", "CHAT MESSAGE");
                     NotificationManager notificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
                     if (notificationManager != null) {
                         String channel_id = "chat_messages_id";
@@ -117,7 +89,7 @@ public class WanderFirebaseMessagingService extends FirebaseMessagingService {
                         } else {
                             intent = new Intent(getApplicationContext(), LoginActivity.class);
                         }
-                        PendingIntent pendingIntent = PendingIntent.getActivity(getApplicationContext(), 0, intent, 0);
+                        PendingIntent pendingIntent = PendingIntent.getActivity(getApplicationContext(), 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
                         NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(getApplicationContext(), channel_id)
                                 .setContentTitle(remoteMessage.getData().get("title"))
                                 .setContentText(remoteMessage.getData().get("body"))
@@ -130,5 +102,79 @@ public class WanderFirebaseMessagingService extends FirebaseMessagingService {
                 }
             }
         }
+    }
+
+    private void setupMatchProfileIntent(final String title, final String body, String uid) {
+        RequestQueue requestQueue = Volley.newRequestQueue(this);
+        String url = Data.getInstance().getUrl() + "/getMatch";
+        Map<String, String> params = new HashMap<>();
+        params.put("uid", uid);
+        JsonObjectRequest postRequest = new JsonObjectRequest(Request.Method.POST, url, new JSONObject(params),
+                new Response.Listener<JSONObject>() {
+                    @Override
+                    public void onResponse(JSONObject response) {
+                        try {
+                            JSONArray array = response.getJSONArray("Profile");
+                            JSONObject object = array.getJSONObject(0);
+                            String uid = object.getString("uid");
+                            String name = object.getString("name");
+                            String about = object.getString("about");
+                            String interests = object.getString("interests");
+                            String picture = object.getString("picture");
+                            int timesCrossed = object.getInt("timesCrossed");
+                            boolean approved = object.getBoolean("approved");
+
+                            NotificationManager notificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
+                            if (notificationManager != null) {
+                                String channel_id = "crossed_paths_id";
+                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                                    CharSequence channel_name = "Crossed Paths";
+                                    int importance = NotificationManager.IMPORTANCE_HIGH;
+                                    NotificationChannel notificationChannel = new NotificationChannel(channel_id, channel_name, importance);
+                                    notificationChannel.enableLights(true);
+                                    notificationChannel.setLightColor(R.color.colorAccent);
+                                    notificationChannel.enableVibration(true);
+                                    notificationChannel.setVibrationPattern(new long[]{100, 200, 300, 200, 100});
+                                    notificationManager.createNotificationChannel(notificationChannel);
+                                }
+                                Intent intent;
+                                if (Data.getInstance().getLoggedIn() || Data.getInstance().getLoggedInGoogle() || Data.getInstance().getLoggedInFacebook()) {
+                                    intent = new Intent(getApplicationContext(), MatchProfileActivity.class);
+                                    intent.putExtra("uid", uid);
+                                    intent.putExtra("name", name);
+                                    intent.putExtra("about", about);
+                                    intent.putExtra("interests", interests);
+                                    intent.putExtra("picture", picture);
+                                    intent.putExtra("timesCrossed", String.valueOf(timesCrossed));
+                                    intent.putExtra("approved", approved);
+                                } else {
+                                    intent = new Intent(getApplicationContext(), LoginActivity.class);
+                                }
+                                PendingIntent pendingIntent = PendingIntent.getActivity(getApplicationContext(), 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+                                NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(getApplicationContext(), channel_id)
+                                        .setContentTitle(title)
+                                        .setContentText(body)
+                                        .setSmallIcon(R.drawable.cross_notification_icon)
+                                        .setAutoCancel(true)
+                                        .setContentIntent(pendingIntent);
+                                notificationManager.notify(1, notificationBuilder.build());
+                            }
+                        } catch (JSONException j) {
+                            j.printStackTrace();
+                        }
+                    }
+                },
+                new Response.ErrorListener() {
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+                        Log.d(TAG, error.toString());
+                    }
+                }
+        );
+        postRequest.setRetryPolicy(new DefaultRetryPolicy(
+                0,
+                DefaultRetryPolicy.DEFAULT_MAX_RETRIES,
+                DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
+        requestQueue.add(postRequest);
     }
 }

@@ -293,7 +293,7 @@ public class ChatActivity extends AppCompatActivity {
                                 } else {
                                     intent = new Intent(getApplicationContext(), LoginActivity.class);
                                 }
-                                PendingIntent pendingIntent = PendingIntent.getActivity(getApplicationContext(), 0, intent, 0);
+                                PendingIntent pendingIntent = PendingIntent.getActivity(getApplicationContext(), 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
                                 NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(getApplicationContext(), channel_id)
                                         .setContentTitle(name)
                                         .setContentText(message)

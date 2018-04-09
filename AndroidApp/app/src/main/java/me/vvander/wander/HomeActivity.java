@@ -253,8 +253,8 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
                             int length = array.length();
                             for (int i = 0; i < length; i++) {
                                 JSONObject object = array.getJSONObject(i);
-                                double lat = Double.parseDouble(String.valueOf(object.get("latitude")));
-                                double lon = Double.parseDouble(String.valueOf(object.get("longitude")));
+                                double lat = object.getDouble("latitude");
+                                double lon = object.getDouble("longitude");
                                 listPersonal.add(new LatLng(lat, lon));
                                 Log.d(TAG, "Latitude: " + lat + ", Longitude: " + lon);
                             }
@@ -286,8 +286,8 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
                             int length = array.length();
                             for (int i = 0; i < length; i++) {
                                 JSONObject object = array.getJSONObject(i);
-                                double lat = Double.parseDouble(String.valueOf(object.get("latitude")));
-                                double lon = Double.parseDouble(String.valueOf(object.get("longitude")));
+                                double lat = object.getDouble("latitude");
+                                double lon = object.getDouble("longitude");
                                 listAll.add(new LatLng(lat, lon));
                                 Log.d(TAG, "Latitude: " + lat + ", Longitude: " + lon);
                             }

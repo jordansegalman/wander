@@ -64,7 +64,7 @@ public class MatchesActivity extends AppCompatActivity {
                             } else {
                                 for (int i = 0; i < length; i++) {
                                     JSONObject object = array.getJSONObject(i);
-                                    String uid = String.valueOf(object.get("uid"));
+                                    String uid = object.getString("uid");
                                     requestSingleMatch(uid);
                                 }
                             }
@@ -98,13 +98,13 @@ public class MatchesActivity extends AppCompatActivity {
                         try {
                             JSONArray array = response.getJSONArray("Profile");
                             JSONObject object = array.getJSONObject(0);
-                            String uid = String.valueOf(object.get("uid"));
-                            String name = String.valueOf(object.get("name"));
-                            String about = String.valueOf(object.get("about"));
-                            String interests = String.valueOf(object.get("interests"));
-                            String picture = String.valueOf(object.get("picture"));
-                            int timesCrossed = Integer.parseInt(String.valueOf(object.get("timesCrossed")));
-                            boolean approved = Boolean.valueOf(String.valueOf(object.get("approved")));
+                            String uid = object.getString("uid");
+                            String name = object.getString("name");
+                            String about = object.getString("about");
+                            String interests = object.getString("interests");
+                            String picture = object.getString("picture");
+                            int timesCrossed = object.getInt("timesCrossed");
+                            boolean approved = object.getBoolean("approved");
 
                             if (picture == null || !picture.equalsIgnoreCase("null")) {
                                 picture = Utilities.encodeImage(BitmapFactory.decodeResource(getResources(), R.drawable.default_profile));

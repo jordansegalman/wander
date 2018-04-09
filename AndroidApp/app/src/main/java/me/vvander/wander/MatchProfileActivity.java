@@ -166,12 +166,9 @@ public class MatchProfileActivity extends AppCompatActivity {
                             for (int i = 0; i < length; i++) {
                                 JSONObject object = array.getJSONObject(i);
                                 if (object.get("latitude") != null && object.get("longitude") != null) {
-                                    String latitude = String.valueOf(object.get("latitude"));
-                                    String longitude = String.valueOf(object.get("longitude"));
-                                    if (latitude != null && longitude != null && !latitude.equals("null") && !longitude.equals("null")) {
-                                        LatLng point = new LatLng(Double.parseDouble(latitude), Double.parseDouble(longitude));
-                                        crossList.add(point);
-                                    }
+                                    double latitude = object.getDouble("latitude");
+                                    double longitude = object.getDouble("longitude");
+                                    crossList.add(new LatLng(latitude, longitude));
                                 }
                             }
                             Gson gson = new Gson();
