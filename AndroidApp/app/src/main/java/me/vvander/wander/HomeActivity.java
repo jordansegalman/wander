@@ -83,8 +83,8 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
     private boolean overlayAllOn;
     private ArrayList<LatLng> crossList;
     private Marker draggedMarker;
-    //private ArrayList<Marker> markers;
     private Map<Marker, LocationTag> markers;
+    private Map<Marker, LocationTag> otherMarkers;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -112,8 +112,8 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
         listAll = new ArrayList<>();
         overlayPersonalOn = false;
         overlayAllOn = false;
-        //markers = new ArrayList<>();
         markers = new HashMap<Marker, LocationTag>();
+        otherMarkers = new HashMap<Marker, LocationTag>();
         draggedMarker = null;
 
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map);
@@ -238,6 +238,7 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
                     }
                 }
             }
+            getTagData();
         }
     }
 
@@ -379,6 +380,96 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
         }
     }
 
+    private void storeTagData() {
+        Map<String, String> params = new HashMap<>();
+
+        int counter = 0;
+        for (Map.Entry<Marker, LocationTag> entry : markers.entrySet()) {
+            String value = "";
+
+            Marker marker = (Marker) entry.getKey();
+            LocationTag tagData = (LocationTag) entry.getValue();
+
+            value += Double.toString(marker.getPosition().latitude) + "@@@";
+            value += Double.toString(marker.getPosition().longitude) + "@@@";
+            if (tagData.getTagTitle() == null || tagData.getTagTitle().equals("")) {
+                value += "No Title@@@";
+            } else {
+                value += tagData.getTagTitle() + "@@@";
+            }
+            if (tagData.getTagReview() == null || tagData.getTagReview().equals("")) {
+                value += "No Review@@@";
+            } else {
+                value += tagData.getTagReview();
+            }
+
+            Log.d("LocationTag", value);
+
+            params.put(Integer.toString(counter), value);
+            counter++;
+        }
+
+        String url = Data.getInstance().getUrl() + "/storeTagData";
+        JsonObjectRequest firstPostRequest = new JsonObjectRequest(Request.Method.POST, url, new JSONObject(params),
+                new Response.Listener<JSONObject>() {
+                    @Override
+                    public void onResponse(JSONObject response) {
+
+                    }
+                },
+                new Response.ErrorListener() {
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+                        Toast.makeText(getApplicationContext(), "Storing tag data has failed.", Toast.LENGTH_SHORT).show();
+                        Log.d(TAG, error.toString());
+                    }
+                }
+        );
+        firstPostRequest.setRetryPolicy(new DefaultRetryPolicy(
+                0,
+                DefaultRetryPolicy.DEFAULT_MAX_RETRIES,
+                DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
+        requestQueue.add(firstPostRequest);
+    }
+
+    private void getTagData() {
+        String url = Data.getInstance().getUrl() + "/getTagData";
+        JsonObjectRequest firstPostRequest = new JsonObjectRequest(Request.Method.POST, url, null,
+                new Response.Listener<JSONObject>() {
+                    @Override
+                    public void onResponse(JSONObject response) {
+                        try {
+                            JSONArray array = response.getJSONArray("Tag");
+                            int length = array.length();
+                            for (int i = 0; i < length; i++) {
+                                JSONObject object = array.getJSONObject(i);
+                                double lat = object.getDouble("latitude");
+                                double lon = object.getDouble("longitude");
+                                String title = object.getString("title");
+                                String review = object.getString("review");
+                                Marker m = googleMap.addMarker(new MarkerOptions().position(new LatLng(lat, lon)));
+                                markers.put(m, new LocationTag(title, review));
+                            }
+                        } catch (JSONException j) {
+                            j.printStackTrace();
+                        }
+                    }
+                },
+                new Response.ErrorListener() {
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+                        Toast.makeText(getApplicationContext(), "Retrieving tag data has failed.", Toast.LENGTH_SHORT).show();
+                        Log.d(TAG, error.toString());
+                    }
+                }
+        );
+        firstPostRequest.setRetryPolicy(new DefaultRetryPolicy(
+                0,
+                DefaultRetryPolicy.DEFAULT_MAX_RETRIES,
+                DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
+        requestQueue.add(firstPostRequest);
+    }
+
     public void addTag() {
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED || ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION);
@@ -406,6 +497,7 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
                 Marker marker = googleMap.addMarker(new MarkerOptions().position(place.getLatLng()).draggable(true));
                 markers.put(marker, new LocationTag());
                 this.googleMap.animateCamera(CameraUpdateFactory.newLatLngZoom(place.getLatLng(), 15));
+                storeTagData();
             }
         }
     }
@@ -452,6 +544,7 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
                     td.setTagTitle(tag_title.getText().toString());
                     td.setTagReview(tag_review.getText().toString());
                     markers.put(m, td);
+                    storeTagData();
                 }
             }
         });

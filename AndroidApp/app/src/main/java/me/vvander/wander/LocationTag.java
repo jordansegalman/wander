@@ -5,6 +5,13 @@ public class LocationTag {
     private String tagReview = "Enter a review or description of the location.";
     private String tagImage;
 
+    public LocationTag(){}
+
+    public LocationTag(String title, String review) {
+        this.tagTitle = title;
+        this.tagReview = review;
+    }
+
     public String getTagTitle() {
         return tagTitle;
     }
