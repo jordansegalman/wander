@@ -43,6 +43,8 @@ const approved = "approved";
 const message = "message";
 const uidFrom = "uidFrom";
 const uidTo = "uidTo";
+const title = "title";
+const review = "review";
 
 // Constants used for MySQL
 const db_host = process.env.DB_HOST;
@@ -54,6 +56,7 @@ const db_profiles = "profiles";
 const db_locations = "locations";
 const db_firebase = "firebase";
 const db_messages = "messages";
+const db_tags = "tags";
 
 // Constant used for password hashing
 const saltRounds = 10;
@@ -1016,6 +1019,45 @@ app.post('/getMessages', function(request, response){
 
 	getMessages(u, request, response);
 });
+
+
+// Called when a POST request is made to /storeTagData
+app.post('/storeTagData', function(request, response){
+	// If the object request.body is null, respond with status 500 'Internal Server Error'
+	if (!request.body) return response.sendStatus(500);
+
+	// POST request must have 1 parameter (uid)
+	if (Object.keys(request.body).length == 0) {
+		return response.status(400).send("Invalid POST request\n");
+	}
+
+	// If session not authenticated
+	if (!request.session || ((!request.session.authenticated || request.session.authenticated === false) && (!request.session.googleAuthenticated || request.session.googleAuthenticated === false) && (!request.session.facebookAuthenticated || request.session.facebookAuthenticated === false))) {
+		return response.status(400).send("User not logged in.\n");
+	}
+
+	storeTagData(request, response);
+});
+
+
+// Called when a POST request is made to /getTagData
+app.post('/getTagData', function(request, response){
+	// If the object request.body is null, respond with status 500 'Internal Server Error'
+	if (!request.body) return response.sendStatus(500);
+
+	// POST request must have 1 parameter (uid)
+	if (Object.keys(request.body).length != 0) {
+		return response.status(400).send("Invalid POST request\n");
+	}
+
+	// If session not authenticated
+	if (!request.session || ((!request.session.authenticated || request.session.authenticated === false) && (!request.session.googleAuthenticated || request.session.googleAuthenticated === false) && (!request.session.facebookAuthenticated || request.session.facebookAuthenticated === false))) {
+		return response.status(400).send("User not logged in.\n");
+	}
+
+	getTagData(request, response);
+});
+
 
 // Validates a user ID
 function validateUid(uid) {
@@ -2366,6 +2408,54 @@ function getMessages(u, request, response) {
 			object[key].push({uidFrom: result[i].uidFrom, uidTo: result[i].uidTo, message: result[i].message, time: result[i].time});
 		}
 		return response.status(200).send(JSON.stringify(object));
+	});
+}
+
+// Stores a users tags and reviews
+function storeTagData(request, response) {
+	var counter = 0;
+	console.log(Object.keys(request.body).length);
+	for (var key in request.body) {
+		var arr = request.body[key].split("@@@");
+		if (arr.length === 4) {
+			var sql = "INSERT INTO ?? (??,??,??,??,??) VALUES (?,?,?,?,?) ON DUPLICATE KEY UPDATE ??=?, ??=?";
+			var lat = arr[0];
+			var lon = arr[1];
+			var t = arr[2];
+			var r = arr[3];
+			
+			var post = [db_tags, uid, latitude, longitude, title, review, request.session.uid, lat, lon, t, r, title, t, review, r];
+			dbConnection.query(sql, post, function(err, result){
+				if (err) throw err;
+				counter++;
+				if (counter === Object.keys(request.body).length)
+					return response.status(200).send(JSON.stringify({"response":"pass"}));
+			});
+		}
+		console.log(request.body[key]);
+	}
+}
+
+// Obtains a users tags and reviews
+function getTagData(request, response) {
+	var sql = "SELECT * FROM ?? WHERE ??=?";
+	var post = [db_tags, uid, request.session.uid]; 
+	dbConnection.query(sql, post, function(err, result){
+		if (err) throw err;
+		var object = {};
+		var key = "Tag";
+		object[key] = [];
+		for (var i = 0; i < result.length; i++) {
+			var lat = result[i].latitude;
+			var lon = result[i].longitude;
+			var t = result[i].title;
+			var r = result[i].review;
+			var data = {latitude: lat, longitude: lon, title: t, review: r};
+			object[key].push(data);
+		}
+		console.log("User tags sent.");
+		return response.status(200).send(JSON.stringify(object));
+		
 	});
 }
 
