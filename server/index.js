@@ -1076,6 +1076,24 @@ app.post('/deleteTagData', function(request, response){
 	deleteTagData(request, response);
 });
 
+// Called when POST request is made to /getMatchTagData
+app.post('/getMatchTagData', function(request, response){
+	// If the object request.body is null, respond with status 500 'Internal Server Error'
+	if (!request.body) return response.sendStatus(500);
+
+	// POST request must have 1 parameter (uid)
+	if (Object.keys(request.body).length != 0) {
+		return response.status(400).send("Invalid POST request\n");
+	}
+
+	// If session not authenticated
+	if (!request.session || ((!request.session.authenticated || request.session.authenticated === false) && (!request.session.googleAuthenticated || request.session.googleAuthenticated === false) && (!request.session.facebookAuthenticated || request.session.facebookAuthenticated === false))) {
+		return response.status(400).send("User not logged in.\n");
+	}
+
+	getMatchTagData(request, response);
+});
+
 
 // Validates a user ID
 function validateUid(uid) {
@@ -2500,6 +2518,52 @@ function deleteTagData(request, response) {
 		console.log(request.body[key]);
 	}
 
+}
+
+// Gets tags of matched users
+function getMatchTagData(request, response) {
+	var edges = matchGraph.outEdges(request.session.uid);
+	var counter = 0;
+	for (var i = 0; i < edges.length; i++) {
+			if (matchGraph.hasEdge(request.session.uid, edges[i].w, "approved")) {
+				counter++;
+			}
+	}
+	var object = {};
+	var key = "Tag";
+	object[key] = [];
+	for (var i = 0; i < edges.length; i++) {
+		if (edges[i].name === "matched") {
+			if (matchGraph.hasEdge(request.session.uid, edges[i].w, "approved")) {
+				var sql = "SELECT * FROM ?? WHERE ??=?";
+				var post = [db_tags, uid, edges[i].w]; 
+				dbConnection.query(sql, post, function(err, result){
+					if (err) throw err;
+					//var object = {};
+					//var tag_key = "Tag";
+					//object[key] = [];
+					for (var j = 0; j < result.length; j++) {
+						var lat = result[j].latitude;
+						var lon = result[j].longitude;
+						var t = result[j].title;
+						var r = result[j].review;
+						var data = {latitude: lat, longitude: lon, title: t, review: r};
+						object[key].push(data);
+					
+
+						if (i === counter && j === result.length - 1) {
+							console.log("Array: " + object[key]);
+							console.log("JSON: " + JSON.stringify(object[key]));
+							return response.status(200).send(JSON.stringify(object[key]));
+						}
+						//console.log(object[key]);
+						//object[tag_key].push(data);
+					}
+					//return response.status(200).send(JSON.stringify(object));
+				});
+			}
+		}
+	}
 }
 
 // Writes the match graph to a file
