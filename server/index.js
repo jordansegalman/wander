@@ -1058,6 +1058,24 @@ app.post('/getTagData', function(request, response){
 	getTagData(request, response);
 });
 
+// Called when POST request is made to /deleteTagData
+app.post('/deleteTagData', function(request, response){
+	// If the object request.body is null, respond with status 500 'Internal Server Error'
+	if (!request.body) return response.sendStatus(500);
+
+	// POST request must have 1 parameter (uid)
+	if (Object.keys(request.body).length == 0) {
+		return response.status(400).send("Invalid POST request\n");
+	}
+
+	// If session not authenticated
+	if (!request.session || ((!request.session.authenticated || request.session.authenticated === false) && (!request.session.googleAuthenticated || request.session.googleAuthenticated === false) && (!request.session.facebookAuthenticated || request.session.facebookAuthenticated === false))) {
+		return response.status(400).send("User not logged in.\n");
+	}
+
+	deleteTagData(request, response);
+});
+
 
 // Validates a user ID
 function validateUid(uid) {
@@ -2457,6 +2475,31 @@ function getTagData(request, response) {
 		return response.status(200).send(JSON.stringify(object));
 		
 	});
+}
+
+// Deletes tag data
+function deleteTagData(request, response) {
+	var counter = 0;
+	console.log(Object.keys(request.body).length);
+	for (var key in request.body) {
+		var arr = request.body[key].split("@@@");
+		if (arr.length === 2) {
+			//var sql = "DELETE FROM ?? WHERE ??=?, ??=?, ??=?";
+			var sql = "DELETE FROM ?? WHERE ??=? AND ??=? AND ??=?";
+			var lat = parseFloat(arr[0]);
+			var lon = parseFloat(arr[1]);
+			
+			var post = [db_tags, uid, request.session.uid, latitude, lat, longitude, lon];
+			dbConnection.query(sql, post, function(err, result){
+				if (err) throw err;
+				counter++;
+				if (counter === Object.keys(request.body).length)
+					return response.status(200).send(JSON.stringify({"response":"pass"}));
+			});
+		}
+		console.log(request.body[key]);
+	}
+
 }
 
 // Writes the match graph to a file
