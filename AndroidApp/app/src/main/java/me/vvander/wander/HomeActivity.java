@@ -36,6 +36,7 @@ import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
+import com.android.volley.toolbox.JsonArrayRequest;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.Volley;
 import com.google.android.gms.location.ActivityRecognitionClient;
@@ -44,6 +45,7 @@ import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
@@ -65,7 +67,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
-public class HomeActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener, OnMapReadyCallback, GoogleMap.OnMyLocationButtonClickListener, GoogleMap.OnMarkerDragListener, GoogleMap.OnMarkerClickListener{
+public class HomeActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener, OnMapReadyCallback, GoogleMap.OnMyLocationButtonClickListener, GoogleMap.OnMarkerClickListener{
     private static final String TAG = HomeActivity.class.getSimpleName();
     private static final int ACTIVITY_RECOGNITION_DETECTION_INTERVAL = 15000;
     private static final int PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION = 2222;
@@ -82,7 +84,6 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
     private boolean overlayPersonalOn;
     private boolean overlayAllOn;
     private ArrayList<LatLng> crossList;
-    private Marker draggedMarker;
     private Map<Marker, LocationTag> markers;
     private Map<Marker, LocationTag> otherMarkers;
 
@@ -114,7 +115,6 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
         overlayAllOn = false;
         markers = new HashMap<Marker, LocationTag>();
         otherMarkers = new HashMap<Marker, LocationTag>();
-        draggedMarker = null;
 
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
@@ -226,7 +226,6 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
         } else {
             this.googleMap.setMyLocationEnabled(true);
             this.googleMap.setOnMyLocationButtonClickListener(this);
-            this.googleMap.setOnMarkerDragListener(this);
             this.googleMap.setOnMarkerClickListener(this);
             if (crossList == null) {
                 LocationManager locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
@@ -447,7 +446,7 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
                                 double lon = object.getDouble("longitude");
                                 String title = object.getString("title");
                                 String review = object.getString("review");
-                                Marker m = googleMap.addMarker(new MarkerOptions().position(new LatLng(lat, lon)));
+                                Marker m = googleMap.addMarker(new MarkerOptions().position(new LatLng(lat, lon)).title("My Tag"));
                                 markers.put(m, new LocationTag(title, review));
                             }
                         } catch (JSONException j) {
@@ -468,6 +467,45 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
                 DefaultRetryPolicy.DEFAULT_MAX_RETRIES,
                 DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
         requestQueue.add(firstPostRequest);
+
+        url = Data.getInstance().getUrl() + "/getMatchTagData";
+        JsonArrayRequest secondPostRequest = new JsonArrayRequest(Request.Method.POST, url, null,
+                new Response.Listener<JSONArray>() {
+                    @Override
+                    public void onResponse(JSONArray response) {
+
+                        try {
+                            Log.d("GOOOOOD", "response.");
+
+                            int length = response.length();
+                            for (int i = 0; i < length; i++) {
+                                JSONObject object = response.getJSONObject(i);
+                                double lat = object.getDouble("latitude");
+                                double lon = object.getDouble("longitude");
+                                String title = object.getString("title");
+                                String review = object.getString("review");
+                                Marker m = googleMap.addMarker(new MarkerOptions().title("Match's Tag").position(new LatLng(lat, lon)).icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_CYAN)));
+                                otherMarkers.put(m, new LocationTag(title, review));
+                            }
+                        } catch (JSONException j) {
+                            j.printStackTrace();
+                        }
+
+                    }
+                },
+                new Response.ErrorListener() {
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+                        Toast.makeText(getApplicationContext(), "Retrieving match tag data has failed.", Toast.LENGTH_SHORT).show();
+                        Log.d(TAG, error.toString());
+                    }
+                }
+        );
+        secondPostRequest.setRetryPolicy(new DefaultRetryPolicy(
+                0,
+                DefaultRetryPolicy.DEFAULT_MAX_RETRIES,
+                DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
+        requestQueue.add(secondPostRequest);
     }
 
     public void addTag() {
@@ -485,16 +523,43 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
         }
     }
 
-    @Override
-    public void onMarkerDrag(Marker marker) {
+    private void deleteTagData(Marker marker) {
+        Map<String, String> params = new HashMap<>();
 
+        String value = "";
+        value += Double.toString(marker.getPosition().latitude) + "@@@";
+        value += Double.toString(marker.getPosition().longitude);
+
+        params.put("marker", value);
+
+        String url = Data.getInstance().getUrl() + "/deleteTagData";
+        JsonObjectRequest firstPostRequest = new JsonObjectRequest(Request.Method.POST, url, new JSONObject(params),
+                new Response.Listener<JSONObject>() {
+                    @Override
+                    public void onResponse(JSONObject response) {
+
+                    }
+                },
+                new Response.ErrorListener() {
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+                        Toast.makeText(getApplicationContext(), "Deleting tag data has failed.", Toast.LENGTH_SHORT).show();
+                        Log.d(TAG, error.toString());
+                    }
+                }
+        );
+        firstPostRequest.setRetryPolicy(new DefaultRetryPolicy(
+                0,
+                DefaultRetryPolicy.DEFAULT_MAX_RETRIES,
+                DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
+        requestQueue.add(firstPostRequest);
     }
 
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (requestCode == PLACE_PICKER_REQUEST) {
             if (resultCode == RESULT_OK) {
                 Place place = PlacePicker.getPlace(this , data);
-                Marker marker = googleMap.addMarker(new MarkerOptions().position(place.getLatLng()).draggable(true));
+                Marker marker = googleMap.addMarker(new MarkerOptions().position(place.getLatLng()).title("My Tag"));
                 markers.put(marker, new LocationTag());
                 this.googleMap.animateCamera(CameraUpdateFactory.newLatLngZoom(place.getLatLng(), 15));
                 storeTagData();
@@ -519,56 +584,58 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
 
         final Marker m = marker;
 
-        final LocationTag td = markers.get(marker);
-        if (td == null) Log.d("NullForAll", "NULLNULL");
-        else {
-            tag_title.setText(td.getTagTitle());
-            tag_review.setText(td.getTagReview());
-        }
-
-        // Setting the information in the review from the info stored in hash map
-
-        edit.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if (edit.getText().equals("Edit")) {
-                    tag_title.setInputType(InputType.TYPE_CLASS_TEXT);
-                    tag_review.setInputType(InputType.TYPE_CLASS_TEXT);
-                    tag_title.setEnabled(true);
-                    tag_review.setEnabled(true);
-                    edit.setText("Done");
-                } else if (edit.getText().equals("Done")) {
-                    tag_title.setInputType(InputType.TYPE_NULL);
-                    tag_review.setInputType(InputType.TYPE_NULL);
-                    edit.setText("Edit");
-                    td.setTagTitle(tag_title.getText().toString());
-                    td.setTagReview(tag_review.getText().toString());
-                    markers.put(m, td);
-                    storeTagData();
-                }
+        if (m.getTitle() != null && m.getTitle().equals("Match's Tag")) {
+            edit.setEnabled(false);
+            delete.setEnabled(false);
+            final LocationTag td = otherMarkers.get(marker);
+            if (td == null) Log.d("NullForAll", "NULLNULL");
+            else {
+                tag_title.setText(td.getTagTitle());
+                tag_review.setText(td.getTagReview());
             }
-        });
+        } else {
+
+            final LocationTag td = markers.get(marker);
+            if (td == null) Log.d("NullForAll", "NULLNULL");
+            else {
+                tag_title.setText(td.getTagTitle());
+                tag_review.setText(td.getTagReview());
+            }
+
+            // Setting the information in the review from the info stored in hash map
+            edit.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    if (edit.getText().equals("Edit")) {
+                        tag_title.setInputType(InputType.TYPE_CLASS_TEXT);
+                        tag_review.setInputType(InputType.TYPE_CLASS_TEXT);
+                        tag_title.setEnabled(true);
+                        tag_review.setEnabled(true);
+                        edit.setText("Done");
+                    } else if (edit.getText().equals("Done")) {
+                        tag_title.setInputType(InputType.TYPE_NULL);
+                        tag_review.setInputType(InputType.TYPE_NULL);
+                        edit.setText("Edit");
+                        td.setTagTitle(tag_title.getText().toString());
+                        td.setTagReview(tag_review.getText().toString());
+                        markers.put(m, td);
+                        storeTagData();
+                        dialog.dismiss();
+                    }
+                }
+            });
+        }
 
         delete.setOnClickListener(new View.OnClickListener(){
             @Override
             public void onClick(View v) {
                 m.remove();
+                deleteTagData(m);
                 dialog.dismiss();
             }
         });
 
-
         return false;
-    }
-
-    @Override
-    public void onMarkerDragStart(Marker marker) {
-        draggedMarker = marker;
-    }
-
-    @Override
-    public void onMarkerDragEnd(Marker marker) {
-        draggedMarker = null;
     }
 
     @Override
