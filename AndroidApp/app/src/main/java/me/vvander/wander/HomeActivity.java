@@ -473,10 +473,7 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
                 new Response.Listener<JSONArray>() {
                     @Override
                     public void onResponse(JSONArray response) {
-
                         try {
-                            Log.d("GOOOOOD", "response.");
-
                             int length = response.length();
                             for (int i = 0; i < length; i++) {
                                 JSONObject object = response.getJSONObject(i);
@@ -496,7 +493,7 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
                 new Response.ErrorListener() {
                     @Override
                     public void onErrorResponse(VolleyError error) {
-                        Toast.makeText(getApplicationContext(), "Retrieving match tag data has failed.", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(getApplicationContext(), "No match tag data to display.", Toast.LENGTH_SHORT).show();
                         Log.d(TAG, error.toString());
                     }
                 }

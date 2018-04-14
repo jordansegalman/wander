@@ -51,7 +51,11 @@ public class RegistrationActivity extends AppCompatActivity {
         String password = passwordText.getText().toString();
         String confirmPassword = confirmPasswordText.getText().toString();
 
-        if (!password.equals(confirmPassword)) {
+        if (username.length() < 4) {
+            Toast.makeText(getApplicationContext(), "Please enter a username with four or more characters.", Toast.LENGTH_SHORT).show();
+        } else if (password.length() < 8) {
+            Toast.makeText(getApplicationContext(), "Please enter a password with eight or more characters.", Toast.LENGTH_SHORT).show();
+        } else if (!password.equals(confirmPassword)) {
             Toast.makeText(getApplicationContext(), "Passwords do not match.", Toast.LENGTH_SHORT).show();
         } else {
             sendPOSTRequest(email, username, password);
