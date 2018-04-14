@@ -9,4 +9,8 @@
         android:id="@+id/popular_locations"
         android:title="Popular Locations"
         app:showAsAction="never" />
+    <item
+        android:id="@+id/tag_location"
+        android:title="Tag Location"
+        app:showAsAction="never" />
 </menu>
