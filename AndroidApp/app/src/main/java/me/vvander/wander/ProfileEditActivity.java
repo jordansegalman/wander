@@ -15,6 +15,7 @@ import android.widget.Spinner;
 import android.widget.Toast;
 
 import com.android.volley.DefaultRetryPolicy;
+import com.android.volley.NetworkResponse;
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.Response;
@@ -123,6 +124,10 @@ public class ProfileEditActivity extends AppCompatActivity {
                 new Response.ErrorListener() {
                     @Override
                     public void onErrorResponse(VolleyError error) {
+                        NetworkResponse networkResponse = error.networkResponse;
+                        if (networkResponse != null) {
+                            Toast.makeText(getApplicationContext(), new String(networkResponse.data), Toast.LENGTH_LONG).show();
+                        }
                         Log.d(TAG, error.toString());
                     }
                 }

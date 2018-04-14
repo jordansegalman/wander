@@ -10,6 +10,7 @@ import android.widget.EditText;
 import android.widget.Toast;
 
 import com.android.volley.DefaultRetryPolicy;
+import com.android.volley.NetworkResponse;
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.Response;
@@ -52,13 +53,7 @@ public class RegistrationActivity extends AppCompatActivity {
         String password = passwordText.getText().toString();
         String confirmPassword = confirmPasswordText.getText().toString();
 
-        if (!isValidEmail(email)) {
-            Toast.makeText(getApplicationContext(), "Please enter a valid email.", Toast.LENGTH_SHORT).show();
-        } else if (username.length() < 4) {
-            Toast.makeText(getApplicationContext(), "Please enter a username with four or more characters.", Toast.LENGTH_SHORT).show();
-        } else if (password.length() < 8) {
-            Toast.makeText(getApplicationContext(), "Please enter a password with eight or more characters.", Toast.LENGTH_SHORT).show();
-        } else if (!password.equals(confirmPassword)) {
+        if (!password.equals(confirmPassword)) {
             Toast.makeText(getApplicationContext(), "Passwords do not match.", Toast.LENGTH_SHORT).show();
         } else {
             sendPOSTRequest(email, username, password);
@@ -97,7 +92,10 @@ public class RegistrationActivity extends AppCompatActivity {
                 new Response.ErrorListener() {
                     @Override
                     public void onErrorResponse(VolleyError error) {
-                        Toast.makeText(getApplicationContext(), "Error creating account!", Toast.LENGTH_SHORT).show();
+                        NetworkResponse networkResponse = error.networkResponse;
+                        if (networkResponse != null) {
+                            Toast.makeText(getApplicationContext(), new String(networkResponse.data), Toast.LENGTH_LONG).show();
+                        }
                         Log.d(TAG, error.toString());
                     }
                 }

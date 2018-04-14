@@ -7,6 +7,7 @@ import android.util.Log;
 import android.widget.Toast;
 
 import com.android.volley.DefaultRetryPolicy;
+import com.android.volley.NetworkResponse;
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.Response;
@@ -116,8 +117,12 @@ public class GoogleLoginActivity extends AppCompatActivity {
                 new Response.ErrorListener() {
                     @Override
                     public void onErrorResponse(VolleyError error) {
+                        NetworkResponse networkResponse = error.networkResponse;
+                        if (networkResponse != null) {
+                            Toast.makeText(getApplicationContext(), new String(networkResponse.data), Toast.LENGTH_LONG).show();
+                        }
                         Log.d(TAG, error.toString());
-                        Toast.makeText(getApplicationContext(), "Google login failed!", Toast.LENGTH_SHORT).show();
+                        //Toast.makeText(getApplicationContext(), "Google login failed!", Toast.LENGTH_SHORT).show();
                         Intent intent = new Intent(GoogleLoginActivity.this, LoginActivity.class);
                         startActivity(intent);
                     }
