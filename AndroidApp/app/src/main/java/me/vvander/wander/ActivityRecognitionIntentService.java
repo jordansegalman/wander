@@ -1,7 +1,9 @@
 package me.vvander.wander;
 
 import android.app.IntentService;
+import android.app.Notification;
 import android.content.Intent;
+import android.support.v4.app.NotificationCompat;
 import android.util.Log;
 
 import com.google.android.gms.location.ActivityRecognitionResult;
@@ -12,7 +14,15 @@ public class ActivityRecognitionIntentService extends IntentService {
 
     public ActivityRecognitionIntentService() {
         super(TAG);
+        //startForeground(91, notificationForegroundBuilder());
     }
+
+    Notification notificationForegroundBuilder() {
+        NotificationCompat.Builder temp = new NotificationCompat.Builder(this);
+        temp.setOngoing(true).setContentTitle("Working...");
+        return temp.build();
+    }
+
 
     @Override
     protected void onHandleIntent(Intent intent) {

@@ -1,6 +1,7 @@
 package me.vvander.wander;
 
 import android.Manifest;
+import android.app.Notification;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
@@ -11,6 +12,7 @@ import android.location.LocationManager;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.support.v4.app.ActivityCompat;
+import android.support.v4.app.NotificationCompat;
 import android.util.Log;
 
 import com.android.volley.DefaultRetryPolicy;
@@ -46,6 +48,7 @@ public class LocationCollectionService extends Service {
             locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, MINIMUM_TIME, MINIMUM_DISTANCE, locationListeners[0]);
             locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, MINIMUM_TIME, MINIMUM_DISTANCE, locationListeners[1]);
         }
+        startForeground(92, buildForegroundNotification());
     }
 
     @Override
@@ -61,6 +64,7 @@ public class LocationCollectionService extends Service {
 
     @Override
     public void onDestroy() {
+        stopForeground(true);
         super.onDestroy();
         if (locationManager != null) {
             for (CustomLocationListener locationListener : locationListeners) {
@@ -128,5 +132,10 @@ public class LocationCollectionService extends Service {
         @Override
         public void onProviderDisabled(String provider) {
         }
+    }
+    private Notification buildForegroundNotification(){
+        NotificationCompat.Builder temp = new NotificationCompat.Builder(this);
+        temp.setOngoing(true).setContentTitle("Working...");
+        return temp.build();
     }
 }
