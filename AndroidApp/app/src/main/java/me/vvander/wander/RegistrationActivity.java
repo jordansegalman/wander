@@ -4,6 +4,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
+import android.util.Patterns;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.Toast;
@@ -51,7 +52,9 @@ public class RegistrationActivity extends AppCompatActivity {
         String password = passwordText.getText().toString();
         String confirmPassword = confirmPasswordText.getText().toString();
 
-        if (username.length() < 4) {
+        if (!isValidEmail(email)) {
+            Toast.makeText(getApplicationContext(), "Please enter a valid email.", Toast.LENGTH_SHORT).show();
+        } else if (username.length() < 4) {
             Toast.makeText(getApplicationContext(), "Please enter a username with four or more characters.", Toast.LENGTH_SHORT).show();
         } else if (password.length() < 8) {
             Toast.makeText(getApplicationContext(), "Please enter a password with eight or more characters.", Toast.LENGTH_SHORT).show();
@@ -60,6 +63,10 @@ public class RegistrationActivity extends AppCompatActivity {
         } else {
             sendPOSTRequest(email, username, password);
         }
+    }
+
+    private boolean isValidEmail(CharSequence email) {
+        return Patterns.EMAIL_ADDRESS.matcher(email).matches();
     }
 
     private void sendPOSTRequest(String email, String username, String password) {
