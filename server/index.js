@@ -287,24 +287,24 @@ app.post('/registerAccount', function(request, response) {
 
 	// POST request must have 3 parameters (username, password, and email)
 	if (Object.keys(request.body).length != 3 || !request.body.username || !request.body.password || !request.body.email) {
-		return response.status(400).send("Invalid POST request\n");
+		return response.status(400).send("Please enter an email, a username, and a password.");
 	}
 
 	// Validate username, password, and email
 	if (validateUsername(request.body.username)) {
 		var u = request.body.username;
 	} else {
-		return response.status(400).send("Username must be alphanumeric and have a minimum length of 4 characters and a maximum length of 24 characters.\n");
+		return response.status(400).send("Username must be alphanumeric and have a minimum length of 4 characters and a maximum length of 24 characters.");
 	}
 	if (validatePassword(request.body.password)) {
 		var p = request.body.password;
 	} else {
-		return response.status(400).send("Password must only contain ASCII characters and must have a minimum length of 8 characters and a maximum length of 64 characters.\n");
+		return response.status(400).send("Password must only contain ASCII characters and must have a minimum length of 8 characters and a maximum length of 64 characters.");
 	}
 	if (validateEmail(request.body.email)) {
 		var e = normalizeEmail(request.body.email);
 	} else {
-		return response.status(400).send("Email must be valid and have a minimum length of 3 characters and a maximum length of 255 characters.\n");
+		return response.status(400).send("Email must be valid and have a minimum length of 3 characters and a maximum length of 255 characters.");
 	}
 
 	register(u, p, e, response);
@@ -317,24 +317,24 @@ app.post('/login', function(request, response) {
 
 	// POST request must have 2 parameters (username and password)
 	if (Object.keys(request.body).length != 2 || !request.body.username || !request.body.password) {
-		return response.status(400).send("Invalid POST request\n");
+		return response.status(400).send("Invalid POST request");
 	}
 
 	// If session already authenticated
 	if (request.session && ((request.session.authenticated && request.session.authenticated === true) || (request.session.googleAuthenticated && request.session.googleAuthenticated === true) || (request.session.facebookAuthenticated && request.session.facebookAuthenticated === true))) {
-		return response.status(400).send("User already logged in.\n");
+		return response.status(400).send("User already logged in.");
 	}
 
 	// Validate username and password
 	if (validateUsername(request.body.username)) {
 		var u = request.body.username;
 	} else {
-		return response.status(400).send("Invalid username or password.\n");
+		return response.status(400).send("Invalid username or password.");
 	}
 	if (validatePassword(request.body.password)) {
 		var p = request.body.password;
 	} else {
-		return response.status(400).send("Invalid username or password.\n");
+		return response.status(400).send("Invalid username or password.");
 	}
 
 	login(u, p, request, response);
@@ -347,12 +347,12 @@ app.post('/googleLogin', function(request, response) {
 
 	// POST request must have 2 parameters (googleID and email)
 	if (Object.keys(request.body).length != 2 || !request.body.googleID || !request.body.email) {
-		return response.status(400).send("Invalid POST request\n");
+		return response.status(400).send("Invalid POST request");
 	}
 
 	// If session already authenticated
 	if (request.session && ((request.session.authenticated && request.session.authenticated === true) || (request.session.googleAuthenticated && request.session.googleAuthenticated === true) || (request.session.facebookAuthenticated && request.session.facebookAuthenticated === true))) {
-		return response.status(400).send("User already logged in.\n");
+		return response.status(400).send("User already logged in.");
 	}
 
 	var id = request.body.googleID;
@@ -360,7 +360,7 @@ app.post('/googleLogin', function(request, response) {
 	if (validateEmail(request.body.email)) {
 		var e = normalizeEmail(request.body.email);
 	} else {
-		return response.status(400).send("Email must be valid and have a minimum length of 3 characters and a maximum length of 255 characters.\n");
+		return response.status(400).send("Email must be valid and have a minimum length of 3 characters and a maximum length of 255 characters.");
 	}
 
 	googleLogin(id, e, request, response);
@@ -373,12 +373,12 @@ app.post('/facebookLogin', function(request, response) {
 
 	// POST request must have 2 parameters (facebookID and email)
 	if (Object.keys(request.body).length != 2 || !request.body.facebookID || !request.body.email) {
-		return response.status(400).send("Invalid POST request\n");
+		return response.status(400).send("Invalid POST request");
 	}
 
 	// If session already authenticated
 	if (request.session && ((request.session.authenticated && request.session.authenticated === true) || (request.session.googleAuthenticated && request.session.googleAuthenticated === true) || (request.session.facebookAuthenticated && request.session.facebookAuthenticated === true))) {
-		return response.status(400).send("User already logged in.\n");
+		return response.status(400).send("User already logged in.");
 	}
 
 	var id = request.body.facebookID;
@@ -386,7 +386,7 @@ app.post('/facebookLogin', function(request, response) {
 	if (validateEmail(request.body.email)) {
 		var e = normalizeEmail(request.body.email);
 	} else {
-		return response.status(400).send("Email must be valid and have a minimum length of 3 characters and a maximum length of 255 characters.\n");
+		return response.status(400).send("Email must be valid and have a minimum length of 3 characters and a maximum length of 255 characters.");
 	}
 
 	facebookLogin(id, e, request, response);
@@ -399,12 +399,12 @@ app.post('/logout', function(request, response) {
 
 	// POST request must have 0 parameters
 	if (Object.keys(request.body).length != 0) {
-		return response.status(400).send("Invalid POST request\n");
+		return response.status(400).send("Invalid POST request");
 	}
 
 	// If session not authenticated
 	if (!request.session || ((!request.session.authenticated || request.session.authenticated === false) && (!request.session.googleAuthenticated || request.session.googleAuthenticated === false) && (!request.session.facebookAuthenticated || request.session.facebookAuthenticated === false))) {
-		return response.status(400).send("User not logged in.\n");
+		return response.status(400).send("User not logged in.");
 	}
 
 	logout(request, response);
@@ -417,7 +417,7 @@ app.post('/verifySession', function(request, response) {
 
 	// POST request must have 0 parameters
 	if (Object.keys(request.body).length != 0) {
-		return response.status(400).send("Invalid POST request\n");
+		return response.status(400).send("Invalid POST request");
 	}
 
 	// If session not authenticated
@@ -441,19 +441,19 @@ app.post('/deleteAccount', function(request, response) {
 
 	// POST request must have 1 parameter (password)
 	if (Object.keys(request.body).length != 1 || !request.body.password) {
-		return response.status(400).send("Invalid POST request\n");
+		return response.status(400).send("Invalid POST request");
 	}
 
 	// If session not authenticated
 	if (!request.session || !request.session.authenticated || request.session.authenticated === false) {
-		return response.status(400).send("User not logged in.\n");
+		return response.status(400).send("User not logged in.");
 	}
 
 	// Validate password
 	if (validatePassword(request.body.password)) {
 		var p = request.body.password;
 	} else {
-		return response.status(400).send("Invalid password.\n");
+		return response.status(400).send("Invalid password.");
 	}
 
 	deleteAccount(p, request, response);
@@ -466,12 +466,12 @@ app.post('/googleDeleteAccount', function(request, response) {
 
 	// POST request must have 0 parameters
 	if (Object.keys(request.body).length != 0) {
-		return response.status(400).send("Invalid POST request\n");
+		return response.status(400).send("Invalid POST request");
 	}
 
 	// If session not authenticated
 	if (!request.session || !request.session.googleAuthenticated || request.session.googleAuthenticated === false) {
-		return response.status(400).send("User not logged in.\n");
+		return response.status(400).send("User not logged in.");
 	}
 
 	googleDeleteAccount(request, response);
@@ -484,12 +484,12 @@ app.post('/facebookDeleteAccount', function(request, response) {
 
 	// POST request must have 0 parameters
 	if (Object.keys(request.body).length != 0) {
-		return response.status(400).send("Invalid POST request\n");
+		return response.status(400).send("Invalid POST request");
 	}
 
 	// If session not authenticated
 	if (!request.session || !request.session.facebookAuthenticated || request.session.facebookAuthenticated === false) {
-		return response.status(400).send("User not logged in.\n");
+		return response.status(400).send("User not logged in.");
 	}
 
 	facebookDeleteAccount(request, response);
@@ -506,7 +506,7 @@ app.get('/confirmEmail', function(request, response) {
 	if (validateEmail(request.query.email)) {
 		var e = normalizeEmail(request.query.email);
 	} else {
-		return response.status(400).send("Invalid email.\n");
+		return response.status(400).send("Invalid email.");
 	}
 
 	// Update account confirmed to true
@@ -530,24 +530,24 @@ app.post('/changeUsername', function(request, response) {
 
 	// POST request must have 2 parameters (password and newUsername)
 	if (Object.keys(request.body).length != 2 || !request.body.password || !request.body.newUsername) {
-		return response.status(400).send("Invalid POST request\n");
+		return response.status(400).send("Invalid POST request");
 	}
 
 	// If session not authenticated
 	if (!request.session || !request.session.authenticated || request.session.authenticated === false) {
-		return response.status(400).send("User not logged in.\n");
+		return response.status(400).send("User not logged in.");
 	}
 
 	// Validate password and newUsername
 	if (validatePassword(request.body.password)) {
 		var p = request.body.password;
 	} else {
-		return response.status(400).send("Invalid password.\n");
+		return response.status(400).send("Invalid password.");
 	}
 	if (validateUsername(request.body.newUsername)) {
 		var n = request.body.newUsername;
 	} else {
-		return response.status(400).send("New username must be alphanumeric and have a minimum length of 4 characters and a maximum length of 24 characters.\n");
+		return response.status(400).send("New username must be alphanumeric and have a minimum length of 4 characters and a maximum length of 24 characters.");
 	}
 
 	changeUsername(p, n, request, response);
@@ -560,24 +560,24 @@ app.post('/changePassword', function(request, response) {
 
 	// POST request must have 2 parameters (password and newPassword)
 	if (Object.keys(request.body).length != 2 || !request.body.password || !request.body.newPassword) {
-		return response.status(400).send("Invalid POST request\n");
+		return response.status(400).send("Invalid POST request");
 	}
 
 	// If session not authenticated
 	if (!request.session || !request.session.authenticated || request.session.authenticated === false) {
-		return response.status(400).send("User not logged in.\n");
+		return response.status(400).send("User not logged in.");
 	}
 
 	// Validate password and newPassword
 	if (validatePassword(request.body.password)) {
 		var p = request.body.password;
 	} else {
-		return response.status(400).send("Invalid password.\n");
+		return response.status(400).send("Invalid password.");
 	}
 	if (validatePassword(request.body.newPassword)) {
 		var n = request.body.newPassword;
 	} else {
-		return response.status(400).send("New password must only contain ASCII characters and must have a minimum length of 8 characters and a maximum length of 64 characters.\n");
+		return response.status(400).send("New password must only contain ASCII characters and must have a minimum length of 8 characters and a maximum length of 64 characters.");
 	}
 
 	changePassword(p, n, request, response);
@@ -590,24 +590,24 @@ app.post('/changeEmail', function(request, response) {
 
 	// POST request must have 2 parameters (password and newEmail)
 	if (Object.keys(request.body).length != 2 || !request.body.password || !request.body.newEmail) {
-		return response.status(400).send("Invalid POST request\n");
+		return response.status(400).send("Invalid POST request");
 	}
 
 	// If session not authenticated
 	if (!request.session || !request.session.authenticated || request.session.authenticated === false) {
-		return response.status(400).send("User not logged in.\n");
+		return response.status(400).send("User not logged in.");
 	}
 
 	// Validate password and newEmail
 	if (validatePassword(request.body.password)) {
 		var p = request.body.password;
 	} else {
-		return response.status(400).send("Invalid password.\n");
+		return response.status(400).send("Invalid password.");
 	}
 	if (validateEmail(request.body.newEmail)) {
 		var n = normalizeEmail(request.body.newEmail);
 	} else {
-		return response.status(400).send("New email must be valid and have a minimum length of 3 characters and a maximum length of 255 characters.\n");
+		return response.status(400).send("New email must be valid and have a minimum length of 3 characters and a maximum length of 255 characters.");
 	}
 
 	changeEmail(p, n, request, response);
@@ -620,19 +620,19 @@ app.post('/changeCrossRadius', function(request, response) {
 
 	// POST request must have 1 parameter (newCrossRadius)
 	if (Object.keys(request.body).length != 1 || !request.body.newCrossRadius) {
-		return response.status(400).send("Invalid POST request\n");
+		return response.status(400).send("Invalid POST request");
 	}
 
 	// If session not authenticated
 	if (!request.session || ((!request.session.authenticated || request.session.authenticated === false) && (!request.session.googleAuthenticated || request.session.googleAuthenticated === false) && (!request.session.facebookAuthenticated || request.session.facebookAuthenticated === false))) {
-		return response.status(400).send("User not logged in.\n");
+		return response.status(400).send("User not logged in.");
 	}
 
 	// Validate newCrossRadius
 	if (validateCrossRadius(request.body.newCrossRadius)) {
 		var n = request.body.newCrossRadius;
 	} else {
-		return response.status(400).send("Cross radius must be an integer with a minimum of 10 and a maximum of 5280.\n");
+		return response.status(400).send("Cross radius must be an integer with a minimum of 10 and a maximum of 5280.");
 	}
 
 	changeCrossRadius(n, request, response);
@@ -645,12 +645,12 @@ app.post('/getCrossRadius', function(request, response) {
 
 	// POST request must have 0 parameters
 	if (Object.keys(request.body).length != 0) {
-		return response.status(400).send("Invalid POST request\n");
+		return response.status(400).send("Invalid POST request");
 	}
 
 	// If session not authenticated
 	if (!request.session || ((!request.session.authenticated || request.session.authenticated === false) && (!request.session.googleAuthenticated || request.session.googleAuthenticated === false) && (!request.session.facebookAuthenticated || request.session.facebookAuthenticated === false))) {
-		return response.status(400).send("User not logged in.\n");
+		return response.status(400).send("User not logged in.");
 	}
 
 	getCrossRadius(request, response);
@@ -663,19 +663,19 @@ app.post('/forgotPassword', function(request, response) {
 
 	// POST request must have 2 parameters (username and email)
 	if (Object.keys(request.body).length != 2 || !request.body.username || !request.body.email) {
-		return response.status(400).send("Invalid POST request\n");
+		return response.status(400).send("Invalid POST request");
 	}
 
 	// Validate username and email
 	if (validateUsername(request.body.username)) {
 		var u = request.body.username;
 	} else {
-		return response.status(400).send("Invalid username.\n");
+		return response.status(400).send("Invalid username.");
 	}
 	if (validateEmail(request.body.email)) {
 		var e = normalizeEmail(request.body.email);
 	} else {
-		return response.status(400).send("Invalid email.\n");
+		return response.status(400).send("Invalid email.");
 	}
 
 	forgotPassword(u, e, response);
@@ -698,30 +698,30 @@ app.post('/resetPassword', function(request, response) {
 
 	// POST request must have 2 parameters (inputNewPassword and inputConfirmPassword)
 	if (Object.keys(request.body).length != 2 || !request.body.inputNewPassword || !request.body.inputConfirmPassword) {
-		return response.status(400).send("Invalid POST request\n");
+		return response.status(400).send("Invalid POST request");
 	}
 
 	// POST request must have 1 query (token)
 	if (Object.keys(request.query).length != 1 || !request.query.token) {
-		return response.status(400).send("Invalid POST request\n");
+		return response.status(400).send("Invalid POST request");
 	}
 
 	// Validate token, inputNewPassword, and inputConfirmPassword
 	if (validatePasswordResetToken(request.query.token)) {
 		var token = request.query.token;
 	} else {
-		return response.status(400).send("Invalid password reset token.\n");
+		return response.status(400).send("Invalid password reset token.");
 	}
 	if (validatePassword(request.body.inputNewPassword) && validatePassword(request.body.inputConfirmPassword)) {
 		var newPassword = request.body.inputNewPassword;
 		var confirmPassword = request.body.inputConfirmPassword;
 	} else {
-		return response.status(400).send("New password must only contain ASCII characters and must have a minimum length of 8 characters and a maximum length of 64 characters.\n");
+		return response.status(400).send("New password must only contain ASCII characters and must have a minimum length of 8 characters and a maximum length of 64 characters.");
 	}
 
 	// Check that newPassword and confirmPassword are the same
 	if (newPassword != confirmPassword) {
-		return response.status(400).send("Passwords did not match.\n");
+		return response.status(400).send("Passwords did not match.");
 	}
 
 	resetPassword(token, newPassword, confirmPassword, response);
@@ -734,12 +734,12 @@ app.post('/addFirebaseRegistrationToken', function(request, response) {
 
 	// POST request must have 1 parameter (firebaseRegistrationToken)
 	if (Object.keys(request.body).length != 1 || !request.body.firebaseRegistrationToken) {
-		return response.status(400).send("Invalid POST request\n");
+		return response.status(400).send("Invalid POST request");
 	}
 
 	// If session not authenticated
 	if (!request.session || ((!request.session.authenticated || request.session.authenticated === false) && (!request.session.googleAuthenticated || request.session.googleAuthenticated === false) && (!request.session.facebookAuthenticated || request.session.facebookAuthenticated === false))) {
-		return response.status(400).send("User not logged in.\n");
+		return response.status(400).send("User not logged in.");
 	}
 
 	var token = request.body.firebaseRegistrationToken;
@@ -759,14 +759,14 @@ app.post('/updateLinkedIn', function(request, response) {
 
 	// POST request must have 3 parameters (email, name, and about)
 	if (Object.keys(request.body).length != 3 || !request.body.email || !request.body.name || !request.body.about) {
-		return response.status(400).send("Invalid POST request\n");
+		return response.status(400).send("Invalid POST request");
 	}
 
 	// Validate email
 	if (validateEmail(request.body.email)) {
 		var e = normalizeEmail(request.body.email);
 	} else {
-		return response.status(400).send("Email must be valid and have a minimum length of 3 characters and a maximum length of 255 characters.\n");
+		return response.status(400).send("Email must be valid and have a minimum length of 3 characters and a maximum length of 255 characters.");
 	}
 	var n = request.body.name;
 	var a = request.body.about;
@@ -781,12 +781,12 @@ app.post('/updateProfile', function(request, response){
 
 	// POST request must have 4 parameters (name, about, interests, and picture)
 	if (Object.keys(request.body).length != 4 || !request.body.name || !request.body.about || !request.body.interests || !request.body.picture) {
-		return response.status(400).send("Invalid POST request\n");
+		return response.status(400).send("Invalid POST request");
 	}
 
 	// If session not authenticated
 	if (!request.session || ((!request.session.authenticated || request.session.authenticated === false) && (!request.session.googleAuthenticated || request.session.googleAuthenticated === false) && (!request.session.facebookAuthenticated || request.session.facebookAuthenticated === false))) {
-		return response.status(400).send("User not logged in.\n");
+		return response.status(400).send("User not logged in.");
 	}
 
 	var n = request.body.name;
@@ -804,12 +804,12 @@ app.post('/getProfile', function(request, response) {
 
 	// POST request must have 0 parameters
 	if (Object.keys(request.body).length != 0) {
-		return response.status(400).send("Invalid POST request\n");
+		return response.status(400).send("Invalid POST request");
 	}
 
 	// If session not authenticated
 	if (!request.session || ((!request.session.authenticated || request.session.authenticated === false) && (!request.session.googleAuthenticated || request.session.googleAuthenticated === false) && (!request.session.facebookAuthenticated || request.session.facebookAuthenticated === false))) {
-		return response.status(400).send("User not logged in.\n");
+		return response.status(400).send("User not logged in.");
 	}
 
 	getProfile(request, response);
@@ -822,12 +822,12 @@ app.post('/updateLocation', function(request, response){
 
 	// POST request must have 2 parameters (latitude and longitude)
 	if (Object.keys(request.body).length != 2 || !request.body.latitude || !request.body.longitude) {
-		return response.status(400).send("Invalid POST request\n");
+		return response.status(400).send("Invalid POST request");
 	}
 
 	// If session not authenticated
 	if (!request.session || ((!request.session.authenticated || request.session.authenticated === false) && (!request.session.googleAuthenticated || request.session.googleAuthenticated === false) && (!request.session.facebookAuthenticated || request.session.facebookAuthenticated === false))) {
-		return response.status(400).send("User not logged in.\n");
+		return response.status(400).send("User not logged in.");
 	}
 
 	// Validate coordinates
@@ -835,7 +835,7 @@ app.post('/updateLocation', function(request, response){
 		var lat = request.body.latitude;
 		var lon = request.body.longitude;
 	} else {
-		return response.status(400).send("Invalid coordinates.\n");
+		return response.status(400).send("Invalid coordinates.");
 	}
 
 	updateLocation(lat, lon, request, response);
@@ -848,19 +848,19 @@ app.post('/approveUser', function(request, response){
 
 	// POST request must have 1 parameter (uid)
 	if (Object.keys(request.body).length != 1 || !request.body.uid) {
-		return response.status(400).send("Invalid POST request\n");
+		return response.status(400).send("Invalid POST request");
 	}
 
 	// If session not authenticated
 	if (!request.session || ((!request.session.authenticated || request.session.authenticated === false) && (!request.session.googleAuthenticated || request.session.googleAuthenticated === false) && (!request.session.facebookAuthenticated || request.session.facebookAuthenticated === false))) {
-		return response.status(400).send("User not logged in.\n");
+		return response.status(400).send("User not logged in.");
 	}
 
 	// Validate uid
 	if (validateUid(request.body.uid)) {
 		var u = request.body.uid;
 	} else {
-		return response.status(400).send("Invalid user ID.\n");
+		return response.status(400).send("Invalid user ID.");
 	}
 
 	approveUser(u, request, response);
@@ -873,19 +873,19 @@ app.post('/unapproveUser', function(request, response){
 
 	// POST request must have 1 parameter (uid)
 	if (Object.keys(request.body).length != 1 || !request.body.uid) {
-		return response.status(400).send("Invalid POST request\n");
+		return response.status(400).send("Invalid POST request");
 	}
 
 	// If session not authenticated
 	if (!request.session || ((!request.session.authenticated || request.session.authenticated === false) && (!request.session.googleAuthenticated || request.session.googleAuthenticated === false) && (!request.session.facebookAuthenticated || request.session.facebookAuthenticated === false))) {
-		return response.status(400).send("User not logged in.\n");
+		return response.status(400).send("User not logged in.");
 	}
 
 	// Validate uid
 	if (validateUid(request.body.uid)) {
 		var u = request.body.uid;
 	} else {
-		return response.status(400).send("Invalid user ID.\n");
+		return response.status(400).send("Invalid user ID.");
 	}
 
 	unapproveUser(u, request, response);
@@ -898,12 +898,12 @@ app.post('/getLocationForHeatmap', function(request, response){
 
 	// POST request must have 0 parameters
 	if (Object.keys(request.body).length != 0) {
-		return response.status(400).send("Invalid POST request\n");
+		return response.status(400).send("Invalid POST request");
 	}
 
 	// If session not autheticated
 	if (!request.session || ((!request.session.authenticated || request.session.authenticated === false) && (!request.session.googleAuthenticated || request.session.googleAuthenticated === false) && (!request.session.facebookAuthenticated || request.session.facebookAuthenticated === false))) {
-		return response.status(400).send("User not logged in.\n");
+		return response.status(400).send("User not logged in.");
 	}
 
 	getLocationForHeatmap(request, response);
@@ -916,12 +916,12 @@ app.post('/getAllLocationsForHeatmap', function(request, response){
 
 	// POST request must have 0 parameters
 	if (Object.keys(request.body).length != 0) {
-		return response.status(400).send("Invalid POST request\n");
+		return response.status(400).send("Invalid POST request");
 	}
 
 	// If session not autheticated
 	if (!request.session || ((!request.session.authenticated || request.session.authenticated === false) && (!request.session.googleAuthenticated || request.session.googleAuthenticated === false) && (!request.session.facebookAuthenticated || request.session.facebookAuthenticated === false))) {
-		return response.status(400).send("User not logged in.\n");
+		return response.status(400).send("User not logged in.");
 	}
 
 	getAllLocationsForHeatmap(request, response);
@@ -934,12 +934,12 @@ app.post('/getAllMatches', function(request, response){
 
 	// POST request must have 0 parameters
 	if (Object.keys(request.body).length != 0) {
-		return response.status(400).send("Invalid POST request\n");
+		return response.status(400).send("Invalid POST request");
 	}
 
 	// If session not authenticated
 	if (!request.session || ((!request.session.authenticated || request.session.authenticated === false) && (!request.session.googleAuthenticated || request.session.googleAuthenticated === false) && (!request.session.facebookAuthenticated || request.session.facebookAuthenticated === false))) {
-		return response.status(400).send("User not logged in.\n");
+		return response.status(400).send("User not logged in.");
 	}
 
 	getAllMatches(request, response);
@@ -952,19 +952,19 @@ app.post('/getMatch', function(request, response){
 
 	// POST request must have 1 parameter (uid)
 	if (Object.keys(request.body).length != 1 || !request.body.uid) {
-		return response.status(400).send("Invalid POST request\n");
+		return response.status(400).send("Invalid POST request");
 	}
 
 	// If session not authenticated
 	if (!request.session || ((!request.session.authenticated || request.session.authenticated === false) && (!request.session.googleAuthenticated || request.session.googleAuthenticated === false) && (!request.session.facebookAuthenticated || request.session.facebookAuthenticated === false))) {
-		return response.status(400).send("User not logged in.\n");
+		return response.status(400).send("User not logged in.");
 	}
 
 	// Validate uid
 	if (validateUid(request.body.uid)) {
 		var u = request.body.uid;
 	} else {
-		return response.status(400).send("Invalid user ID.\n");
+		return response.status(400).send("Invalid user ID.");
 	}
 
 	getMatch(u, request, response);
@@ -977,19 +977,19 @@ app.post('/getCrossLocations', function(request, response){
 
 	// POST request must have 1 parameter (uid)
 	if (Object.keys(request.body).length != 1 || !request.body.uid) {
-		return response.status(400).send("Invalid POST request\n");
+		return response.status(400).send("Invalid POST request");
 	}
 
 	// If session not authenticated
 	if (!request.session || ((!request.session.authenticated || request.session.authenticated === false) && (!request.session.googleAuthenticated || request.session.googleAuthenticated === false) && (!request.session.facebookAuthenticated || request.session.facebookAuthenticated === false))) {
-		return response.status(400).send("User not logged in.\n");
+		return response.status(400).send("User not logged in.");
 	}
 
 	// Validate uid
 	if (validateUid(request.body.uid)) {
 		var u = request.body.uid;
 	} else {
-		return response.status(400).send("Invalid user ID.\n");
+		return response.status(400).send("Invalid user ID.");
 	}
 
 	getCrossLocations(u, request, response);
@@ -1002,19 +1002,19 @@ app.post('/getMessages', function(request, response){
 
 	// POST request must have 1 parameter (uid)
 	if (Object.keys(request.body).length != 1 || !request.body.uid) {
-		return response.status(400).send("Invalid POST request\n");
+		return response.status(400).send("Invalid POST request");
 	}
 
 	// If session not authenticated
 	if (!request.session || ((!request.session.authenticated || request.session.authenticated === false) && (!request.session.googleAuthenticated || request.session.googleAuthenticated === false) && (!request.session.facebookAuthenticated || request.session.facebookAuthenticated === false))) {
-		return response.status(400).send("User not logged in.\n");
+		return response.status(400).send("User not logged in.");
 	}
 
 	// Validate uid
 	if (validateUid(request.body.uid)) {
 		var u = request.body.uid;
 	} else {
-		return response.status(400).send("Invalid user ID.\n");
+		return response.status(400).send("Invalid user ID.");
 	}
 
 	getMessages(u, request, response);
@@ -1028,12 +1028,12 @@ app.post('/storeTagData', function(request, response){
 
 	// POST request must have 1 parameter (uid)
 	if (Object.keys(request.body).length == 0) {
-		return response.status(400).send("Invalid POST request\n");
+		return response.status(400).send("Invalid POST request");
 	}
 
 	// If session not authenticated
 	if (!request.session || ((!request.session.authenticated || request.session.authenticated === false) && (!request.session.googleAuthenticated || request.session.googleAuthenticated === false) && (!request.session.facebookAuthenticated || request.session.facebookAuthenticated === false))) {
-		return response.status(400).send("User not logged in.\n");
+		return response.status(400).send("User not logged in.");
 	}
 
 	storeTagData(request, response);
@@ -1047,12 +1047,12 @@ app.post('/getTagData', function(request, response){
 
 	// POST request must have 1 parameter (uid)
 	if (Object.keys(request.body).length != 0) {
-		return response.status(400).send("Invalid POST request\n");
+		return response.status(400).send("Invalid POST request");
 	}
 
 	// If session not authenticated
 	if (!request.session || ((!request.session.authenticated || request.session.authenticated === false) && (!request.session.googleAuthenticated || request.session.googleAuthenticated === false) && (!request.session.facebookAuthenticated || request.session.facebookAuthenticated === false))) {
-		return response.status(400).send("User not logged in.\n");
+		return response.status(400).send("User not logged in.");
 	}
 
 	getTagData(request, response);
@@ -1065,12 +1065,12 @@ app.post('/deleteTagData', function(request, response){
 
 	// POST request must have 1 parameter (uid)
 	if (Object.keys(request.body).length == 0) {
-		return response.status(400).send("Invalid POST request\n");
+		return response.status(400).send("Invalid POST request");
 	}
 
 	// If session not authenticated
 	if (!request.session || ((!request.session.authenticated || request.session.authenticated === false) && (!request.session.googleAuthenticated || request.session.googleAuthenticated === false) && (!request.session.facebookAuthenticated || request.session.facebookAuthenticated === false))) {
-		return response.status(400).send("User not logged in.\n");
+		return response.status(400).send("User not logged in.");
 	}
 
 	deleteTagData(request, response);
@@ -1083,12 +1083,12 @@ app.post('/getMatchTagData', function(request, response){
 
 	// POST request must have 1 parameter (uid)
 	if (Object.keys(request.body).length != 0) {
-		return response.status(400).send("Invalid POST request\n");
+		return response.status(400).send("Invalid POST request");
 	}
 
 	// If session not authenticated
 	if (!request.session || ((!request.session.authenticated || request.session.authenticated === false) && (!request.session.googleAuthenticated || request.session.googleAuthenticated === false) && (!request.session.facebookAuthenticated || request.session.facebookAuthenticated === false))) {
-		return response.status(400).send("User not logged in.\n");
+		return response.status(400).send("User not logged in.");
 	}
 
 	getMatchTagData(request, response);
@@ -1207,7 +1207,7 @@ function login(u, p, request, response) {
 	dbConnection.query(sql, post, function(err, result) {
 		if (err) throw err;
 		if (result.length != 1) {
-			return response.status(400).send("Invalid username or password. Try again.\n");
+			return response.status(400).send("Invalid username or password. Try again.");
 		} else {
 			// Compare sent password hash to account password hash
 			bcrypt.compare(p, result[0].password, function(err, res) {
@@ -1219,7 +1219,7 @@ function login(u, p, request, response) {
 					console.log("User logged in.");
 					return response.status(200).send(JSON.stringify({"response":"pass","uid":request.session.uid}));
 				} else {
-					return response.status(400).send("Invalid username or password. Try again.\n");
+					return response.status(400).send("Invalid username or password. Try again.");
 				}
 			});
 		}
@@ -1240,7 +1240,7 @@ function googleLogin(id, e, request, response) {
 			dbConnection.query(sql, post, function(err, result) {
 				if (err) throw err;
 				if (result.length != 0) {
-					return response.status(400).send("Email already exists!\n");
+					return response.status(400).send("Email already exists!");
 				} else {
 					var userID = crypto.randomBytes(8).toString('hex');
 					// Check if user ID already exists
@@ -1249,7 +1249,7 @@ function googleLogin(id, e, request, response) {
 					dbConnection.query(sql, post, function(err, result) {
 						if (err) throw err;
 						if (result.length != 0) {
-							return response.status(500).send("User ID collision!\n");
+							return response.status(500).send("User ID collision!");
 						} else {
 							// Create account in accounts table
 							var sql = "INSERT INTO ?? SET ?";
@@ -1311,7 +1311,7 @@ function googleLogin(id, e, request, response) {
 				});
 			}
 		} else {
-			return response.status(500).send("Error with Google login.\n");
+			return response.status(500).send("Error with Google login.");
 		}
 	});
 }
@@ -1330,7 +1330,7 @@ function facebookLogin(id, e, request, response) {
 			dbConnection.query(sql, post, function(err, result) {
 				if (err) throw err;
 				if (result.length != 0) {
-					return response.status(400).send("Email already exists!\n");
+					return response.status(400).send("Email already exists!");
 				} else {
 					var userID = crypto.randomBytes(8).toString('hex');
 					// Check if user ID already exists
@@ -1339,7 +1339,7 @@ function facebookLogin(id, e, request, response) {
 					dbConnection.query(sql, post, function(err, result) {
 						if (err) throw err;
 						if (result.length != 0) {
-							return response.status(500).send("User ID collision!\n");
+							return response.status(500).send("User ID collision!");
 						} else {
 							// Create account in accounts table
 							var sql = "INSERT INTO ?? SET ?";
@@ -1401,7 +1401,7 @@ function facebookLogin(id, e, request, response) {
 				});
 			}
 		} else {
-			return response.status(500).send("Error with Facebook login.\n");
+			return response.status(500).send("Error with Facebook login.");
 		}
 	});
 }
@@ -1431,12 +1431,12 @@ function deleteAccount(p, request, response) {
 	dbConnection.query(sql, post, function(err, result) {
 		if (err) throw err;
 		if (result.length != 1) {
-			return response.status(500).send("User ID not found.\n");
+			return response.status(500).send("User ID not found.");
 		} else {
 			// Compare sent password hash to account password hash
 			bcrypt.compare(p, result[0].password, function(err, res) {
 				if (res !== true) {
-					return response.status(400).send("Invalid password. Try again.\n");
+					return response.status(400).send("Invalid password. Try again.");
 				} else {
 					// Delete account for user ID
 					var sql = "DELETE FROM ?? WHERE ??=?";
@@ -1482,9 +1482,9 @@ function deleteAccount(p, request, response) {
 							});
 						} else if (result.affectedRows > 1) {
 							// For testing purposes only
-							return reponse.status(500).send("Error deleted multiple accounts.\n");
+							return reponse.status(500).send("Error deleted multiple accounts.");
 						} else if (result.affectedRows == 0) {
-							return response.status(500).send("Failed to delete account.\n");
+							return response.status(500).send("Failed to delete account.");
 						}
 					});
 				}
@@ -1501,7 +1501,7 @@ function googleDeleteAccount(request, response) {
 	dbConnection.query(sql, post, function(err, result) {
 		if (err) throw err;
 		if (result.length != 1) {
-			return response.status(500).send("User ID not found.\n");
+			return response.status(500).send("User ID not found.");
 		} else {
 			// Delete account for user ID
 			var sql = "DELETE FROM ?? WHERE ??=?";
@@ -1547,9 +1547,9 @@ function googleDeleteAccount(request, response) {
 					});
 				} else if (result.affectedRows > 1) {
 					// For testing purposes only
-					return reponse.status(500).send("Error deleted multiple accounts.\n");
+					return reponse.status(500).send("Error deleted multiple accounts.");
 				} else if (result.affectedRows == 0) {
-					return response.status(500).send("Failed to delete account.\n");
+					return response.status(500).send("Failed to delete account.");
 				}
 			});
 		}
@@ -1564,7 +1564,7 @@ function facebookDeleteAccount(request, response) {
 	dbConnection.query(sql, post, function(err, result) {
 		if (err) throw err;
 		if (result.length != 1) {
-			return response.status(500).send("User ID not found.\n");
+			return response.status(500).send("User ID not found.");
 		} else {
 			// Delete account for user ID
 			var sql = "DELETE FROM ?? WHERE ??=?";
@@ -1610,9 +1610,9 @@ function facebookDeleteAccount(request, response) {
 					});
 				} else if (result.affectedRows > 1) {
 					// For testing purposes only
-					return reponse.status(500).send("Error deleted multiple accounts.\n");
+					return reponse.status(500).send("Error deleted multiple accounts.");
 				} else if (result.affectedRows == 0) {
-					return response.status(500).send("Failed to delete account.\n");
+					return response.status(500).send("Failed to delete account.");
 				}
 			});
 		}
@@ -1627,7 +1627,7 @@ function changeUsername(p, n, request, response) {
 	dbConnection.query(sql, post, function(err, result) {
 		if (err) throw err;
 		if (result.length != 0) {
-			return response.status(400).send("Username already exists! Try again.\n");
+			return response.status(400).send("Username already exists! Try again.");
 		} else {
 			// Get password hash for user ID
 			var sql = "SELECT ?? FROM ?? WHERE ??=?";
@@ -1635,12 +1635,12 @@ function changeUsername(p, n, request, response) {
 			dbConnection.query(sql, post, function(err, result) {
 				if (err) throw err;
 				if (result.length != 1) {
-					return response.status(500).send("User ID not found.\n");
+					return response.status(500).send("User ID not found.");
 				} else {
 					// Compare sent password hash to account password hash
 					bcrypt.compare(p, result[0].password, function(err, res) {
 						if (res !== true) {
-							return response.status(400).send("Invalid password. Try again.\n");
+							return response.status(400).send("Invalid password. Try again.");
 						} else {
 							// Update username for user ID
 							var sql = "UPDATE ?? SET ??=? WHERE ??=?";
@@ -1662,9 +1662,9 @@ function changeUsername(p, n, request, response) {
 									return response.status(200).send(JSON.stringify({"response":"pass"}));
 								} else if (result.affectedRows > 1) {
 									// For testing purposes only
-									return reponse.status(500).send("Error changed multiple account usernames.\n");
+									return reponse.status(500).send("Error changed multiple account usernames.");
 								} else if (result.affectedRows == 0) {
-									return response.status(500).send("Failed to change username.\n");
+									return response.status(500).send("Failed to change username.");
 								}
 							});
 						}
@@ -1683,12 +1683,12 @@ function changePassword(p, n, request, response) {
 	dbConnection.query(sql, post, function(err, result) {
 		if (err) throw err;
 		if (result.length != 1) {
-			return response.status(500).send("User ID not found.\n");
+			return response.status(500).send("User ID not found.");
 		} else {
 			// Compare sent password hash to account password hash
 			bcrypt.compare(p, result[0].password, function(err, res) {
 				if (res !== true) {
-					return response.status(400).send("Invalid password. Try again.\n");
+					return response.status(400).send("Invalid password. Try again.");
 				} else {
 					// Hash new password and update password for user ID
 					bcrypt.hash(n, saltRounds, function(err, hash) {
@@ -1710,9 +1710,9 @@ function changePassword(p, n, request, response) {
 								return response.status(200).send(JSON.stringify({"response":"pass"}));
 							} else if (result.affectedRows > 1) {
 								// For testing purposes only
-								return reponse.status(500).send("Error changed multiple account passwords.\n");
+								return reponse.status(500).send("Error changed multiple account passwords.");
 							} else if (result.affectedRows == 0) {
-								return response.status(500).send("Failed to change password.\n");
+								return response.status(500).send("Failed to change password.");
 							}
 						});
 					});
@@ -1730,7 +1730,7 @@ function changeEmail(p, n, request, response) {
 	dbConnection.query(sql, post, function(err, result) {
 		if (err) throw err;
 		if (result.length != 0) {
-			return response.status(400).send("Email already exists! Try again.\n");
+			return response.status(400).send("Email already exists! Try again.");
 		} else {
 			// Get password hash for user ID
 			var sql = "SELECT ?? FROM ?? WHERE ??=?";
@@ -1738,12 +1738,12 @@ function changeEmail(p, n, request, response) {
 			dbConnection.query(sql, post, function(err, result) {
 				if (err) throw err;
 				if (result.length != 1) {
-					return response.status(500).send("User ID not found.\n");
+					return response.status(500).send("User ID not found.");
 				} else {
 					// Compare sent password hash to account password hash
 					bcrypt.compare(p, result[0].password, function(err, res) {
 						if (res !== true) {
-							return response.status(400).send("Invalid password. Try again.\n");
+							return response.status(400).send("Invalid password. Try again.");
 						} else {
 							// Update account email for user ID
 							var sql = "UPDATE ?? SET ??=? WHERE ??=?";
@@ -1785,14 +1785,14 @@ function changeEmail(p, n, request, response) {
 												return response.status(200).send(JSON.stringify({"response":"pass"}));
 											});
 										} else {
-											return response.status(500).send("Error changing email.\n");
+											return response.status(500).send("Error changing email.");
 										}
 									});
 								} else if (result.affectedRows > 1) {
 									// For testing purposes only
-									return reponse.status(500).send("Error changed multiple account emails.\n");
+									return reponse.status(500).send("Error changed multiple account emails.");
 								} else if (result.affectedRows == 0) {
-									return response.status(500).send("Failed to change email.\n");
+									return response.status(500).send("Failed to change email.");
 								}
 							});
 						}
@@ -1815,9 +1815,9 @@ function changeCrossRadius(n, request, response) {
 			return response.status(200).send(JSON.stringify({"response":"pass"}));
 		} else if (result.affectedRows > 1) {
 			// For testing purposes only
-			return reponse.status(500).send("Error changed multiple account cross radii.\n");
+			return reponse.status(500).send("Error changed multiple account cross radii.");
 		} else if (result.affectedRows == 0) {
-			return response.status(500).send("Failed to change cross radius.\n");
+			return response.status(500).send("Failed to change cross radius.");
 		}
 	});
 }
@@ -1830,7 +1830,7 @@ function getCrossRadius(request, response) {
 	dbConnection.query(sql, post, function(err, result) {
 		if (err) throw err;
 		if (result.length == 0) {
-			return response.status(500).send("Error getting cross radius.\n");
+			return response.status(500).send("Error getting cross radius.");
 		} else {
 			return response.status(200).send(JSON.stringify({"response":"pass", crossRadius:result[0].crossRadius}));
 		}
@@ -1845,7 +1845,7 @@ function forgotPassword(u, e, response) {
 	dbConnection.query(sql, post, function(err, result) {
 		if (err) throw err;
 		if (result.length != 1) {
-			return response.status(400).send("Invalid username or email.\n");
+			return response.status(400).send("Invalid username or email.");
 		} else {
 			// Generate password reset token for username and email
 			crypto.randomBytes(32, (err, buf) => {
@@ -1856,7 +1856,7 @@ function forgotPassword(u, e, response) {
 				dbConnection.query(sql, post, function(err, result) {
 					if (err) throw err;
 					if (result.affectedRows != 1) {
-						return response.status(400).send("Invalid username or email.\n");
+						return response.status(400).send("Invalid username or email.");
 					} else {
 						// Update password reset expire time for username and email
 						var expires = Date.now() + 3600000;
@@ -1865,7 +1865,7 @@ function forgotPassword(u, e, response) {
 						dbConnection.query(sql, post, function(err, result) {
 							if (err) throw err;
 							if (result.affectedRows != 1) {
-								return response.status(400).send("Invalid username or email.\n");
+								return response.status(400).send("Invalid username or email.");
 							} else {
 								// Send password reset request email
 								const msg = {
@@ -1895,11 +1895,11 @@ function resetPassword(token, newPassword, confirmPassword, response) {
 	dbConnection.query(sql, post, function(err, result) {
 		if (err) throw err;
 		if (result.length != 1) {
-			return response.status(400).send("Invalid password reset token.\n");
+			return response.status(400).send("Invalid password reset token.");
 		} else {
 			// Check if password reset token is expired
 			if (Date.now() > result[0].passwordResetExpires) {
-				return response.status(400).send("Password reset link has expired.\n");
+				return response.status(400).send("Password reset link has expired.");
 			} else {
 				// Hash new password and update password for passwordResetToken and email
 				var e = result[0].email;
@@ -1909,7 +1909,7 @@ function resetPassword(token, newPassword, confirmPassword, response) {
 					dbConnection.query(sql, post, function(err, result) {
 						if (err) throw err;
 						if (result.affectedRows != 1) {
-							return response.status(500).send("Error resetting password.\n");
+							return response.status(500).send("Error resetting password.");
 						} else {
 							// Set passwordResetExpires to null for passwordResetToken and email
 							sql = "UPDATE ?? SET ??=? WHERE ??=? AND ??=?";
@@ -1917,7 +1917,7 @@ function resetPassword(token, newPassword, confirmPassword, response) {
 							dbConnection.query(sql, post, function(err, result) {
 								if (err) throw err;
 								if (result.affectedRows != 1) {
-									return response.status(500).send("Error resetting password.\n");
+									return response.status(500).send("Error resetting password.");
 								} else {
 									// Set passwordResetToken to null for passwordResetToken and email
 									sql = "UPDATE ?? SET ??=? WHERE ??=? AND ??=?";
@@ -1925,7 +1925,7 @@ function resetPassword(token, newPassword, confirmPassword, response) {
 									dbConnection.query(sql, post, function(err, result) {
 										if (err) throw err;
 										if (result.affectedRows != 1) {
-											return response.status(500).send("Error resetting password.\n");
+											return response.status(500).send("Error resetting password.");
 										} else {
 											// Send password reset notification email
 											const msg = {
@@ -1965,7 +1965,7 @@ function addFirebaseRegistrationToken(token, request, response) {
 				dbConnection.query(sql, post, function(err, result) {
 					if (err) throw err;
 					if (result.length != 0) {
-						return response.status(500).send("Firebase registration token already exists!\n");
+						return response.status(500).send("Firebase registration token already exists!");
 					} else {
 						// Add new Firebase registration token
 						var sql = "INSERT INTO ?? SET ??=?, ??=?";
@@ -1979,7 +1979,7 @@ function addFirebaseRegistrationToken(token, request, response) {
 					}
 				});
 			} else {
-				return response.status(500).send("Error updating Firebase registration token.\n");
+				return response.status(500).send("Error updating Firebase registration token.");
 			}
 		});
 	} else {
@@ -1989,7 +1989,7 @@ function addFirebaseRegistrationToken(token, request, response) {
 		dbConnection.query(sql, post, function(err, result) {
 			if (err) throw err;
 			if (result.length != 0) {
-				return response.status(500).send("Firebase registration token already exists!\n");
+				return response.status(500).send("Firebase registration token already exists!");
 			} else {
 				// Add new Firebase registration token
 				var sql = "INSERT INTO ?? SET ??=?, ??=?";
@@ -2047,7 +2047,7 @@ function getProfile(request, response) {
 	dbConnection.query(sql, post, function(err, result) {
 		if (err) throw err;
 		if (result.length == 0) {
-			return response.status(400).send("No profile.\n");
+			return response.status(400).send("No profile.");
 		} else {
 			var n = result[0].name;
 			var a = result[0].about;
@@ -2428,7 +2428,7 @@ function getCrossLocations(u, request, response) {
 		console.log("Cross locations sent.");
 		return response.status(200).send(matchGraph.edge(request.session.uid, u, "crossLocations"));
 	}
-	return response.status(400).send("Not approved.\n");
+	return response.status(400).send("Not approved.");
 }
 
 // Gets all messages for chat with a match
