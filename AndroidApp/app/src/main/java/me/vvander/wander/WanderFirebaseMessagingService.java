@@ -64,7 +64,11 @@ public class WanderFirebaseMessagingService extends FirebaseMessagingService {
                     break;
                 }
                 case "Crossed Paths": {
-                    setupMatchProfileIntent(remoteMessage.getData().get("title"), remoteMessage.getData().get("body"), remoteMessage.getData().get("uid"));
+                    setupMatchProfileIntent(remoteMessage.getData().get("title"), remoteMessage.getData().get("body"), remoteMessage.getData().get("uid"), "crossed_paths_id", "Crossed Paths", R.drawable.cross_notification_icon);
+                    break;
+                }
+                case "Match Approval": {
+                    setupMatchProfileIntent(remoteMessage.getData().get("title"), remoteMessage.getData().get("body"), remoteMessage.getData().get("uid"), "match_approvals_id", "Match Approvals", R.drawable.approval_notification_icon);
                     break;
                 }
                 case "Chat Message": {
@@ -104,7 +108,7 @@ public class WanderFirebaseMessagingService extends FirebaseMessagingService {
         }
     }
 
-    private void setupMatchProfileIntent(final String title, final String body, String uid) {
+    private void setupMatchProfileIntent(final String title, final String body, String uid, final String channel_id, final CharSequence channel_name, final int icon) {
         RequestQueue requestQueue = Volley.newRequestQueue(this);
         String url = Data.getInstance().getUrl() + "/getMatch";
         Map<String, String> params = new HashMap<>();
@@ -126,9 +130,7 @@ public class WanderFirebaseMessagingService extends FirebaseMessagingService {
 
                             NotificationManager notificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
                             if (notificationManager != null) {
-                                String channel_id = "crossed_paths_id";
                                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                                    CharSequence channel_name = "Crossed Paths";
                                     int importance = NotificationManager.IMPORTANCE_HIGH;
                                     NotificationChannel notificationChannel = new NotificationChannel(channel_id, channel_name, importance);
                                     notificationChannel.enableLights(true);
@@ -154,7 +156,7 @@ public class WanderFirebaseMessagingService extends FirebaseMessagingService {
                                 NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(getApplicationContext(), channel_id)
                                         .setContentTitle(title)
                                         .setContentText(body)
-                                        .setSmallIcon(R.drawable.cross_notification_icon)
+                                        .setSmallIcon(icon)
                                         .setAutoCancel(true)
                                         .setContentIntent(pendingIntent);
                                 notificationManager.notify(1, notificationBuilder.build());
