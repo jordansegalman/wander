@@ -45,6 +45,7 @@ const uidFrom = "uidFrom";
 const uidTo = "uidTo";
 const title = "title";
 const review = "review";
+const popMultiplier= "popMultiplier";
 
 // Constants used for MySQL
 const db_host = process.env.DB_HOST;
@@ -70,7 +71,8 @@ const CROSS_TIME = 30000;			// 30 seconds
 const CROSS_COOLDOWN = 1000;			// 1 second (DEVELOPMENT)
 //const MATCH_NOTIFY_CRON = '0 20 * * * *';	// every day at 20:00
 const MATCH_NOTIFY_CRON = '0 * * * * *';	// every minute (DEVELOPMENT)
-
+const MIN_CUTOFF = 150;
+const MED_CUTOFF = 500;
 // Constant used for password reset and session
 const crypto = require('crypto');
 
@@ -274,6 +276,7 @@ function setupSocketIO() {
 function scheduleMatchNotifications() {
 	schedule.scheduleJob(MATCH_NOTIFY_CRON, function() {
 		notifyMatches();
+		updatePopulationMultipliers();
 	});
 }
 
@@ -2581,3 +2584,59 @@ app.use(function(err, req, res, next) {
 	console.error(err.stack);
 	res.status(500).sendFile(__dirname + '/website/500.html');
 });
+
+function updatePopulationMultipliers(){
+        //for each user, check number of unique users in a 5? mile radius of their last known point and change multiplyer based on that.
+        var sql = "SELECT DISTINCT ?? FROM ??";
+        var post =[uid, db_locations];
+        dbConnection.query(sql, post, function(err, result){
+                        if(err) throw err;
+                        if(result.length == 0){
+                        return response.status(400).send("The locations database is empty");
+                        }
+                        else{
+                        for(var k = 0; k < result.length; k++){
+                        var sql = "SELECT ??, ??, ?? FROM ?? WHERE ??=?";
+                        var post =[uid, latitude, longitude, db_locations, uid, result[k].uid];
+                        dbConnection.query(sql, post, function(err, result){
+                                        if(err) throw err;
+                                        if(result.length == 0)
+                                        throw err;
+                                        var lat5miles= .07246376811;
+                                        var long5miles = 5/(Math.cos(Math.PI * (result[0].latitude / 180)) * 69.172);
+                                        var lowerLat = result[0].latitude - lat5miles;
+                                        var upperLat = result[0].latitude + lat5miles;
+                                        var lowerLong = result[0].longitude - long5miles;
+                                        var upperLong = result[0].longitude + long5miles;
+                                        var multiplier = 1;
+                                        var tempUID = result[0].uid;
+                                        var sql= "SELECT DISTINCT ?? FROM ?? WHERE ?? BETWEEN ? AND ? AND ?? BETWEEN ? AND ?";
+                                        var post=[uid, db_locations, latitude, lowerLat, upperLat, longitude, lowerLong, upperLong];
+                                        dbConnection.query(sql, post, function(err, result){
+                                                        if(err) throw err;
+                                                        else{
+                                                        if(result.length < MIN_CUTOFF){
+                                                        multiplier = 1.25;
+                                                        var sql = "UPDATE ?? SET ??=? WHERE ??=?";
+                                                        var post=[db_accounts, popMultiplier, multiplier, uid, tempUID];
+                                                        dbConnection.query(sql, post, function(err, result){
+                                                                        if(err) throw err;
+                                                                        });
+                                                        }
+                                                        else if(result.length > MED_CUTOFF){
+                                                        multiplier = .75;
+                                                        var sql = "UPDATE ?? SET ??=? WHERE ??=?";
+                                                        var post=[db_accounts, popMultiplier, multiplier, uid, tempUID];
+                                                        dbConnection.query(sql, post, function(err, result){
+                                                                        if(err) throw err;
+
+                                                                        });
+                                                        }
+                                                        }
+                                        });
+                        });
+                        }
+                        }
+        });
+}
+            
