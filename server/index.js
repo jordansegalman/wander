@@ -177,11 +177,13 @@ function startServer() {
 // Setup Socket.IO
 function setupSocketIO() {
 	var io = require('socket.io')(httpServer);
+	// Holds array of sockets for every user ID
 	var connectedSockets = {};
 	io.on('connection', (socket) => {
 		socket.on('disconnect', () => {
 		});
 		socket.on('initialize', (incomingData) => {
+			// Add socket to connectedSockets
 			var parsedData = JSON.parse(incomingData);
 			if (validateUid(parsedData['uid'])) {
 				if (connectedSockets.hasOwnProperty(parsedData['uid'])) {
@@ -196,6 +198,7 @@ function setupSocketIO() {
 			}
 		});
 		socket.on('terminate', (incomingData) => {
+			// Remove socket from connectedSockets
 			var parsedData = JSON.parse(incomingData);
 			if (validateUid(parsedData['uid'])) {
 				if (connectedSockets.hasOwnProperty(parsedData['uid'])) {
@@ -211,16 +214,19 @@ function setupSocketIO() {
 		});
 		socket.on('message', (incomingData) => {
 			var parsedData = JSON.parse(incomingData);
-			if (validateUid(parsedData['from']) && validateUid(parsedData['to'])) {
+			if (validateUid(parsedData['from']) && validateUid(parsedData['to']) && parsedData['message'].length > 0 && parsedData['message'].length <= 1024) {
+				// Add message to messages table
 				var sql = "INSERT INTO ?? SET ??=?, ??=?, ??=?, ??=?";
 				var post = [db_messages, uidFrom, parsedData['from'], uidTo, parsedData['to'], message, parsedData['message'], time, parsedData['time']];
 				dbConnection.query(sql, post, function(err, result){
 					if (err) throw err;
+					// Get name of user message sent from
 					var sql = "SELECT ?? FROM ?? WHERE ??=?";
 					var post = [name, db_profiles, uid, parsedData['from']];
 					dbConnection.query(sql, post, function(err, result) {
 						if (err) throw err;
 						if (connectedSockets.hasOwnProperty(parsedData['to'])) {
+							// If message sent to user who is connected, send over socket
 							for (var i = 0; i < connectedSockets[parsedData['to']].length; i++) {
 								var outgoingData = {};
 								outgoingData['from'] = parsedData['from'];
@@ -230,6 +236,7 @@ function setupSocketIO() {
 								connectedSockets[parsedData['to']][i].emit('message', JSON.stringify(outgoingData));
 							}
 						} else {
+							// If message sent to user who is not connected, send notification
 							var sql = "SELECT ?? FROM ?? WHERE ??=?";
 							var post = [registrationToken, db_firebase, uid, parsedData['to']];
 							dbConnection.query(sql, post, function(err, res) {
