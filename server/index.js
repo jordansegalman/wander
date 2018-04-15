@@ -2283,6 +2283,36 @@ function notifyMatches() {
 function approveUser(u, request, response) {
 	matchGraph.setEdge(request.session.uid, u, true, "approved");
 	writeMatchGraph();
+	// Notify approved user
+	var sql = "SELECT ?? FROM ?? WHERE ??=?";
+	var post = [registrationToken, db_firebase, uid, u];
+	dbConnection.query(sql, post, function(err, result) {
+		if (err) throw err;
+		if (result.length > 0) {
+			for (var i = 0; i < result.length; i++) {
+				var message = {
+					data: {
+						type: 'Match Approval',
+						title: 'You were just approved by one of your matches!',
+						body: 'Tap to see who approved you.',
+						uid: request.session.uid
+					},
+					token: result[i].registrationToken,
+					android: {
+						ttl: 3600000,
+						priority: 'high',
+					}
+				};
+				admin.messaging().send(message)
+					.then((response) => {
+						console.log('Successfully sent match approval notification.');
+					})
+				.catch((error) => {
+					console.log(error);
+				});
+			}
+		}
+	});
 	console.log('User approved.');
 	return response.status(200).send(JSON.stringify({"response":"pass"}));
 }
