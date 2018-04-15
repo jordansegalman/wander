@@ -1017,6 +1017,32 @@ app.post('/getMessages', function(request, response){
 	getMessages(u, request, response);
 });
 
+// Called when a POST request is made to /getStatistics
+app.post('/getStatistics', function(request, response){
+	// If the object request.body is null, respond with status 500 'Internal Server Error'
+	if (!request.body) return response.sendStatus(500);
+
+	// POST request must have 2 parameters (latitude and longitude)
+	if (Object.keys(request.body).length != 2 || !request.body.latitude || !request.body.longitude) {
+		return response.status(400).send("Invalid POST request\n");
+	}
+
+	// If session not authenticated
+	if (!request.session || ((!request.session.authenticated || request.session.authenticated === false) && (!request.session.googleAuthenticated || request.session.googleAuthenticated === false) && (!request.session.facebookAuthenticated || request.session.facebookAuthenticated === false))) {
+		return response.status(400).send("User not logged in.\n");
+	}
+
+	// Validate coordinates
+	if (validateCoordinates(request.body.latitude, request.body.longitude)) {
+		var lat = request.body.latitude;
+		var lon = request.body.longitude;
+	} else {
+		return response.status(400).send("Invalid coordinates.\n");
+	}
+
+	getStatistics(lat, lon, request, response);
+});
+
 // Validates a user ID
 function validateUid(uid) {
 	return !validator.isEmpty(uid) && validator.isHexadecimal(uid) && validator.isLength(uid, {min: 16, max: 16});
@@ -2366,6 +2392,50 @@ function getMessages(u, request, response) {
 			object[key].push({uidFrom: result[i].uidFrom, uidTo: result[i].uidTo, message: result[i].message, time: result[i].time});
 		}
 		return response.status(200).send(JSON.stringify(object));
+	});
+}
+
+// Gets statistics about users, matches, and location
+function getStatistics(lat, lon, request, response) {
+	var statistics = {};
+	// Get number of users
+	var sql = "SELECT * FROM ??";
+	var post = [db_accounts];
+	dbConnection.query(sql, post, function(err, result) {
+		if (err) throw err;
+		statistics['numUsers'] = result.length;
+		// Get number of users in location
+		var currentTime = Date.now();
+		var timeMin = currentTime - CROSS_TIME;
+		var latMin = lat - feetToLat(5280);
+		var latMax = lat + feetToLat(5280);
+		var lonMin = lon - feetToLon(5280, lat);
+		var lonMax = lon + feetToLon(5280, lat);
+		sql = "SELECT ?? FROM ?? WHERE ??!=? AND ?? BETWEEN ? AND ? AND ?? BETWEEN ? AND ? AND ?? BETWEEN ? AND ?";
+		post = [uid, db_locations, uid, request.session.uid, time, timeMin, currentTime, latitude, latMin, latMax, longitude, lonMin, lonMax];
+		dbConnection.query(sql, post, function(err, result) {
+			if (err) throw err;
+			var unique = {};
+			for (var i = 0; i < result.length; i++) {
+				unique[result[i].uid] = 1 + (unique[result[i].uid] || 0);
+			}
+			statistics['numNearYou'] = Object.keys(unique).length;
+			// Get number of matches and new matches
+			var edges = matchGraph.edges();
+			var numMatches = 0;
+			var numNewMatches = 0;
+			for (var i = 0; i < matchGraph.edgeCount(); i++) {
+				if (edges[i] != null && edges[i].name === "matched") {
+					numMatches++;
+				} else if (edges[i] != null && edges[i].name === "newMatch") {
+					numNewMatches++;
+				}
+			}
+			statistics['numMatches'] = numMatches;
+			statistics['numNewMatches'] = numNewMatches;
+			console.log('Statistics sent.');
+			return response.status(200).send(JSON.stringify(statistics));
+		});
 	});
 }
 
