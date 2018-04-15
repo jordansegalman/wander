@@ -180,11 +180,13 @@ function startServer() {
 // Setup Socket.IO
 function setupSocketIO() {
 	var io = require('socket.io')(httpServer);
+	// Holds array of sockets for every user ID
 	var connectedSockets = {};
 	io.on('connection', (socket) => {
 		socket.on('disconnect', () => {
 		});
 		socket.on('initialize', (incomingData) => {
+			// Add socket to connectedSockets
 			var parsedData = JSON.parse(incomingData);
 			if (validateUid(parsedData['uid'])) {
 				if (connectedSockets.hasOwnProperty(parsedData['uid'])) {
@@ -199,6 +201,7 @@ function setupSocketIO() {
 			}
 		});
 		socket.on('terminate', (incomingData) => {
+			// Remove socket from connectedSockets
 			var parsedData = JSON.parse(incomingData);
 			if (validateUid(parsedData['uid'])) {
 				if (connectedSockets.hasOwnProperty(parsedData['uid'])) {
@@ -214,16 +217,19 @@ function setupSocketIO() {
 		});
 		socket.on('message', (incomingData) => {
 			var parsedData = JSON.parse(incomingData);
-			if (validateUid(parsedData['from']) && validateUid(parsedData['to'])) {
+			if (validateUid(parsedData['from']) && validateUid(parsedData['to']) && parsedData['message'].length > 0 && parsedData['message'].length <= 1024) {
+				// Add message to messages table
 				var sql = "INSERT INTO ?? SET ??=?, ??=?, ??=?, ??=?";
 				var post = [db_messages, uidFrom, parsedData['from'], uidTo, parsedData['to'], message, parsedData['message'], time, parsedData['time']];
 				dbConnection.query(sql, post, function(err, result){
 					if (err) throw err;
+					// Get name of user message sent from
 					var sql = "SELECT ?? FROM ?? WHERE ??=?";
 					var post = [name, db_profiles, uid, parsedData['from']];
 					dbConnection.query(sql, post, function(err, result) {
 						if (err) throw err;
 						if (connectedSockets.hasOwnProperty(parsedData['to'])) {
+							// If message sent to user who is connected, send over socket
 							for (var i = 0; i < connectedSockets[parsedData['to']].length; i++) {
 								var outgoingData = {};
 								outgoingData['from'] = parsedData['from'];
@@ -233,6 +239,7 @@ function setupSocketIO() {
 								connectedSockets[parsedData['to']][i].emit('message', JSON.stringify(outgoingData));
 							}
 						} else {
+							// If message sent to user who is not connected, send notification
 							var sql = "SELECT ?? FROM ?? WHERE ??=?";
 							var post = [registrationToken, db_firebase, uid, parsedData['to']];
 							dbConnection.query(sql, post, function(err, res) {
@@ -1020,7 +1027,6 @@ app.post('/getMessages', function(request, response){
 	getMessages(u, request, response);
 });
 
-
 // Called when a POST request is made to /storeTagData
 app.post('/storeTagData', function(request, response){
 	// If the object request.body is null, respond with status 500 'Internal Server Error'
@@ -1094,6 +1100,31 @@ app.post('/getMatchTagData', function(request, response){
 	getMatchTagData(request, response);
 });
 
+// Called when a POST request is made to /getStatistics
+app.post('/getStatistics', function(request, response){
+	// If the object request.body is null, respond with status 500 'Internal Server Error'
+	if (!request.body) return response.sendStatus(500);
+
+	// POST request must have 2 parameters (latitude and longitude)
+	if (Object.keys(request.body).length != 2 || !request.body.latitude || !request.body.longitude) {
+		return response.status(400).send("Invalid POST request\n");
+	}
+
+	// If session not authenticated
+	if (!request.session || ((!request.session.authenticated || request.session.authenticated === false) && (!request.session.googleAuthenticated || request.session.googleAuthenticated === false) && (!request.session.facebookAuthenticated || request.session.facebookAuthenticated === false))) {
+		return response.status(400).send("User not logged in.\n");
+	}
+
+	// Validate coordinates
+	if (validateCoordinates(request.body.latitude, request.body.longitude)) {
+		var lat = request.body.latitude;
+		var lon = request.body.longitude;
+	} else {
+		return response.status(400).send("Invalid coordinates.\n");
+	}
+
+	getStatistics(lat, lon, request, response);
+});
 
 // Validates a user ID
 function validateUid(uid) {
@@ -2328,6 +2359,36 @@ function notifyMatches() {
 function approveUser(u, request, response) {
 	matchGraph.setEdge(request.session.uid, u, true, "approved");
 	writeMatchGraph();
+	// Notify approved user
+	var sql = "SELECT ?? FROM ?? WHERE ??=?";
+	var post = [registrationToken, db_firebase, uid, u];
+	dbConnection.query(sql, post, function(err, result) {
+		if (err) throw err;
+		if (result.length > 0) {
+			for (var i = 0; i < result.length; i++) {
+				var message = {
+					data: {
+						type: 'Match Approval',
+						title: 'You were just approved by one of your matches!',
+						body: 'Tap to see who approved you.',
+						uid: request.session.uid
+					},
+					token: result[i].registrationToken,
+					android: {
+						ttl: 3600000,
+						priority: 'high',
+					}
+				};
+				admin.messaging().send(message)
+					.then((response) => {
+						console.log('Successfully sent match approval notification.');
+					})
+				.catch((error) => {
+					console.log(error);
+				});
+			}
+		}
+	});
 	console.log('User approved.');
 	return response.status(200).send(JSON.stringify({"response":"pass"}));
 }
@@ -2564,6 +2625,50 @@ function getMatchTagData(request, response) {
 			}
 		}
 	}
+}
+
+// Gets statistics about users, matches, and location
+function getStatistics(lat, lon, request, response) {
+	var statistics = {};
+	// Get number of users
+	var sql = "SELECT * FROM ??";
+	var post = [db_accounts];
+	dbConnection.query(sql, post, function(err, result) {
+		if (err) throw err;
+		statistics['numUsers'] = result.length;
+		// Get number of users in location
+		var currentTime = Date.now();
+		var timeMin = currentTime - CROSS_TIME;
+		var latMin = lat - feetToLat(5280);
+		var latMax = lat + feetToLat(5280);
+		var lonMin = lon - feetToLon(5280, lat);
+		var lonMax = lon + feetToLon(5280, lat);
+		sql = "SELECT ?? FROM ?? WHERE ??!=? AND ?? BETWEEN ? AND ? AND ?? BETWEEN ? AND ? AND ?? BETWEEN ? AND ?";
+		post = [uid, db_locations, uid, request.session.uid, time, timeMin, currentTime, latitude, latMin, latMax, longitude, lonMin, lonMax];
+		dbConnection.query(sql, post, function(err, result) {
+			if (err) throw err;
+			var unique = {};
+			for (var i = 0; i < result.length; i++) {
+				unique[result[i].uid] = 1 + (unique[result[i].uid] || 0);
+			}
+			statistics['numNearYou'] = Object.keys(unique).length;
+			// Get number of matches and new matches
+			var edges = matchGraph.edges();
+			var numMatches = 0;
+			var numNewMatches = 0;
+			for (var i = 0; i < matchGraph.edgeCount(); i++) {
+				if (edges[i] != null && edges[i].name === "matched") {
+					numMatches++;
+				} else if (edges[i] != null && edges[i].name === "newMatch") {
+					numNewMatches++;
+				}
+			}
+			statistics['numMatches'] = numMatches;
+			statistics['numNewMatches'] = numNewMatches;
+			console.log('Statistics sent.');
+			return response.status(200).send(JSON.stringify(statistics));
+		});
+	});
 }
 
 // Writes the match graph to a file
