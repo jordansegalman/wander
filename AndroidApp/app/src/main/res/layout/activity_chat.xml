@@ -48,7 +48,7 @@
             android:background="@android:color/transparent"
             android:hint="Message"
             android:inputType="text|textCapSentences|textAutoCorrect|textAutoComplete|textMultiLine"
-            android:maxLength="255"
+            android:maxLength="1024"
             android:maxLines="6"
             android:paddingBottom="8dp"
             android:paddingTop="8dp" />

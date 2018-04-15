@@ -42,6 +42,7 @@ import io.socket.emitter.Emitter;
 
 public class ChatActivity extends AppCompatActivity {
     private static final String TAG = ChatActivity.class.getSimpleName();
+    private static final int MAX_MESSAGE_LENGTH = 1024;
     private RequestQueue requestQueue;
     private String uid;
     private String matchUid;
@@ -316,7 +317,7 @@ public class ChatActivity extends AppCompatActivity {
         if (socket.connected() && initialized) {
             EditText messageText = findViewById(R.id.messageEditText);
             String message = messageText.getText().toString();
-            if (!TextUtils.isEmpty(message)) {
+            if (!TextUtils.isEmpty(message) && message.length() <= MAX_MESSAGE_LENGTH) {
                 sendMessage(message);
                 messageText.getText().clear();
             }
