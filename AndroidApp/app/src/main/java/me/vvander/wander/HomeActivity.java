@@ -147,6 +147,9 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
             case R.id.nav_matches:
                 startActivity(new Intent(HomeActivity.this, MatchesActivity.class));
                 return true;
+            case R.id.nav_statistics:
+                startActivity(new Intent(HomeActivity.this, StatisticsActivity.class));
+                return true;
             case R.id.nav_profile:
                 startActivity(new Intent(HomeActivity.this, ProfileActivity.class));
                 return true;
