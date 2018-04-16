@@ -45,6 +45,8 @@ const uidFrom = "uidFrom";
 const uidTo = "uidTo";
 const title = "title";
 const review = "review";
+const reason = "reason";
+const banned = "banned";
 
 // Constants used for MySQL
 const db_host = process.env.DB_HOST;
@@ -57,6 +59,7 @@ const db_locations = "locations";
 const db_firebase = "firebase";
 const db_messages = "messages";
 const db_tags = "tags";
+const db_offenses = "offenses";
 
 // Constant used for password hashing
 const saltRounds = 10;
@@ -64,12 +67,14 @@ const saltRounds = 10;
 // Constants used for matching
 //const MATCH_THRESHOLD = 10;			// 10 crossed paths
 const MATCH_THRESHOLD = 1;			// 1 crossed path (DEVELOPMENT)
-const DEFAULT_CROSS_RADIUS = 150;		// 150 feet
+const UNMATCHED_MATCH_THRESHOLD = 3 * MATCH_THRESHOLD;
 const CROSS_TIME = 30000;			// 30 seconds
 //const CROSS_COOLDOWN = 1800000;			// 30 minutes
 const CROSS_COOLDOWN = 1000;			// 1 second (DEVELOPMENT)
-//const MATCH_NOTIFY_CRON = '0 20 * * * *';	// every day at 20:00
-const MATCH_NOTIFY_CRON = '0 * * * * *';	// every minute (DEVELOPMENT)
+//const MATCH_NOTIFY_CRON = '0 20 * * * *';	// Every day at 20:00
+const MATCH_NOTIFY_CRON = '0 * * * * *';	// Every minute (DEVELOPMENT)
+const WARN_THRESHOLD = 3;			// Warn after 3 offenses
+const BAN_THRESHOLD = 5;			// Ban after 5 offenses
 
 // Constant used for password reset and session
 const crypto = require('crypto');
@@ -431,6 +436,16 @@ app.post('/verifySession', function(request, response) {
 	if (!request.session || ((!request.session.authenticated || request.session.authenticated === false) && (!request.session.googleAuthenticated || request.session.googleAuthenticated === false) && (!request.session.facebookAuthenticated || request.session.facebookAuthenticated === false))) {
 		return response.status(400).send(JSON.stringify({"response":"fail"}));
 	}
+
+	// Check if account banned
+	var sql = "SELECT ?? FROM ?? WHERE ??=?";
+	var post = [banned, db_accounts, uid, request.session.uid];
+	dbConnection.query(sql, post, function(err, result) {
+		if (err) throw err;
+		if (result[0].banned === true) {
+			return response.status(400).send("Account banned.");
+		}
+	});
 
 	if (request.session && request.session.googleAuthenticated && request.session.googleAuthenticated === true) {
 		return response.status(200).send(JSON.stringify({"response":"google","uid":request.session.uid}));
@@ -898,6 +913,107 @@ app.post('/unapproveUser', function(request, response){
 	unapproveUser(u, request, response);
 });
 
+// Called when a POST request is made to /unmatchUser
+app.post('/unmatchUser', function(request, response){
+	// If the object request.body is null, respond with status 500 'Internal Server Error'
+	if (!request.body) return response.sendStatus(500);
+
+	// POST request must have 1 parameter (uid)
+	if (Object.keys(request.body).length != 1 || !request.body.uid) {
+		return response.status(400).send("Invalid POST request");
+	}
+
+	// If session not authenticated
+	if (!request.session || ((!request.session.authenticated || request.session.authenticated === false) && (!request.session.googleAuthenticated || request.session.googleAuthenticated === false) && (!request.session.facebookAuthenticated || request.session.facebookAuthenticated === false))) {
+		return response.status(400).send("User not logged in.");
+	}
+
+	// Validate uid
+	if (validateUid(request.body.uid)) {
+		var u = request.body.uid;
+	} else {
+		return response.status(400).send("Invalid user ID.");
+	}
+
+	unmatchUser(u, request, response);
+});
+
+// Called when a POST request is made to /blockUser
+app.post('/blockUser', function(request, response){
+	// If the object request.body is null, respond with status 500 'Internal Server Error'
+	if (!request.body) return response.sendStatus(500);
+
+	// POST request must have 1 parameter (uid)
+	if (Object.keys(request.body).length != 1 || !request.body.uid) {
+		return response.status(400).send("Invalid POST request");
+	}
+
+	// If session not authenticated
+	if (!request.session || ((!request.session.authenticated || request.session.authenticated === false) && (!request.session.googleAuthenticated || request.session.googleAuthenticated === false) && (!request.session.facebookAuthenticated || request.session.facebookAuthenticated === false))) {
+		return response.status(400).send("User not logged in.");
+	}
+
+	// Validate uid
+	if (validateUid(request.body.uid)) {
+		var u = request.body.uid;
+	} else {
+		return response.status(400).send("Invalid user ID.");
+	}
+
+	blockUser(u, request, response);
+});
+
+// Called when a POST request is made to /unblockUser
+app.post('/unblockUser', function(request, response){
+	// If the object request.body is null, respond with status 500 'Internal Server Error'
+	if (!request.body) return response.sendStatus(500);
+
+	// POST request must have 1 parameter (uid)
+	if (Object.keys(request.body).length != 1 || !request.body.uid) {
+		return response.status(400).send("Invalid POST request");
+	}
+
+	// If session not authenticated
+	if (!request.session || ((!request.session.authenticated || request.session.authenticated === false) && (!request.session.googleAuthenticated || request.session.googleAuthenticated === false) && (!request.session.facebookAuthenticated || request.session.facebookAuthenticated === false))) {
+		return response.status(400).send("User not logged in.");
+	}
+
+	// Validate uid
+	if (validateUid(request.body.uid)) {
+		var u = request.body.uid;
+	} else {
+		return response.status(400).send("Invalid user ID.");
+	}
+
+	unblockUser(u, request, response);
+});
+
+// Called when a POST request is made to /reportUser
+app.post('/reportUser', function(request, response){
+	// If the object request.body is null, respond with status 500 'Internal Server Error'
+	if (!request.body) return response.sendStatus(500);
+
+	// POST request must have 1 parameter (uid)
+	if (Object.keys(request.body).length != 1 || !request.body.uid) {
+		return response.status(400).send("Invalid POST request");
+	}
+
+	// If session not authenticated
+	if (!request.session || ((!request.session.authenticated || request.session.authenticated === false) && (!request.session.googleAuthenticated || request.session.googleAuthenticated === false) && (!request.session.facebookAuthenticated || request.session.facebookAuthenticated === false))) {
+		return response.status(400).send("User not logged in.");
+	}
+
+	// Validate uid
+	if (validateUid(request.body.uid)) {
+		var u = request.body.uid;
+	} else {
+		return response.status(400).send("Invalid user ID.");
+	}
+	var r = request.body.reason;
+
+	reportUser(u, r, request, response);
+});
+
 // Called when a POST request is made to /getLocationForHeatmap
 app.post('/getLocationForHeatmap', function(request, response){
 	// If the object request.body is null, respond with status 500 'Internal Server Error'
@@ -1189,7 +1305,7 @@ function register(u, p, e, response) {
 					} else {
 						// Create account in accounts table
 						var sql = "INSERT INTO ?? SET ?";
-						var post = {uid: userID, username: u, password: hash, email: e, crossRadius: DEFAULT_CROSS_RADIUS};
+						var post = {uid: userID, username: u, password: hash, email: e};
 						dbConnection.query(sql, [db_accounts, post], function(err, result) {
 							if (err) throw err;
 							// Create profile in profiles table
@@ -1232,14 +1348,17 @@ function setDefaultProfilePicture(u) {
 
 // Verifies user has an account and logs them in
 function login(u, p, request, response) {
-	// Get password hash and email for username
-	var sql = "SELECT ??,??,?? FROM ?? WHERE ??=?";
-	var post = [uid, password, email, db_accounts, username, u];
+	// Get user ID, password hash, email, and banned status for username
+	var sql = "SELECT ??,??,??,?? FROM ?? WHERE ??=?";
+	var post = [uid, password, email, banned, db_accounts, username, u];
 	dbConnection.query(sql, post, function(err, result) {
 		if (err) throw err;
 		if (result.length != 1) {
 			return response.status(400).send("Invalid username or password. Try again.");
 		} else {
+			if (result[0].banned === true) {
+				return response.status(400).send("Account banned.");
+			}
 			// Compare sent password hash to account password hash
 			bcrypt.compare(p, result[0].password, function(err, res) {
 				if (res === true) {
@@ -1284,7 +1403,7 @@ function googleLogin(id, e, request, response) {
 						} else {
 							// Create account in accounts table
 							var sql = "INSERT INTO ?? SET ?";
-							var post = {uid: userID, email: e, googleID: id, crossRadius: DEFAULT_CROSS_RADIUS};
+							var post = {uid: userID, email: e, googleID: id};
 							dbConnection.query(sql, [db_accounts, post], function(err, result) {
 								if (err) throw err;
 								// Create profile in profiles table
@@ -1316,6 +1435,9 @@ function googleLogin(id, e, request, response) {
 				}
 			});
 		} else if (result.length == 1) {
+			if (result[0].banned === true) {
+				return response.status(400).send("Account banned.");
+			}
 			if (result[0].email == e) {
 				request.session.googleAuthenticated = true;
 				request.session.uid = result[0].uid;
@@ -1374,7 +1496,7 @@ function facebookLogin(id, e, request, response) {
 						} else {
 							// Create account in accounts table
 							var sql = "INSERT INTO ?? SET ?";
-							var post = {uid: userID, email: e, facebookID: id, crossRadius: DEFAULT_CROSS_RADIUS};
+							var post = {uid: userID, email: e, facebookID: id};
 							dbConnection.query(sql, [db_accounts, post], function(err, result) {
 								if (err) throw err;
 								// Create profile in profiles table
@@ -1406,6 +1528,9 @@ function facebookLogin(id, e, request, response) {
 				}
 			});
 		} else if (result.length == 1) {
+			if (result[0].banned === true) {
+				return response.status(400).send("Account banned.");
+			}
 			if (result[0].email == e) {
 				request.session.facebookAuthenticated = true;
 				request.session.uid = result[0].uid;
@@ -2141,118 +2266,133 @@ function findCrossedPaths(lat, lon, currentTime, request, response) {
 				var uidOther = result[i].uid;
 				var latOther = result[i].latitude;
 				var lonOther = result[i].longitude;
-				// Get cross radius for other user ID
-				sql = "SELECT ?? FROM ?? WHERE ??=?";
-				post = [crossRadius, db_accounts, uid, uidOther];
-				dbConnection.query(sql, post, function(err, result) {
-					if (err) throw err;
-					var otherLatMin = latOther - feetToLat(result[0].crossRadius);
-					var otherLatMax = latOther + feetToLat(result[0].crossRadius);
-					var otherLonMin = lonOther - feetToLon(result[0].crossRadius, latOther);
-					var otherLonMax = lonOther + feetToLon(result[0].crossRadius, latOther);
-					if (lat >= otherLatMin && lat <= otherLatMax && lon >= otherLonMin && lon <= otherLonMax) {
-						// If also within other user ID's cross radius
-						if (!matchGraph.hasEdge(request.session.uid, uidOther, "timesCrossed") && !matchGraph.hasEdge(uidOther, request.session.uid, "timesCrossed")) {
-							// If never crossed before, create timesCrossed, lastTime, and crossLocations edges
-							matchGraph.setEdge(request.session.uid, uidOther, 1, "timesCrossed");
-							matchGraph.setEdge(uidOther, request.session.uid, 1, "timesCrossed");
-							matchGraph.setEdge(request.session.uid, uidOther, currentTime, "lastTime");
-							matchGraph.setEdge(uidOther, request.session.uid, currentTime, "lastTime");
-							var object = {};
-							var key = "Cross Locations";
-							object[key] = [];
-							var crossLat = (parseFloat(lat) + parseFloat(latOther)) / parseFloat(2.0);
-							var crossLon = (parseFloat(lon) + parseFloat(lonOther)) / parseFloat(2.0);
-							var data = {latitude: crossLat, longitude: crossLon};
-							object[key].push(data);
-							matchGraph.setEdge(request.session.uid, uidOther, JSON.stringify(object), "crossLocations");
-							matchGraph.setEdge(uidOther, request.session.uid, JSON.stringify(object), "crossLocations");
-							console.log('Users crossed paths for the first time.');
-						} else if (matchGraph.edge(request.session.uid, uidOther, "lastTime") < currentTime - CROSS_COOLDOWN && matchGraph.edge(uidOther, request.session.uid, "lastTime") < currentTime - CROSS_COOLDOWN) {
-							// If crossed before, increment timesCrossed edge and update lastTime and crossLocations edges
-							matchGraph.setEdge(request.session.uid, uidOther, matchGraph.edge(request.session.uid, uidOther, "timesCrossed") + 1, "timesCrossed");
-							matchGraph.setEdge(uidOther, request.session.uid, matchGraph.edge(uidOther, request.session.uid, "timesCrossed") + 1, "timesCrossed");
-							matchGraph.setEdge(request.session.uid, uidOther, currentTime, "lastTime");
-							matchGraph.setEdge(uidOther, request.session.uid, currentTime, "lastTime");
-							var object = JSON.parse(matchGraph.edge(request.session.uid, uidOther, "crossLocations"));
-							var key = "Cross Locations";
-							var crossLat = (parseFloat(lat) + parseFloat(latOther)) / parseFloat(2.0);
-							var crossLon = (parseFloat(lon) + parseFloat(lonOther)) / parseFloat(2.0);
-							var data = {latitude: crossLat, longitude: crossLon};
-							object[key].push(data);
-							matchGraph.setEdge(request.session.uid, uidOther, JSON.stringify(object), "crossLocations");
-							matchGraph.setEdge(uidOther, request.session.uid, JSON.stringify(object), "crossLocations");
-							console.log('Users crossed paths again.');
-						}
-						if (matchGraph.edge(request.session.uid, uidOther, "timesCrossed") >= MATCH_THRESHOLD && matchGraph.edge(uidOther, request.session.uid, "timesCrossed") >= MATCH_THRESHOLD && !matchGraph.hasEdge(request.session.uid, uidOther, "matched") && !matchGraph.hasEdge(uidOther, request.session.uid, "matched") && !matchGraph.hasEdge(request.session.uid, uidOther, "newMatch") && !matchGraph.hasEdge(uidOther, request.session.uid, "newMatch")) {
-							// If crossed greater than or equal to match threshold times and not already matched, create matched, approved, unmatched, blocked, and newMatch edges
-							matchGraph.setEdge(request.session.uid, uidOther, true, "newMatch");
-							matchGraph.setEdge(uidOther, request.session.uid, true, "newMatch");
-							console.log('Users matched.');
-						} else if (matchGraph.edge(request.session.uid, uidOther, "timesCrossed") >= MATCH_THRESHOLD && matchGraph.edge(uidOther, request.session.uid, "timesCrossed") >= MATCH_THRESHOLD && matchGraph.hasEdge(request.session.uid, uidOther, "matched") && matchGraph.hasEdge(uidOther, request.session.uid, "matched") && matchGraph.hasEdge(request.session.uid, uidOther, "approved") && matchGraph.hasEdge(uidOther, request.session.uid, "approved") && matchGraph.edge(request.session.uid, uidOther, "approved") == true && matchGraph.edge(uidOther, request.session.uid, "approved") == true) {
-							// If crossed and already matched, notify users
-							var sql = "SELECT ?? FROM ?? WHERE ??=?";
-							var post = [registrationToken, db_firebase, uid, request.session.uid];
-							dbConnection.query(sql, post, function(err, result) {
-								if (err) throw err;
-								if (result.length > 0) {
-									for (var i = 0; i < result.length; i++) {
-										var message = {
-											data: {
-												type: 'Crossed Paths',
-												title: 'You just crossed paths with one of your matches!',
-												body: 'Tap to see who you crossed paths with.',
-												uid: uidOther
-											},
-											token: result[i].registrationToken,
-											android: {
-												ttl: 3600000,
-												priority: 'high',
-											}
-										};
-										admin.messaging().send(message)
-											.then((response) => {
-												console.log('Successfully sent crossed paths notification.');
-											})
-										.catch((error) => {
-											console.log(error);
-										});
+				if (!matchGraph.hasEdge(request.session.uid, uidOther, "blocked") && !matchGraph.hasEdge(uidOther, request.session.uid, "blocked")) {
+					// Get cross radius for other user ID
+					sql = "SELECT ?? FROM ?? WHERE ??=?";
+					post = [crossRadius, db_accounts, uid, uidOther];
+					dbConnection.query(sql, post, function(err, result) {
+						if (err) throw err;
+						var otherLatMin = latOther - feetToLat(result[0].crossRadius);
+						var otherLatMax = latOther + feetToLat(result[0].crossRadius);
+						var otherLonMin = lonOther - feetToLon(result[0].crossRadius, latOther);
+						var otherLonMax = lonOther + feetToLon(result[0].crossRadius, latOther);
+						if (lat >= otherLatMin && lat <= otherLatMax && lon >= otherLonMin && lon <= otherLonMax) {
+							// If also within other user ID's cross radius
+							if (!matchGraph.hasEdge(request.session.uid, uidOther, "timesCrossed") && !matchGraph.hasEdge(uidOther, request.session.uid, "timesCrossed")) {
+								// If never crossed before, create timesCrossed, lastTime, and crossLocations edges
+								matchGraph.setEdge(request.session.uid, uidOther, 1, "timesCrossed");
+								matchGraph.setEdge(uidOther, request.session.uid, 1, "timesCrossed");
+								matchGraph.setEdge(request.session.uid, uidOther, currentTime, "lastTime");
+								matchGraph.setEdge(uidOther, request.session.uid, currentTime, "lastTime");
+								var object = {};
+								var key = "Cross Locations";
+								object[key] = [];
+								var crossLat = (parseFloat(lat) + parseFloat(latOther)) / parseFloat(2.0);
+								var crossLon = (parseFloat(lon) + parseFloat(lonOther)) / parseFloat(2.0);
+								var data = {latitude: crossLat, longitude: crossLon};
+								object[key].push(data);
+								matchGraph.setEdge(request.session.uid, uidOther, JSON.stringify(object), "crossLocations");
+								matchGraph.setEdge(uidOther, request.session.uid, JSON.stringify(object), "crossLocations");
+								console.log('Users crossed paths for the first time.');
+							} else if (matchGraph.edge(request.session.uid, uidOther, "lastTime") < currentTime - CROSS_COOLDOWN && matchGraph.edge(uidOther, request.session.uid, "lastTime") < currentTime - CROSS_COOLDOWN) {
+								// If crossed before, increment timesCrossed edge and update lastTime and crossLocations edges
+								matchGraph.setEdge(request.session.uid, uidOther, matchGraph.edge(request.session.uid, uidOther, "timesCrossed") + 1, "timesCrossed");
+								matchGraph.setEdge(uidOther, request.session.uid, matchGraph.edge(uidOther, request.session.uid, "timesCrossed") + 1, "timesCrossed");
+								matchGraph.setEdge(request.session.uid, uidOther, currentTime, "lastTime");
+								matchGraph.setEdge(uidOther, request.session.uid, currentTime, "lastTime");
+								var object = JSON.parse(matchGraph.edge(request.session.uid, uidOther, "crossLocations"));
+								var key = "Cross Locations";
+								var crossLat = (parseFloat(lat) + parseFloat(latOther)) / parseFloat(2.0);
+								var crossLon = (parseFloat(lon) + parseFloat(lonOther)) / parseFloat(2.0);
+								var data = {latitude: crossLat, longitude: crossLon};
+								object[key].push(data);
+								matchGraph.setEdge(request.session.uid, uidOther, JSON.stringify(object), "crossLocations");
+								matchGraph.setEdge(uidOther, request.session.uid, JSON.stringify(object), "crossLocations");
+								console.log('Users crossed paths again.');
+							}
+							if (matchGraph.edge(request.session.uid, uidOther, "timesCrossed") >= MATCH_THRESHOLD && matchGraph.edge(uidOther, request.session.uid, "timesCrossed") >= MATCH_THRESHOLD && !matchGraph.hasEdge(request.session.uid, uidOther, "matched") && !matchGraph.hasEdge(uidOther, request.session.uid, "matched") && !matchGraph.hasEdge(request.session.uid, uidOther, "newMatch") && !matchGraph.hasEdge(uidOther, request.session.uid, "newMatch")) {
+								if (!matchGraph.hasEdge(request.session.uid, uidOther, "unmatched") && !matchGraph.hasEdge(uidOther, request.session.uid, "unmatched")) {
+									// If crossed greater than or equal to match threshold times and not unmatched and not already matched, create newMatch edges
+									matchGraph.setEdge(request.session.uid, uidOther, true, "newMatch");
+									matchGraph.setEdge(uidOther, request.session.uid, true, "newMatch");
+									console.log('Users matched.');
+								} else if (matchGraph.edge(request.session.uid, uidOther, "timesCrossed") >= UNMATCHED_MATCH_THRESHOLD && matchGraph.edge(uidOther, request.session.uid, "timesCrossed") >= UNMATCHED_MATCH_THRESHOLD) {
+									// If crossed greater than or equal to unmatched match threshold times and unmatched and not already matched, create newMatch edges
+									matchGraph.setEdge(request.session.uid, uidOther, true, "newMatch");
+									matchGraph.setEdge(uidOther, request.session.uid, true, "newMatch");
+									if (matchGraph.hasEdge(request.session.uid, uidOther, "unmatched")) {
+										matchGraph.removeEdge(request.session.uid, uidOther, "unmatched");
 									}
-								}
-							});
-							var sql = "SELECT ?? FROM ?? WHERE ??=?";
-							var post = [registrationToken, db_firebase, uid, uidOther];
-							dbConnection.query(sql, post, function(err, result) {
-								if (err) throw err;
-								if (result.length > 0) {
-									for (var i = 0; i < result.length; i++) {
-										var message = {
-											data: {
-												type: 'Crossed Paths',
-												title: 'You just crossed paths with one of your matches!',
-												body: 'Tap to see who you crossed paths with.',
-												uid: request.session.uid
-											},
-											token: result[i].registrationToken,
-											android: {
-												ttl: 3600000,
-												priority: 'high',
-											}
-										};
-										admin.messaging().send(message)
-											.then((response) => {
-												console.log('Successfully sent crossed paths notification.');
-											})
-										.catch((error) => {
-											console.log(error);
-										});
+									if (matchGraph.hasEdge(uidOther, request.session.uid, "unmatched")) {
+										matchGraph.removeEdge(uidOther, request.session.uid, "unmatched");
 									}
+									console.log('Unmatched users matched.');
 								}
-							});
+							} else if (matchGraph.edge(request.session.uid, uidOther, "timesCrossed") >= MATCH_THRESHOLD && matchGraph.edge(uidOther, request.session.uid, "timesCrossed") >= MATCH_THRESHOLD && matchGraph.hasEdge(request.session.uid, uidOther, "matched") && matchGraph.hasEdge(uidOther, request.session.uid, "matched") && matchGraph.hasEdge(request.session.uid, uidOther, "approved") && matchGraph.hasEdge(uidOther, request.session.uid, "approved") && matchGraph.edge(request.session.uid, uidOther, "approved") == true && matchGraph.edge(uidOther, request.session.uid, "approved") == true) {
+								// If crossed and already matched, notify users
+								var sql = "SELECT ?? FROM ?? WHERE ??=?";
+								var post = [registrationToken, db_firebase, uid, request.session.uid];
+								dbConnection.query(sql, post, function(err, result) {
+									if (err) throw err;
+									if (result.length > 0) {
+										for (var i = 0; i < result.length; i++) {
+											var message = {
+												data: {
+													type: 'Crossed Paths',
+													title: 'You just crossed paths with one of your matches!',
+													body: 'Tap to see who you crossed paths with.',
+													uid: uidOther
+												},
+												token: result[i].registrationToken,
+												android: {
+													ttl: 3600000,
+													priority: 'high',
+												}
+											};
+											admin.messaging().send(message)
+												.then((response) => {
+													console.log('Successfully sent crossed paths notification.');
+												})
+											.catch((error) => {
+												console.log(error);
+											});
+										}
+									}
+								});
+								var sql = "SELECT ?? FROM ?? WHERE ??=?";
+								var post = [registrationToken, db_firebase, uid, uidOther];
+								dbConnection.query(sql, post, function(err, result) {
+									if (err) throw err;
+									if (result.length > 0) {
+										for (var i = 0; i < result.length; i++) {
+											var message = {
+												data: {
+													type: 'Crossed Paths',
+													title: 'You just crossed paths with one of your matches!',
+													body: 'Tap to see who you crossed paths with.',
+													uid: request.session.uid
+												},
+												token: result[i].registrationToken,
+												android: {
+													ttl: 3600000,
+													priority: 'high',
+												}
+											};
+											admin.messaging().send(message)
+												.then((response) => {
+													console.log('Successfully sent crossed paths notification.');
+												})
+											.catch((error) => {
+												console.log(error);
+											});
+										}
+									}
+								});
+							}
 						}
-					}
 
-				});
+					});
+				}
 			}
 			writeMatchGraph();
 		});
@@ -2278,8 +2418,6 @@ function notifyMatches() {
 			// Create matched, approved, unmatched, and blocked edges
 			matchGraph.setEdge(edges[i].v, edges[i].w, true, "matched");
 			matchGraph.setEdge(edges[i].v, edges[i].w, false, "approved");
-			matchGraph.setEdge(edges[i].v, edges[i].w, false, "unmatched");
-			matchGraph.setEdge(edges[i].v, edges[i].w, false, "blocked");
 		}
 	}
 	for (var key in toNotify) {
@@ -2401,6 +2539,148 @@ function unapproveUser(u, request, response) {
 	return response.status(200).send(JSON.stringify({"response":"pass"}));
 }
 
+// Unmatches the user with the given user ID
+function unmatchUser(u, request, response) {
+	matchGraph.setEdge(request.session.uid, u, true, "unmatched");
+	matchGraph.removeEdge(request.session.uid, u, "matched");
+	matchGraph.removeEdge(u, request.session.uid, "matched");
+	matchGraph.removeEdge(request.session.uid, u, "approved");
+	matchGraph.removeEdge(u, request.session.uid, "approved");
+	matchGraph.removeEdge(request.session.uid, u, "timesCrossed");
+	matchGraph.removeEdge(u, request.session.uid, "timesCrossed");
+	matchGraph.removeEdge(request.session.uid, u, "lastTime");
+	matchGraph.removeEdge(u, request.session.uid, "lastTime");
+	matchGraph.removeEdge(request.session.uid, u, "crossLocations");
+	matchGraph.removeEdge(u, request.session.uid, "crossLocations");
+	writeMatchGraph();
+	// Delete messages
+	var sql = "DELETE FROM ?? WHERE ??=? AND ??=? OR ??=? AND ??=?";
+	var post = [db_messages, uidFrom, request.session.uid, uidTo, u, uidFrom, u, uidTo, request.session.uid];
+	dbConnection.query(sql, post, function(err, result) {
+		if (err) throw err;
+		console.log('User unmatched.');
+		return response.status(200).send(JSON.stringify({"response":"pass"}));
+	});
+}
+
+// Blocks the user with the given user ID
+function blockUser(u, request, response) {
+	matchGraph.setEdge(request.session.uid, u, true, "blocked");
+	matchGraph.removeEdge(request.session.uid, u, "matched");
+	matchGraph.removeEdge(u, request.session.uid, "matched");
+	matchGraph.removeEdge(request.session.uid, u, "approved");
+	matchGraph.removeEdge(u, request.session.uid, "approved");
+	matchGraph.removeEdge(request.session.uid, u, "timesCrossed");
+	matchGraph.removeEdge(u, request.session.uid, "timesCrossed");
+	matchGraph.removeEdge(request.session.uid, u, "lastTime");
+	matchGraph.removeEdge(u, request.session.uid, "lastTime");
+	matchGraph.removeEdge(request.session.uid, u, "crossLocations");
+	matchGraph.removeEdge(u, request.session.uid, "crossLocations");
+	writeMatchGraph();
+	// Delete messages
+	var sql = "DELETE FROM ?? WHERE ??=? AND ??=? OR ??=? AND ??=?";
+	var post = [db_messages, uidFrom, request.session.uid, uidTo, u, uidFrom, u, uidTo, request.session.uid];
+	dbConnection.query(sql, post, function(err, result) {
+		if (err) throw err;
+		console.log('User blocked.');
+		return response.status(200).send(JSON.stringify({"response":"pass"}));
+	});
+}
+
+// Unblocks the user with the given user ID
+function unblockUser(u, request, response) {
+	matchGraph.removeEdge(request.session.uid, u, "blocked");
+	writeMatchGraph();
+	console.log('User unblocked.');
+	return response.status(200).send(JSON.stringify({"response":"pass"}));
+}
+
+// Reports the user with the given user ID
+function reportUser(u, r, request, response) {
+	matchGraph.setEdge(request.session.uid, u, true, "blocked");
+	matchGraph.removeEdge(request.session.uid, u, "matched");
+	matchGraph.removeEdge(u, request.session.uid, "matched");
+	matchGraph.removeEdge(request.session.uid, u, "approved");
+	matchGraph.removeEdge(u, request.session.uid, "approved");
+	matchGraph.removeEdge(request.session.uid, u, "timesCrossed");
+	matchGraph.removeEdge(u, request.session.uid, "timesCrossed");
+	matchGraph.removeEdge(request.session.uid, u, "lastTime");
+	matchGraph.removeEdge(u, request.session.uid, "lastTime");
+	matchGraph.removeEdge(request.session.uid, u, "crossLocations");
+	matchGraph.removeEdge(u, request.session.uid, "crossLocations");
+	writeMatchGraph();
+	// Delete messages
+	var sql = "DELETE FROM ?? WHERE ??=? AND ??=? OR ??=? AND ??=?";
+	var post = [db_messages, uidFrom, request.session.uid, uidTo, u, uidFrom, u, uidTo, request.session.uid];
+	dbConnection.query(sql, post, function(err, result) {
+		if (err) throw err;
+		// Add offense to offenses table
+		var sql = "INSERT INTO ?? SET ??=?, ??=?";
+		var post = [db_offenses, uid, u, reason, r];
+		dbConnection.query(sql, post, function(err, result){
+			if (err) throw err;
+			// Get total number of offenses
+			var sql = "SELECT ?? FROM ?? WHERE ??=?";
+			var post = [uid, db_offenses, uid, u];
+			dbConnection.query(sql, post, function(err, result){
+				if (result.length == WARN_THRESHOLD) {
+					// Warn user of offenses
+					var sql = "SELECT ?? FROM ?? WHERE ??=?";
+					var post = [registrationToken, db_firebase, uid, u];
+					dbConnection.query(sql, post, function(err, result) {
+						if (err) throw err;
+						if (result.length > 0) {
+							for (var i = 0; i < result.length; i++) {
+								var message = {
+									data: {
+										type: 'Offense Warning',
+										title: 'You have been reported multiple times.',
+										body: 'Your account will be banned if you continue to be reported.',
+									},
+									token: result[i].registrationToken,
+									android: {
+										ttl: 3600000,
+										priority: 'high',
+									}
+								};
+								admin.messaging().send(message)
+									.then((response) => {
+										console.log('Successfully sent offense warning notification.');
+									})
+								.catch((error) => {
+									console.log(error);
+								});
+							}
+						}
+					});
+				} else if (result.length >= BAN_THRESHOLD) {
+					// Update account banned to true
+					var sql = "UPDATE ?? SET ??=? WHERE ??=?";
+					var post = [db_accounts, banned, true, uid, u];
+					dbConnection.query(sql, post, function(err, result){
+						if (err) throw err;
+						matchGraph.removeNode(u);
+						matchGraph.setNode(u);
+						writeMatchGraph();
+						console.log('User banned.');
+					});
+				}
+				// Send report notification email
+				const msg = {
+					to: process.env.SUPPORT_EMAIL,
+					from: 'support@vvander.me',
+					subject: 'Offense Report',
+					text: 'USER ID: ' + u + ' REASON: ' + r,
+					html: '<strong>USER ID: ' + u + ' REASON: ' + r + '</strong>'
+				};
+				sgMail.send(msg);
+				console.log('User reported.');
+				return response.status(200).send(JSON.stringify({"response":"pass"}));
+			});
+		});
+	});
+}
+
 // Gets all location coordinates for user ID for heatmap generation
 function getLocationForHeatmap(request, response) {
 	var sql = "SELECT ??,?? FROM ?? WHERE ??=?";
@@ -2456,7 +2736,7 @@ function getAllMatches(request, response) {
 
 // Gets information of a single match
 function getMatch(u, request, response) {
-	if (matchGraph.hasEdge(request.session.uid, u, "matched")) {
+	if (matchGraph.hasEdge(request.session.uid, u, "matched") && matchGraph.edge(request.session.uid, u, "matched") === true) {
 		var sql = "SELECT * FROM ?? WHERE ??=?";
 		var post = [db_profiles, uid, u];
 		dbConnection.query(sql, post, function(err, result) {
@@ -2520,7 +2800,7 @@ function storeTagData(request, response) {
 			var lon = arr[1];
 			var t = arr[2];
 			var r = arr[3];
-			
+
 			var post = [db_tags, uid, latitude, longitude, title, review, request.session.uid, lat, lon, t, r, title, t, review, r];
 			dbConnection.query(sql, post, function(err, result){
 				if (err) throw err;
@@ -2552,7 +2832,7 @@ function getTagData(request, response) {
 		}
 		console.log("User tags sent.");
 		return response.status(200).send(JSON.stringify(object));
-		
+
 	});
 }
 
@@ -2567,7 +2847,7 @@ function deleteTagData(request, response) {
 			var sql = "DELETE FROM ?? WHERE ??=? AND ??=? AND ??=?";
 			var lat = parseFloat(arr[0]);
 			var lon = parseFloat(arr[1]);
-			
+
 			var post = [db_tags, uid, request.session.uid, latitude, lat, longitude, lon];
 			dbConnection.query(sql, post, function(err, result){
 				if (err) throw err;
@@ -2586,9 +2866,9 @@ function getMatchTagData(request, response) {
 	var edges = matchGraph.outEdges(request.session.uid);
 	var counter = 0;
 	for (var i = 0; i < edges.length; i++) {
-			if (matchGraph.hasEdge(request.session.uid, edges[i].w, "approved")) {
-				counter++;
-			}
+		if (matchGraph.hasEdge(request.session.uid, edges[i].w, "approved")) {
+			counter++;
+		}
 	}
 	var object = {};
 	var key = "Tag";
@@ -2610,7 +2890,7 @@ function getMatchTagData(request, response) {
 						var r = result[j].review;
 						var data = {latitude: lat, longitude: lon, title: t, review: r};
 						object[key].push(data);
-					
+
 
 						if (i === counter && j === result.length - 1) {
 							console.log("Array: " + object[key]);
