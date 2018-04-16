@@ -11,9 +11,9 @@ import android.widget.TextView;
 
 import java.util.ArrayList;
 
-public class MatchAdapter extends ArrayAdapter<Match> {
-    MatchAdapter(Context context, ArrayList<Match> matchList) {
-        super(context, 0, matchList);
+public class BlockedAdapter extends ArrayAdapter<Blocked> {
+    BlockedAdapter(Context context, ArrayList<Blocked> blockedList) {
+        super(context, 0, blockedList);
     }
 
     @NonNull
@@ -23,12 +23,12 @@ public class MatchAdapter extends ArrayAdapter<Match> {
             convertView = LayoutInflater.from(getContext()).inflate(R.layout.profile_list_item, parent, false);
         }
 
-        Match match = getItem(position);
-        if (match != null) {
+        Blocked blocked = getItem(position);
+        if (blocked != null) {
             TextView name = convertView.findViewById(R.id.name);
-            name.setText(match.getName());
+            name.setText(blocked.getName());
             ImageView picture = convertView.findViewById(R.id.picture);
-            picture.setImageBitmap(Utilities.decodeImage(match.getPicture()));
+            picture.setImageBitmap(Utilities.decodeImage(blocked.getPicture()));
         }
         return convertView;
     }

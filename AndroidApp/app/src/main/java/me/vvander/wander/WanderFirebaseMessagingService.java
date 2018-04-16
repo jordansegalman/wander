@@ -104,6 +104,37 @@ public class WanderFirebaseMessagingService extends FirebaseMessagingService {
                     }
                     break;
                 }
+                case "Offense Warning": {
+                    NotificationManager notificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
+                    if (notificationManager != null) {
+                        String channel_id = "offense_warnings_id";
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                            CharSequence channel_name = "Offense Warnings";
+                            int importance = NotificationManager.IMPORTANCE_HIGH;
+                            NotificationChannel notificationChannel = new NotificationChannel(channel_id, channel_name, importance);
+                            notificationChannel.enableLights(true);
+                            notificationChannel.setLightColor(R.color.colorAccent);
+                            notificationChannel.enableVibration(true);
+                            notificationChannel.setVibrationPattern(new long[]{100, 200, 300, 200, 100});
+                            notificationManager.createNotificationChannel(notificationChannel);
+                        }
+                        Intent intent;
+                        if (Data.getInstance().getLoggedIn() || Data.getInstance().getLoggedInGoogle() || Data.getInstance().getLoggedInFacebook()) {
+                            intent = new Intent(getApplicationContext(), HomeActivity.class);
+                        } else {
+                            intent = new Intent(getApplicationContext(), LoginActivity.class);
+                        }
+                        PendingIntent pendingIntent = PendingIntent.getActivity(getApplicationContext(), 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+                        NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(getApplicationContext(), channel_id)
+                                .setContentTitle(remoteMessage.getData().get("title"))
+                                .setContentText(remoteMessage.getData().get("body"))
+                                .setSmallIcon(R.drawable.offense_notification_icon)
+                                .setAutoCancel(true)
+                                .setContentIntent(pendingIntent);
+                        notificationManager.notify(1, notificationBuilder.build());
+                    }
+                    break;
+                }
             }
         }
     }

@@ -5,6 +5,8 @@ import android.graphics.BitmapFactory;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ListView;
@@ -47,6 +49,22 @@ public class MatchesActivity extends AppCompatActivity {
         matchList.clear();
         remainingMatchesToAdd = 0;
         requestAllMatches();
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.matches_options_menu, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.blocked_users:
+                startActivity(new Intent(MatchesActivity.this, BlockedActivity.class));
+                return true;
+        }
+        return super.onOptionsItemSelected(item);
     }
 
     private void requestAllMatches() {
@@ -150,7 +168,7 @@ public class MatchesActivity extends AppCompatActivity {
             matchListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
                 @Override
                 public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                    final Match match = (Match) parent.getAdapter().getItem(position);
+                    Match match = (Match) parent.getAdapter().getItem(position);
 
                     Intent intent = new Intent(MatchesActivity.this, MatchProfileActivity.class);
                     intent.putExtra("uid", match.getUserID());
