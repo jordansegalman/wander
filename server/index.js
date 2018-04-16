@@ -73,8 +73,10 @@ const CROSS_TIME = 30000;			// 30 seconds
 const CROSS_COOLDOWN = 1000;			// 1 second (DEVELOPMENT)
 //const MATCH_NOTIFY_CRON = '0 20 * * * *';	// Every day at 20:00
 const MATCH_NOTIFY_CRON = '0 * * * * *';	// Every minute (DEVELOPMENT)
-const WARN_THRESHOLD = 3;			// Warn after 3 offenses
-const BAN_THRESHOLD = 5;			// Ban after 5 offenses
+//const WARN_THRESHOLD = 3;			// Warn after 3 offenses
+const WARN_THRESHOLD = 1;			// Warn after 1 offense (DEVELOPMENT)
+//const BAN_THRESHOLD = 5;			// Ban after 5 offenses
+const BAN_THRESHOLD = 2;			// Ban after 2 offenses (DEVELOPMENT)
 
 // Constant used for password reset and session
 const crypto = require('crypto');
@@ -442,7 +444,7 @@ app.post('/verifySession', function(request, response) {
 	var post = [banned, db_accounts, uid, request.session.uid];
 	dbConnection.query(sql, post, function(err, result) {
 		if (err) throw err;
-		if (result[0].banned === true) {
+		if (result[0].banned == true) {
 			return response.status(400).send("Account banned.");
 		}
 	});
@@ -993,8 +995,8 @@ app.post('/reportUser', function(request, response){
 	// If the object request.body is null, respond with status 500 'Internal Server Error'
 	if (!request.body) return response.sendStatus(500);
 
-	// POST request must have 1 parameter (uid)
-	if (Object.keys(request.body).length != 1 || !request.body.uid) {
+	// POST request must have 2 parameters (uid and reason)
+	if (Object.keys(request.body).length != 2 || !request.body.uid || !request.body.reason) {
 		return response.status(400).send("Invalid POST request");
 	}
 
@@ -1141,6 +1143,49 @@ app.post('/getMessages', function(request, response){
 	}
 
 	getMessages(u, request, response);
+});
+
+// Called when a POST request is made to /getAllBlocked
+app.post('/getAllBlocked', function(request, response){
+	// If the object request.body is null, respond with status 500 'Internal Server Error'
+	if (!request.body) return response.sendStatus(500);
+
+	// POST request must have 0 parameters
+	if (Object.keys(request.body).length != 0) {
+		return response.status(400).send("Invalid POST request");
+	}
+
+	// If session not authenticated
+	if (!request.session || ((!request.session.authenticated || request.session.authenticated === false) && (!request.session.googleAuthenticated || request.session.googleAuthenticated === false) && (!request.session.facebookAuthenticated || request.session.facebookAuthenticated === false))) {
+		return response.status(400).send("User not logged in.");
+	}
+
+	getAllBlocked(request, response);
+});
+
+// Called when a POST request is made to /getBlocked
+app.post('/getBlocked', function(request, response){
+	// If the object request.body is null, respond with status 500 'Internal Server Error'
+	if (!request.body) return response.sendStatus(500);
+
+	// POST request must have 1 parameter (uid)
+	if (Object.keys(request.body).length != 1 || !request.body.uid) {
+		return response.status(400).send("Invalid POST request");
+	}
+
+	// If session not authenticated
+	if (!request.session || ((!request.session.authenticated || request.session.authenticated === false) && (!request.session.googleAuthenticated || request.session.googleAuthenticated === false) && (!request.session.facebookAuthenticated || request.session.facebookAuthenticated === false))) {
+		return response.status(400).send("User not logged in.");
+	}
+
+	// Validate uid
+	if (validateUid(request.body.uid)) {
+		var u = request.body.uid;
+	} else {
+		return response.status(400).send("Invalid user ID.");
+	}
+
+	getBlocked(u, request, response);
 });
 
 // Called when a POST request is made to /storeTagData
@@ -1356,7 +1401,7 @@ function login(u, p, request, response) {
 		if (result.length != 1) {
 			return response.status(400).send("Invalid username or password. Try again.");
 		} else {
-			if (result[0].banned === true) {
+			if (result[0].banned == true) {
 				return response.status(400).send("Account banned.");
 			}
 			// Compare sent password hash to account password hash
@@ -1435,7 +1480,7 @@ function googleLogin(id, e, request, response) {
 				}
 			});
 		} else if (result.length == 1) {
-			if (result[0].banned === true) {
+			if (result[0].banned == true) {
 				return response.status(400).send("Account banned.");
 			}
 			if (result[0].email == e) {
@@ -1528,7 +1573,7 @@ function facebookLogin(id, e, request, response) {
 				}
 			});
 		} else if (result.length == 1) {
-			if (result[0].banned === true) {
+			if (result[0].banned == true) {
 				return response.status(400).send("Account banned.");
 			}
 			if (result[0].email == e) {
@@ -2589,10 +2634,12 @@ function blockUser(u, request, response) {
 
 // Unblocks the user with the given user ID
 function unblockUser(u, request, response) {
-	matchGraph.removeEdge(request.session.uid, u, "blocked");
-	writeMatchGraph();
-	console.log('User unblocked.');
-	return response.status(200).send(JSON.stringify({"response":"pass"}));
+	if (matchGraph.hasEdge(request.session.uid, u, "blocked") && matchGraph.edge(request.session.uid, u, "blocked") === true) {
+		matchGraph.removeEdge(request.session.uid, u, "blocked");
+		writeMatchGraph();
+		console.log('User unblocked.');
+		return response.status(200).send(JSON.stringify({"response":"pass"}));
+	}
 }
 
 // Reports the user with the given user ID
@@ -2741,22 +2788,58 @@ function getMatch(u, request, response) {
 		var post = [db_profiles, uid, u];
 		dbConnection.query(sql, post, function(err, result) {
 			if (err) throw err;
-			if (result.length == 0) {
+			if (result.length != 1) {
 				return response.status(500).send("Error getting match information.\n");
 			} else {
 				var object = {};
 				var key = "Profile";
 				object[key] = [];
-				for (var j = 0; j < result.length; j++) {
-					var n = result[j].name;
-					var a = result[j].about;
-					var i = result[j].interests;
-					var p = result[j].picture;
-					var t = matchGraph.edge(request.session.uid, result[j].uid, "timesCrossed");
-					var ap = matchGraph.edge(request.session.uid, result[j].uid, "approved");
-					var data = {uid: result[j].uid, name: n, about: a, interests: i, picture: p, timesCrossed: t, approved: ap};
-					object[key].push(data);
-				}
+				var n = result[0].name;
+				var a = result[0].about;
+				var i = result[0].interests;
+				var p = result[0].picture;
+				var t = matchGraph.edge(request.session.uid, u, "timesCrossed");
+				var ap = matchGraph.edge(request.session.uid, u, "approved");
+				var data = {uid: u, name: n, about: a, interests: i, picture: p, timesCrossed: t, approved: ap};
+				object[key].push(data);
+				return response.status(200).send(JSON.stringify(object));
+			}
+		});
+	}
+}
+
+// Gets user IDs of all blocked users
+function getAllBlocked(request, response) {
+	var edges = matchGraph.outEdges(request.session.uid);
+	var object = {};
+	var key = "UIDs";
+	object[key] = [];
+	for (var i = 0; i < edges.length; i++) {
+		if (edges[i].name === "blocked") {
+			var data = {uid: edges[i].w};
+			object[key].push(data);
+		}
+	}
+	return response.status(200).send(JSON.stringify(object));
+}
+
+// Gets information of a single blocked user
+function getBlocked(u, request, response) {
+	if (matchGraph.hasEdge(request.session.uid, u, "blocked") && matchGraph.edge(request.session.uid, u, "blocked") === true) {
+		var sql = "SELECT ??,?? FROM ?? WHERE ??=?";
+		var post = [name, picture, db_profiles, uid, u];
+		dbConnection.query(sql, post, function(err, result) {
+			if (err) throw err;
+			if (result.length != 1) {
+				return response.status(500).send("Error getting blocked user's information.\n");
+			} else {
+				var object = {};
+				var key = "Blocked";
+				object[key] = [];
+				var n = result[0].name;
+				var p = result[0].picture;
+				var data = {uid: u, name: n, picture: p};
+				object[key].push(data);
 				return response.status(200).send(JSON.stringify(object));
 			}
 		});
@@ -2943,8 +3026,8 @@ function getStatistics(lat, lon, request, response) {
 					numNewMatches++;
 				}
 			}
-			statistics['numMatches'] = numMatches;
-			statistics['numNewMatches'] = numNewMatches;
+			statistics['numMatches'] = numMatches / 2;
+			statistics['numNewMatches'] = numNewMatches / 2;
 			console.log('Statistics sent.');
 			return response.status(200).send(JSON.stringify(statistics));
 		});
