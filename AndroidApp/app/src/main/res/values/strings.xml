@@ -14,4 +14,23 @@
         <item>Video Games</item>
         <item>Sports</item>
     </string-array>
+
+    <string-array name="colorList">
+        <item>Default</item>
+        <item>Red</item>
+        <item>Orange</item>
+        <item>Yellow</item>
+        <item>Blue</item>
+        <item>Green</item>
+        <item>Purple</item>
+    </string-array>
+
+    <string-array name="fontList">
+        <item>Default</item>
+        <item>Light</item>
+        <item>Condensed</item>
+        <item>Black</item>
+        <item>Thin</item>
+        <item>Medium</item>
+    </string-array>
 </resources>
