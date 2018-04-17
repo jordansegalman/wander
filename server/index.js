@@ -9,6 +9,7 @@ var graphlib = require('graphlib');
 var schedule = require('node-schedule');
 var validator = require('validator');
 var admin = require('firebase-admin');
+var geocluster = require('geocluster');
 
 // Load environment variables
 require('dotenv').config();
@@ -77,6 +78,7 @@ const MATCH_NOTIFY_CRON = '0 * * * * *';	// Every minute (DEVELOPMENT)
 const WARN_THRESHOLD = 1;			// Warn after 1 offense (DEVELOPMENT)
 //const BAN_THRESHOLD = 5;			// Ban after 5 offenses
 const BAN_THRESHOLD = 2;			// Ban after 2 offenses (DEVELOPMENT)
+const POPULAR_LOCATION_CRON = '0 0 * * * *';	// Every day at 0:00
 
 // Constant used for password reset and session
 const crypto = require('crypto');
@@ -288,6 +290,13 @@ function setupSocketIO() {
 function scheduleMatchNotifications() {
 	schedule.scheduleJob(MATCH_NOTIFY_CRON, function() {
 		notifyMatches();
+	});
+}
+
+// Setup schedule for generating popular locations
+function schedulePopularLocationGeneration() {
+		schedule.scheduleJob(POPULAR_LOCATION_CRON, function() {
+			calculateDensity();
 	});
 }
 
@@ -1285,6 +1294,24 @@ app.post('/getStatistics', function(request, response){
 	}
 
 	getStatistics(lat, lon, request, response);
+});
+
+// Called when a POST request is made to /getSuggestions
+app.post('/getSuggestions', function(request, response){
+	// If the object request.body is null, respond with status 500 'Internal Server Error'
+	if (!request.body) return response.sendStatus(500);
+
+	// POST request should not have any parameters
+	if (Object.keys(request.body).length != 0) {
+		return response.status(400).send("Invalid POST request\n");
+	}
+
+	// If session not authenticated
+	if (!request.session || ((!request.session.authenticated || request.session.authenticated === false) && (!request.session.googleAuthenticated || request.session.googleAuthenticated === false) && (!request.session.facebookAuthenticated || request.session.facebookAuthenticated === false))) {
+		return response.status(400).send("User not logged in.\n");
+	}
+
+	getSuggestions(request, response);
 });
 
 // Validates a user ID
@@ -3030,6 +3057,39 @@ function getStatistics(lat, lon, request, response) {
 			statistics['numNewMatches'] = numNewMatches / 2;
 			console.log('Statistics sent.');
 			return response.status(200).send(JSON.stringify(statistics));
+		});
+	});
+}
+
+// Gets suggestions for users to meet more people
+function getSuggestions(request, response) {
+	var json = JSON.parse(fs.readFileSync('popularCluster.json', 'utf8'));
+	return response.status(200).send(json);
+}
+
+// Writes clusters of popular locations to a file
+function calculateDensity() {
+	var sql = "SELECT ??,?? FROM ??";
+	var post = [latitude, longitude, db_locations];
+	dbConnection.query(sql, post, function(err, result){
+		var dataset = [];
+		for (var i = 0; i < result.length; i++) {
+			var lat = result[i].latitude;
+			var lon = result[i].longitude;
+			var set = [lat, lon];
+			dataset.push(set);
+		}
+		var bias = 3;
+		var data = geocluster(dataset, bias);
+		for (var i = 0; i < data.length; i++) {
+			console.log("Centroid: " + data[i].centroid);
+			for (var j = 0; j < data[i].elements.length; j++) {
+				console.log("Element: " + data[i].elements[j]);
+			}
+		}
+		fs.writeFile('popularCluster.json', JSON.stringify(data), function(err){
+			if (err) throw err;
+			console.log("Popular clusters written to file.");
 		});
 	});
 }
