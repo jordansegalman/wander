@@ -86,7 +86,7 @@ public class LocationScheduleNewActivity extends AppCompatActivity {
         }
     }
 
-    public void startTimeButton(View view) {
+    public void chooseStartTime(View view) {
         Bundle bundle = new Bundle();
         bundle.putString("Time", "Start");
         DialogFragment newFragment = new LocationScheduleTimePickerFragment();
@@ -94,7 +94,7 @@ public class LocationScheduleNewActivity extends AppCompatActivity {
         newFragment.show(getFragmentManager(), "TimePicker");
     }
 
-    public void endTimeButton(View view) {
+    public void chooseEndTime(View view) {
         Bundle bundle = new Bundle();
         bundle.putString("Time", "End");
         DialogFragment newFragment = new LocationScheduleTimePickerFragment();
