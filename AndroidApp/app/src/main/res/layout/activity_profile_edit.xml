@@ -117,7 +117,7 @@
                 android:layout_height="wrap_content"
                 android:layout_gravity="end"
                 android:layout_weight="0"
-                android:backgroundTint="@color/colorAccent"
+                android:backgroundTint="?attr/colorAccent"
                 android:onClick="done"
                 android:text="Done" />
 

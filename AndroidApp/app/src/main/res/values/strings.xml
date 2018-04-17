@@ -26,11 +26,7 @@
     </string-array>
 
     <string-array name="fontList">
-        <item>Default</item>
-        <item>Light</item>
-        <item>Condensed</item>
-        <item>Black</item>
-        <item>Thin</item>
-        <item>Medium</item>
+        <item>Sans-Serif</item>
+        <item>Serif</item>
     </string-array>
 </resources>
