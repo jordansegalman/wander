@@ -1,16 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
+<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:padding="20dp">
+    tools:context="me.vvander.wander.MatchProfileActivity">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="fill_parent"
-        android:layout_above="@+id/button_layer"
         android:gravity="top"
-        android:orientation="vertical">
+        android:orientation="vertical"
+        android:padding="20dp">
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -58,7 +58,7 @@
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="About Me:"
+            android:text="About Me"
             android:textColor="#000000"
             android:textSize="20sp" />
 
@@ -72,7 +72,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:inputType="none"
-            android:text="Interests:"
+            android:text="Interests"
             android:textColor="#000000"
             android:textSize="20sp" />
 
@@ -85,7 +85,7 @@
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Times Crossed:"
+            android:text="Times Crossed"
             android:textColor="#000000"
             android:textSize="20sp" />
 
@@ -95,25 +95,21 @@
             android:layout_height="wrap_content"
             android:text="0" />
 
-    </LinearLayout>
-
-    <LinearLayout
-        android:id="@+id/button_layer"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_alignParentBottom="true"
-        android:orientation="horizontal">
+        <Space
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight="1" />
 
         <LinearLayout
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_weight="0">
+            android:layout_weight="0"
+            android:gravity="center">
 
             <Button
                 android:id="@+id/chatButton"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_weight="0"
                 android:backgroundTint="@color/colorAccent"
                 android:onClick="chat"
                 android:text="Chat" />
@@ -123,7 +119,6 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="end"
-                android:layout_weight="0"
                 android:backgroundTint="@color/colorAccent"
                 android:onClick="approveUser"
                 android:text="Approve"
@@ -134,7 +129,6 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="end"
-                android:layout_weight="0"
                 android:backgroundTint="@color/colorAccent"
                 android:onClick="unapproveUser"
                 android:text="Unapprove"
@@ -145,7 +139,6 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="end"
-                android:layout_weight="0"
                 android:backgroundTint="@color/colorAccent"
                 android:onClick="getCrossLocations"
                 android:text="View Crossed Paths" />
@@ -154,4 +147,4 @@
 
     </LinearLayout>
 
-</RelativeLayout>
+</android.support.constraint.ConstraintLayout>
