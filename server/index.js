@@ -1287,6 +1287,24 @@ app.post('/getStatistics', function(request, response){
 	getStatistics(lat, lon, request, response);
 });
 
+// Called when a POST request is made to /notifyInterestsChange
+app.post('/notifyInterestsChange', function(request, response){
+	// If the object request.body is null, respond with status 500 'Internal Server Error'
+	if (!request.body) return response.sendStatus(500);
+
+	// POST request must have 0 parameters
+	if (Object.keys(request.body).length != 0) {
+		return response.status(400).send("Invalid POST request\n");
+	}
+
+	// If session not authenticated
+	if (!request.session || ((!request.session.authenticated || request.session.authenticated === false) && (!request.session.googleAuthenticated || request.session.googleAuthenticated === false) && (!request.session.facebookAuthenticated || request.session.facebookAuthenticated === false))) {
+		return response.status(400).send("User not logged in.\n");
+	}
+
+	notifyInterestsChange(request, response);
+});
+
 // Validates a user ID
 function validateUid(uid) {
 	return !validator.isEmpty(uid) && validator.isHexadecimal(uid) && validator.isLength(uid, {min: 16, max: 16});
@@ -2444,7 +2462,7 @@ function findCrossedPaths(lat, lon, currentTime, request, response) {
 	});
 }
 
-// Notifies all users that have new matches, then removes newMatch edges
+// Notifies all users that have new matches and removes newMatch edges
 function notifyMatches() {
 	var edges = matchGraph.edges();
 	var toNotify = {};
@@ -2460,44 +2478,23 @@ function notifyMatches() {
 				toNotify[edges[i].v] = [];
 				toNotify[edges[i].v].push(edges[i].w);
 			}
-			// Create matched, approved, unmatched, and blocked edges
-			matchGraph.setEdge(edges[i].v, edges[i].w, true, "matched");
-			matchGraph.setEdge(edges[i].v, edges[i].w, false, "approved");
 		}
 	}
 	for (var key in toNotify) {
 		if (toNotify.hasOwnProperty(key)) {
 			if (toNotify[key].length == 1) {
-				// Notify user of match
-				var sql = "SELECT ?? FROM ?? WHERE ??=?";
-				var post = [registrationToken, db_firebase, uid, key];
-				dbConnection.query(sql, post, function(err, result) {
-					if (err) throw err;
-					if (result.length > 0) {
-						for (var j = 0; j < result.length; j++) {
-							var message = {
-								data: {
-									type: 'New Matches',
-									title: 'You have a new match!',
-									body: 'Tap to see who you matched with.'
-								},
-								token: result[j].registrationToken,
-								android: {
-									ttl: 3600000,
-									priority: 'high'
-								}
-							};
-							admin.messaging().send(message)
-								.then((response) => {
-									console.log('Successfully sent new match notification.');
-								})
-							.catch((error) => {
-								console.log(error);
-							});
-						}
-					}
-				});
+				// Create matched and approved edges and remove newMatch edge
+				matchGraph.setEdge(key, toNotify[key][0], true, "matched");
+				matchGraph.setEdge(key, toNotify[key][0], false, "approved");
+				matchGraph.removeEdge(key, toNotify[key][0], "newMatch");
+				compareMatchInterests(key, toNotify[key][0]);
 			} else if (toNotify[key].length > 1) {
+				for (var j = 0; j < toNotify[key].length; j++) {
+					// Create matched and approved edges and remove newMatch edge
+					matchGraph.setEdge(key, toNotify[key][j], true, "matched");
+					matchGraph.setEdge(key, toNotify[key][j], false, "approved");
+					matchGraph.removeEdge(key, toNotify[key][j], "newMatch");
+				}
 				// Notify user of multiple matches
 				var sql = "SELECT ?? FROM ?? WHERE ??=?";
 				var post = [registrationToken, db_firebase, uid, key];
@@ -2509,7 +2506,8 @@ function notifyMatches() {
 								data: {
 									type: 'New Matches',
 									title: 'You have new matches!',
-									body: 'Tap to see who you matched with.'
+									body: 'Tap to see your matches.',
+									uid: ''
 								},
 								token: result[j].registrationToken,
 								android: {
@@ -2528,14 +2526,101 @@ function notifyMatches() {
 					}
 				});
 			}
-			// Remove newMatch edges
-			for (var i = 0; i < toNotify[key].length; i++) {
-				matchGraph.removeEdge(key, toNotify[key][i], "newMatch");
-			}
 		}
 	}
 	writeMatchGraph();
-	console.log('Matches notified.');
+}
+
+// Determines if users who matched share interests
+function compareMatchInterests(firstUid, secondUid) {
+	// Get interests
+	var sql = "SELECT ?? FROM ?? WHERE ??=? OR ??=?";
+	var post = [interests, db_profiles, uid, firstUid, uid, secondUid];
+	dbConnection.query(sql, post, function(err, result) {
+		if (err) throw err;
+		var firstInterests = result[0].interests;
+		var secondInterests = result[1].interests;
+		if (firstInterests !== "No Interests" && secondInterests !== "No Interests") {
+			// Compare interests
+			firstInterests = firstInterests.split(', ');
+			secondInterests = secondInterests.split(', ');
+			for (var i = 0; i < firstInterests.length; i++) {
+				for (var j = 0; j < secondInterests.length; j++) {
+					if (firstInterests[i] === secondInterests[j]) {
+						notifyMatchSharedInterests(firstUid, secondUid);
+						return;
+					}
+				}
+			}
+		}
+		notifyMatchNoSharedInterests(firstUid, secondUid);
+	});
+}
+
+// Notifies specific user that matched
+function notifyMatchNoSharedInterests(firstUid, secondUid) {
+	var sql = "SELECT ?? FROM ?? WHERE ??=?";
+	var post = [registrationToken, db_firebase, uid, firstUid];
+	dbConnection.query(sql, post, function(err, result) {
+		if (err) throw err;
+		if (result.length > 0) {
+			for (var i = 0; i < result.length; i++) {
+				var message = {
+					data: {
+						type: 'New Matches',
+						title: 'You have a new match!',
+						body: 'Tap to see who you matched with.',
+						uid: secondUid
+					},
+					token: result[i].registrationToken,
+					android: {
+						ttl: 3600000,
+						priority: 'high'
+					}
+				};
+				admin.messaging().send(message)
+					.then((response) => {
+						console.log('Successfully sent new match notification.');
+					})
+				.catch((error) => {
+					console.log(error);
+				});
+			}
+		}
+	});
+}
+
+// Notifies specific user that matched and has shared interests
+function notifyMatchSharedInterests(firstUid, secondUid) {
+	var sql = "SELECT ?? FROM ?? WHERE ??=?";
+	var post = [registrationToken, db_firebase, uid, firstUid];
+	dbConnection.query(sql, post, function(err, result) {
+		if (err) throw err;
+		if (result.length > 0) {
+			for (var i = 0; i < result.length; i++) {
+				var message = {
+					data: {
+						type: 'New Matches',
+						title: 'You have a new match with shared interests!',
+						body: 'Tap to see who you matched with.',
+						uid: secondUid
+					},
+					token: result[i].registrationToken,
+					android: {
+						ttl: 3600000,
+						priority: 'high'
+					}
+				};
+				admin.messaging().send(message)
+					.then((response) => {
+						console.log('Successfully sent new match with shared interests notification.');
+					})
+				.catch((error) => {
+					console.log(error);
+				});
+			}
+		}
+	});
 }
 
 // Approves the user with the given user ID
@@ -2857,7 +2942,7 @@ function getCrossLocations(u, request, response) {
 
 // Gets all messages for chat with a match
 function getMessages(u, request, response) {
-	var sql = "SELECT * FROM ?? WHERE ??=? AND ??=? OR ??=? AND ??=? ORDER BY ?? LIMIT 100";
+	var sql = "SELECT * FROM ?? WHERE ??=? AND ??=? OR ??=? AND ??=? ORDER BY ?? LIMIT 1000";
 	var post = [db_messages, uidFrom, request.session.uid, uidTo, u, uidFrom, u, uidTo, request.session.uid, time];
 	dbConnection.query(sql, post, function(err, result) {
 		if (err) throw err;
@@ -3032,6 +3117,109 @@ function getStatistics(lat, lon, request, response) {
 			return response.status(200).send(JSON.stringify(statistics));
 		});
 	});
+}
+
+// Notifies matches who have the same interests
+function notifyInterestsChange(request, response) {
+	var edges = matchGraph.outEdges(request.session.uid);
+	for (var i = 0; i < edges.length; i++) {
+		if (edges[i].name === "matched") {
+			// Get interests
+			var sql = "SELECT ??,?? FROM ?? WHERE ??=? OR ??=?";
+			var post = [uid, interests, db_profiles, uid, request.session.uid, uid, edges[i].w];
+			dbConnection.query(sql, post, function(err, result) {
+				if (err) throw err;
+				var interests;
+				var matchInterests;
+				var matchUid;
+				if (result[0].uid === request.session.uid) {
+					interests = result[0].interests;
+					matchInterests = result[1].interests;
+					matchUid = result[1].uid;
+				} else if (result[1].uid === request.session.uid) {
+					interests = result[1].interests;
+					matchInterests = result[0].interests;
+					matchUid = result[0].uid;
+				}
+				if (interests !== "No Interests" && matchInterests !== "No Interests") {
+					// Compare interests
+					interests = interests.split(', ');
+					matchInterests = matchInterests.split(', ');
+					var shared = false;
+					for (var j = 0; j < matchInterests.length; j++) {
+						for (var k = 0; k < interests.length; k++) {
+							if (matchInterests[j] === interests[k]) {
+								shared = true;
+							}
+						}
+					}
+					if (shared) {
+						// Notify user of shared interests
+						var sql = "SELECT ?? FROM ?? WHERE ??=?";
+						var post = [registrationToken, db_firebase, uid, request.session.uid];
+						dbConnection.query(sql, post, function(err, result) {
+							if (err) throw err;
+							if (result.length > 0) {
+								for (var j = 0; j < result.length; j++) {
+									var message = {
+										data: {
+											type: 'Shared Interests',
+											title: 'You share interests with one of your matches!',
+											body: 'Tap to see who you share interests with.',
+											uid: matchUid
+										},
+										token: result[j].registrationToken,
+										android: {
+											ttl: 3600000,
+											priority: 'high'
+										}
+									};
+									admin.messaging().send(message)
+										.then((response) => {
+											console.log('Successfully sent shared interests notification.');
+										})
+									.catch((error) => {
+										console.log(error);
+									});
+								}
+							}
+						});
+						// Notify match of shared interests
+						var sql = "SELECT ?? FROM ?? WHERE ??=?";
+						var post = [registrationToken, db_firebase, uid, matchUid];
+						dbConnection.query(sql, post, function(err, result) {
+							if (err) throw err;
+							if (result.length > 0) {
+								for (var j = 0; j < result.length; j++) {
+									var message = {
+										data: {
+											type: 'Shared Interests',
+											title: 'You share interests with one of your matches!',
+											body: 'Tap to see who you share interests with.',
+											uid: request.session.uid
+										},
+										token: result[j].registrationToken,
+										android: {
+											ttl: 3600000,
+											priority: 'high'
+										}
+									};
+									admin.messaging().send(message)
+										.then((response) => {
+											console.log('Successfully sent shared interests notification.');
+										})
+									.catch((error) => {
+										console.log(error);
+									});
+								}
+							}
+						});
+					}
+				}
+			});
+		}
+	}
+	return response.status(200).send(JSON.stringify({"response":"pass"}));
 }
 
 // Writes the match graph to a file
