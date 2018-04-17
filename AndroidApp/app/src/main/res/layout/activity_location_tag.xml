@@ -43,7 +43,7 @@
             android:layout_marginTop="10dp"
             android:layout_toRightOf="@+id/tag_image"
             android:background="@android:color/transparent"
-            android:inputType="none"
+            android:inputType="textMultiLine|none"
             android:text="Enter a review or description of the location." />
 
     </RelativeLayout>
