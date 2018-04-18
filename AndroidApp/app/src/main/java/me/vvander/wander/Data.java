@@ -21,6 +21,7 @@ public class Data {
     private boolean manualLocationSwitch = true;
     private boolean scheduleLocationSwitch = true;
     private boolean activityRecognitionLocationSwitch = false;
+    private boolean notificationStatus = false;
     private ArrayList<LocationSchedule> locationSchedules;
 
     static Data getInstance() {
@@ -124,6 +125,14 @@ public class Data {
 
     void setActivityRecognitionLocationSwitch(boolean value) {
         activityRecognitionLocationSwitch = value;
+    }
+
+    void setNotificationStatus(boolean value){
+        notificationStatus = value;
+    }
+
+    boolean getNotificationStatus(){
+        return notificationStatus;
     }
 
     void initializeLocationSchedules() {

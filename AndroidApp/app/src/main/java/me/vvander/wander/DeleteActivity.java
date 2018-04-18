@@ -33,6 +33,7 @@ public class DeleteActivity extends AppCompatActivity {
     private static final String TAG = DeleteActivity.class.getSimpleName();
     private static final String SP_LOCATION = "locationSwitch";
     private static final String SP_SCHEDULE = "locationSchedule";
+    private static final String SP_NOTIFICATIONS = "notificationSwitch";
     EditText passwordEditText;
     private RequestQueue requestQueue;
 
@@ -87,6 +88,7 @@ public class DeleteActivity extends AppCompatActivity {
                                     stopService(new Intent(getApplicationContext(), LocationCollectionService.class));
                                     resetManualLocationSwitch();
                                     resetScheduleLocationSwitch();
+                                    resetNotificationSwitch();
                                     cancelLocationScheduleAlarm();
                                     Data.getInstance().logout();
                                     Data.getInstance().removeAllCookies();
@@ -132,6 +134,7 @@ public class DeleteActivity extends AppCompatActivity {
                                 if (res.equalsIgnoreCase("pass")) {
                                     stopService(new Intent(getApplicationContext(), LocationCollectionService.class));
                                     resetManualLocationSwitch();
+                                    resetNotificationSwitch();
                                     resetScheduleLocationSwitch();
                                     cancelLocationScheduleAlarm();
                                     Data.getInstance().logoutGoogle();
@@ -174,6 +177,7 @@ public class DeleteActivity extends AppCompatActivity {
                                 if (res.equalsIgnoreCase("pass")) {
                                     stopService(new Intent(getApplicationContext(), LocationCollectionService.class));
                                     resetManualLocationSwitch();
+                                    resetNotificationSwitch();
                                     resetScheduleLocationSwitch();
                                     cancelLocationScheduleAlarm();
                                     Data.getInstance().logoutFacebook();
@@ -213,6 +217,12 @@ public class DeleteActivity extends AppCompatActivity {
         sharedPreferences.edit().clear().apply();
     }
 
+    private void resetNotificationSwitch() {
+        Data.getInstance().setNotificationStatus(true);
+        SharedPreferences sharedPreferences = getSharedPreferences(SP_NOTIFICATIONS, Context.MODE_PRIVATE);
+        sharedPreferences.edit().clear().apply();
+
+    }
     private void resetScheduleLocationSwitch() {
         SharedPreferences sharedPreferences = getSharedPreferences(SP_SCHEDULE, Context.MODE_PRIVATE);
         sharedPreferences.edit().clear().apply();

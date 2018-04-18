@@ -89,7 +89,7 @@ public class LocationCollectionService extends Service {
                         try {
                             String res = response.getString("response");
                             if (res.equalsIgnoreCase("pass")) {
-                                Log.d(TAG, "Location sent to server.");
+                                Log.d(TAG, "Location s sent to server.");
                             } else {
                                 Log.d(TAG, "Error sending location to server.");
                             }

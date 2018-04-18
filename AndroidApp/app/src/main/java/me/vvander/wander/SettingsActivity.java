@@ -34,9 +34,13 @@ public class SettingsActivity extends AppCompatActivity {
     private static final String TAG = SettingsActivity.class.getSimpleName();
     private static final String SP_LOCATION = "locationSwitch";
     private static final String SP_SCHEDULE = "locationSchedule";
+    private static final String SP_NOTIFICATIONS = "notificationSwitch";
     Switch locationSwitch;
+    Switch notificationSwitch;
     TextView radiusText;
+    TextView radiusTextMatches;
     SeekBar seekBar;
+    SeekBar seekBarMatches;
     private RequestQueue requestQueue;
 
     @Override
@@ -60,14 +64,20 @@ public class SettingsActivity extends AppCompatActivity {
 
         locationSwitch = findViewById(R.id.tracking);
         locationSwitch.setChecked(Data.getInstance().getManualLocationSwitch());
-
+        notificationSwitch = findViewById(R.id.notifcations);
+        notificationSwitch.setChecked(Data.getInstance().getNotificationStatus());
         requestQueue = Volley.newRequestQueue(this);
 
         seekBar = findViewById(R.id.seekBar);
         radiusText = findViewById(R.id.textView);
 
+        seekBarMatches = findViewById(R.id.maximumMatches);
+        radiusTextMatches = findViewById(R.id.maximumText);
+
         getCrossRadius();
+        getMaximumMatches();
         initializeSeekBar();
+        initializeSeekBarMatches();
     }
 
     public void locationToggle(View view) {
@@ -84,6 +94,15 @@ public class SettingsActivity extends AppCompatActivity {
         }
     }
 
+    public void notificationToggle(View view){
+        boolean value = notificationSwitch.isChecked();
+        Data.getInstance().setNotificationStatus(value);
+        SharedPreferences sharedPreferences = getSharedPreferences(SP_NOTIFICATIONS, Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+        editor.putBoolean("notificationSwitch", value);
+        editor.apply();
+        Log.i("SWITCH", "Notifications Switch");
+    }
     public void delete(View view) {
         startActivity(new Intent(SettingsActivity.this, DeleteActivity.class));
         finish();
@@ -125,6 +144,7 @@ public class SettingsActivity extends AppCompatActivity {
                             if (res.equalsIgnoreCase("pass")) {
                                 stopService(new Intent(getApplicationContext(), LocationCollectionService.class));
                                 resetManualLocationSwitch();
+                                resetNotificationSwitch();
                                 resetScheduleLocationSwitch();
                                 cancelLocationScheduleAlarm();
                                 Data.getInstance().logout();
@@ -172,6 +192,13 @@ public class SettingsActivity extends AppCompatActivity {
         Data.getInstance().setManualLocationSwitch(true);
     }
 
+    private void resetNotificationSwitch() {
+        SharedPreferences sharedPreferences = getSharedPreferences(SP_NOTIFICATIONS, Context.MODE_PRIVATE);
+        sharedPreferences.edit().clear().apply();
+        Data.getInstance().setNotificationStatus(true);
+
+    }
+
     private void resetScheduleLocationSwitch() {
         SharedPreferences sharedPreferences = getSharedPreferences(SP_SCHEDULE, Context.MODE_PRIVATE);
         sharedPreferences.edit().clear().apply();
@@ -207,6 +234,7 @@ public class SettingsActivity extends AppCompatActivity {
         };
         seekBar.setOnSeekBarChangeListener(seekBarChangeListener);
     }
+
 
     private void updateCrossRadius(int radius) {
         String url = Data.getInstance().getUrl() + "/changeCrossRadius";
@@ -275,6 +303,101 @@ public class SettingsActivity extends AppCompatActivity {
                     @Override
                     public void onErrorResponse(VolleyError error) {
                         Toast.makeText(getApplicationContext(), "Error getting radius!", Toast.LENGTH_SHORT).show();
+                        Log.d(TAG, error.toString());
+                    }
+                }
+        );
+        postRequest.setRetryPolicy(new DefaultRetryPolicy(
+                0,
+                DefaultRetryPolicy.DEFAULT_MAX_RETRIES,
+                DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
+        requestQueue.add(postRequest);
+    }
+
+    private void initializeSeekBarMatches() {
+        SeekBar.OnSeekBarChangeListener seekBarChangeListener = new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                String text = "Maximum Number of Matches: " + progress;
+                radiusTextMatches.setText(text);
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
+            }
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+                updateMaximumMatches(seekBar.getProgress());
+            }
+        };
+        seekBarMatches.setOnSeekBarChangeListener(seekBarChangeListener);
+
+    }
+
+    private void updateMaximumMatches(int newMax) {
+        String url = Data.getInstance().getUrl() + "/changeMaximumMatches";
+        Map<String, String> params = new HashMap<>();
+        params.put("newMaximumMatches", String.valueOf(newMax));
+
+        JsonObjectRequest postRequest = new JsonObjectRequest(Request.Method.POST, url, new JSONObject(params),
+                new Response.Listener<JSONObject>() {
+                    @Override
+                    public void onResponse(JSONObject response) {
+                        try {
+                            String res = response.getString("response");
+                            if (res.equalsIgnoreCase("pass")) {
+                                Toast.makeText(getApplicationContext(), "Maximum Matches Updated!", Toast.LENGTH_SHORT).show();
+                            }
+                        } catch (JSONException j) {
+                            j.printStackTrace();
+                        }
+                    }
+                },
+                new Response.ErrorListener() {
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+                        Toast.makeText(getApplicationContext(), "Error Updating Maximum Matches!", Toast.LENGTH_SHORT).show();
+                        Log.d(TAG, error.toString());
+                    }
+                }
+        );
+        postRequest.setRetryPolicy(new DefaultRetryPolicy(
+                0,
+                DefaultRetryPolicy.DEFAULT_MAX_RETRIES,
+                DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
+        requestQueue.add(postRequest);
+    }
+
+    private void getMaximumMatches() {
+        String url = Data.getInstance().getUrl() + "/getMaximumMatches";
+
+        JsonObjectRequest postRequest = new JsonObjectRequest(Request.Method.POST, url, null,
+                new Response.Listener<JSONObject>() {
+                    @Override
+                    public void onResponse(JSONObject response) {
+                        try {
+                            String r = response.getString("maximumMatches");
+                            if (r != null) {
+                                try {
+                                    String text = "Maximum Number of Matches: " +r;
+                                    radiusTextMatches.setText(text);
+                                    seekBarMatches.setProgress(Integer.parseInt(r));
+                                } catch (NumberFormatException e) {
+                                    String text = "Maximum Number of Matches: 1";
+                                    radiusTextMatches.setText(text);
+                                    seekBarMatches.setProgress(150);
+                                }
+                            }
+                        } catch (JSONException j) {
+                            j.printStackTrace();
+                        }
+                    }
+                },
+                new Response.ErrorListener() {
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+                        Toast.makeText(getApplicationContext(), "Error getting Maximum Matches!", Toast.LENGTH_SHORT).show();
                         Log.d(TAG, error.toString());
                     }
                 }

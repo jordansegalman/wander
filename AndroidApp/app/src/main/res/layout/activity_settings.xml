@@ -30,6 +30,31 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_weight="0"
+                android:text="Notifications" />
+
+            <Space
+                android:layout_width="10dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1" />
+
+            <Switch
+                android:id="@+id/notifcations"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="0"
+                android:onClick="notificationToggle" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="10dp"
+            android:orientation="horizontal">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="0"
                 android:text="Location Tracking" />
 
             <Space
@@ -73,6 +98,19 @@
             android:max="5290"
             android:min="10"
             android:progress="150" />
+
+        <TextView
+            android:id="@+id/maximumText"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Maximum Number of Matches: " />
+
+        <SeekBar
+            android:id="@+id/maximumMatches"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:max="10"
+            android:min="1"/>
 
         <Button
             android:id="@+id/changeEmail"

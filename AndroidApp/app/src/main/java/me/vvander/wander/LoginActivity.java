@@ -162,6 +162,8 @@ public class LoginActivity extends AppCompatActivity {
         Map<String, String> params = new HashMap<>();
         params.put("username", username);
         params.put("password", password);
+        //FOLLOWING LINE IS FOR TESTING
+        //startActivity(new Intent(Login.this, Home.class));
 
         String url = Data.getInstance().getUrl() + "/login";
         JsonObjectRequest postRequest = new JsonObjectRequest(Request.Method.POST, url, new JSONObject(params),
