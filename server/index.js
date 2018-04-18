@@ -1312,7 +1312,7 @@ app.post('/getSuggestions', function(request, response){
 	}
 
 	getSuggestions(request, response);
-}
+});
 
 // Called when a POST request is made to /notifyInterestsChange
 app.post('/notifyInterestsChange', function(request, response){
