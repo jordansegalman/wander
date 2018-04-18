@@ -16,6 +16,7 @@
     "express": "^4.16.2",
     "express-session": "^1.15.6",
     "firebase-admin": "^5.9.1",
+    "geocluster": "^0.1.1",
     "graphlib": "^2.1.5",
     "mysql": "^2.15.0",
     "node-schedule": "^1.3.0",
