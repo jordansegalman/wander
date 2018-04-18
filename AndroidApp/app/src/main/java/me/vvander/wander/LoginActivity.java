@@ -89,7 +89,6 @@ public class LoginActivity extends AppCompatActivity {
     }
 
     public void login(View view) {
-
         EditText usernameText = findViewById(R.id.username);
         EditText passwordText = findViewById(R.id.password);
         String username = usernameText.getText().toString();
