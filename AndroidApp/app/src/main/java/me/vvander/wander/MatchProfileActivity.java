@@ -1,12 +1,21 @@
 package me.vvander.wander;
 
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
+import android.text.InputFilter;
+import android.text.TextUtils;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -29,6 +38,7 @@ import java.util.HashMap;
 
 public class MatchProfileActivity extends AppCompatActivity {
     private static final String TAG = MatchProfileActivity.class.getSimpleName();
+    private static final int MAX_REASON_LENGTH = 1024;
     private RequestQueue requestQueue;
     private Button approveButton;
     private Button unapproveButton;
@@ -69,6 +79,67 @@ public class MatchProfileActivity extends AppCompatActivity {
             unapproveButton.setVisibility(View.GONE);
             crossedPathsButton.setEnabled(false);
         }
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.match_profile_options_menu, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.unmatch:
+                new AlertDialog.Builder(this)
+                        .setTitle("Are you sure you want to unmatch " + name + "?")
+                        .setPositiveButton("Unmatch", new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                unmatch();
+                            }
+                        })
+                        .setNegativeButton("Cancel", null)
+                        .show();
+                return true;
+            case R.id.block:
+                new AlertDialog.Builder(this)
+                        .setTitle("Are you sure you want to block " + name + "?")
+                        .setPositiveButton("Block", new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                block();
+                            }
+                        })
+                        .setNegativeButton("Cancel", null)
+                        .show();
+                return true;
+            case R.id.report:
+                final EditText reasonEditText = new EditText(this);
+                reasonEditText.setHint("Reason");
+                reasonEditText.setLayoutParams(new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
+                reasonEditText.setFilters(new InputFilter[] {new InputFilter.LengthFilter(MAX_REASON_LENGTH)});
+                new AlertDialog.Builder(this)
+                        .setTitle("What is your reason for reporting " + name + "?")
+                        .setView(reasonEditText)
+                        .setPositiveButton("Report", new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                String reason = reasonEditText.getText().toString();
+                                if (TextUtils.isEmpty(reason)) {
+                                    Toast.makeText(getApplicationContext(), "Reason cannot be empty.", Toast.LENGTH_SHORT).show();
+                                } else if (reason.length() > MAX_REASON_LENGTH) {
+                                    Toast.makeText(getApplicationContext(), "Reason cannot be greater than 1024 characters.", Toast.LENGTH_SHORT).show();
+                                } else {
+                                    report(reason);
+                                }
+                            }
+                        })
+                        .setNegativeButton("Cancel", null)
+                        .show();
+                return true;
+        }
+        return super.onOptionsItemSelected(item);
     }
 
     public void chat(View view) {
@@ -185,6 +256,106 @@ public class MatchProfileActivity extends AppCompatActivity {
                     @Override
                     public void onErrorResponse(VolleyError error) {
                         Toast.makeText(getApplicationContext(), "Not approved yet.", Toast.LENGTH_SHORT).show();
+                        Log.d(TAG, error.toString());
+                    }
+                }
+        );
+        postRequest.setRetryPolicy(new DefaultRetryPolicy(
+                0,
+                DefaultRetryPolicy.DEFAULT_MAX_RETRIES,
+                DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
+        requestQueue.add(postRequest);
+    }
+
+    private void unmatch() {
+        String url = Data.getInstance().getUrl() + "/unmatchUser";
+        java.util.Map<String, String> params = new HashMap<>();
+        params.put("uid", uid);
+        JsonObjectRequest postRequest = new JsonObjectRequest(Request.Method.POST, url, new JSONObject(params),
+                new Response.Listener<JSONObject>() {
+                    @Override
+                    public void onResponse(JSONObject response) {
+                        try {
+                            String res = response.getString("response");
+                            if (res.equalsIgnoreCase("pass")) {
+                                Toast.makeText(getApplicationContext(), "User unmatched.", Toast.LENGTH_SHORT).show();
+                                finish();
+                            }
+                        } catch (JSONException j) {
+                            j.printStackTrace();
+                        }
+                    }
+                },
+                new Response.ErrorListener() {
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+                        Log.d(TAG, error.toString());
+                    }
+                }
+        );
+        postRequest.setRetryPolicy(new DefaultRetryPolicy(
+                0,
+                DefaultRetryPolicy.DEFAULT_MAX_RETRIES,
+                DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
+        requestQueue.add(postRequest);
+    }
+
+    private void block() {
+        String url = Data.getInstance().getUrl() + "/blockUser";
+        java.util.Map<String, String> params = new HashMap<>();
+        params.put("uid", uid);
+        JsonObjectRequest postRequest = new JsonObjectRequest(Request.Method.POST, url, new JSONObject(params),
+                new Response.Listener<JSONObject>() {
+                    @Override
+                    public void onResponse(JSONObject response) {
+                        try {
+                            String res = response.getString("response");
+                            if (res.equalsIgnoreCase("pass")) {
+                                Toast.makeText(getApplicationContext(), "User blocked.", Toast.LENGTH_SHORT).show();
+                                finish();
+                            }
+                        } catch (JSONException j) {
+                            j.printStackTrace();
+                        }
+                    }
+                },
+                new Response.ErrorListener() {
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+                        Log.d(TAG, error.toString());
+                    }
+                }
+        );
+        postRequest.setRetryPolicy(new DefaultRetryPolicy(
+                0,
+                DefaultRetryPolicy.DEFAULT_MAX_RETRIES,
+                DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
+        requestQueue.add(postRequest);
+    }
+
+    private void report(String reason) {
+        String url = Data.getInstance().getUrl() + "/reportUser";
+        java.util.Map<String, String> params = new HashMap<>();
+        params.put("uid", uid);
+        params.put("reason", reason);
+        JsonObjectRequest postRequest = new JsonObjectRequest(Request.Method.POST, url, new JSONObject(params),
+                new Response.Listener<JSONObject>() {
+                    @Override
+                    public void onResponse(JSONObject response) {
+                        try {
+                            String res = response.getString("response");
+                            if (res.equalsIgnoreCase("pass")) {
+                                Toast.makeText(getApplicationContext(), "User reported and blocked.", Toast.LENGTH_SHORT).show();
+                                finish();
+                            }
+                        } catch (JSONException j) {
+                            j.printStackTrace();
+                        }
+                    }
+                },
+                new Response.ErrorListener() {
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
                         Log.d(TAG, error.toString());
                     }
                 }

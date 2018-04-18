@@ -5,155 +5,161 @@
     android:layout_height="match_parent"
     tools:context="me.vvander.wander.LocationScheduleNewActivity">
 
-    <android.support.design.widget.CoordinatorLayout
+    <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:padding="20dp">
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:paddingBottom="15dp"
+            android:text="New Schedule"
+            android:textAlignment="center"
+            android:textColor="#000000"
+            android:textSize="30sp" />
+
+        <EditText
+            android:id="@+id/name"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Schedule Name"
+            android:inputType="text|textAutoCorrect" />
+
+
+        <Button
+            android:id="@+id/startTimeButton"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:onClick="chooseStartTime"
+            android:text="Start Time" />
+
+        <Button
+            android:id="@+id/endTimeButton"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:onClick="chooseEndTime"
+            android:text="End Time" />
 
         <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:layout_margin="20dp"
-            android:orientation="vertical"
-            android:padding="20dp">
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:orientation="horizontal">
 
-            <EditText
-                android:id="@+id/name"
-                android:layout_width="match_parent"
+            <ToggleButton
+                android:id="@+id/day0"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:hint="Schedule Name" />
+                android:layout_weight="1"
+                android:textOff="SU"
+                android:textOn="SU" />
 
-
-            <Button
-                android:id="@+id/startTimeButton"
-                android:layout_width="match_parent"
+            <ToggleButton
+                android:id="@+id/day1"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:onClick="startTimeButton"
-                android:text="Start Time" />
+                android:layout_weight="1"
+                android:textOff="MO"
+                android:textOn="MO" />
 
-            <Button
-                android:id="@+id/endTimeButton"
-                android:layout_width="match_parent"
+            <ToggleButton
+                android:id="@+id/day2"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:onClick="endTimeButton"
-                android:text="End Time" />
+                android:layout_weight="1"
+                android:textOff="TU"
+                android:textOn="TU" />
 
-            <LinearLayout
-                android:layout_width="match_parent"
+            <ToggleButton
+                android:id="@+id/day3"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="10dp"
-                android:orientation="horizontal">
-
-                <ToggleButton
-                    android:id="@+id/day0"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:textOff="SU"
-                    android:textOn="SU" />
-
-                <ToggleButton
-                    android:id="@+id/day1"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:textOff="MO"
-                    android:textOn="MO" />
-
-                <ToggleButton
-                    android:id="@+id/day2"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:textOff="TU"
-                    android:textOn="TU" />
-
-                <ToggleButton
-                    android:id="@+id/day3"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:textOff="WE"
-                    android:textOn="WE" />
-
-            </LinearLayout>
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="10dp"
-                android:orientation="horizontal">
-
-                <Space
-                    android:layout_width="0dp"
-                    android:layout_height="match_parent"
-                    android:layout_weight=".125" />
-
-                <ToggleButton
-                    android:id="@+id/day4"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight=".25"
-                    android:textOff="TH"
-                    android:textOn="TH" />
-
-                <ToggleButton
-                    android:id="@+id/day5"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight=".25"
-                    android:textOff="FR"
-                    android:textOn="FR" />
-
-                <ToggleButton
-                    android:id="@+id/day6"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight=".25"
-                    android:textOff="SA"
-                    android:textOn="SA" />
-
-                <Space
-                    android:layout_width="0dp"
-                    android:layout_height="match_parent"
-                    android:layout_weight=".125" />
-
-            </LinearLayout>
-
-            <android.support.v4.widget.Space
-                android:layout_width="wrap_content"
-                android:layout_height="0dp"
-                android:layout_weight="1" />
-
-            <Button
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:backgroundTint="@color/colorAccent"
-                android:onClick="done"
-                android:text="Done" />
+                android:layout_weight="1"
+                android:textOff="WE"
+                android:textOn="WE" />
 
         </LinearLayout>
 
-        <!--These are used to store data in the view-->
-        <TextView
-            android:id="@+id/startHour"
-            android:layout_width="0dp"
-            android:layout_height="0dp" />
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:orientation="horizontal">
 
-        <TextView
-            android:id="@+id/startMinute"
-            android:layout_width="0dp"
-            android:layout_height="0dp" />
+            <Space
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight=".125" />
 
-        <TextView
-            android:id="@+id/endHour"
-            android:layout_width="0dp"
-            android:layout_height="0dp" />
+            <ToggleButton
+                android:id="@+id/day4"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight=".25"
+                android:textOff="TH"
+                android:textOn="TH" />
 
-        <TextView
-            android:id="@+id/endMinute"
-            android:layout_width="0dp"
-            android:layout_height="0dp" />
+            <ToggleButton
+                android:id="@+id/day5"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight=".25"
+                android:textOff="FR"
+                android:textOn="FR" />
 
-    </android.support.design.widget.CoordinatorLayout>
+            <ToggleButton
+                android:id="@+id/day6"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight=".25"
+                android:textOff="SA"
+                android:textOn="SA" />
 
+            <Space
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight=".125" />
+
+        </LinearLayout>
+
+        <android.support.v4.widget.Space
+            android:layout_width="wrap_content"
+            android:layout_height="0dp"
+            android:layout_weight="0.25" />
+
+        <Button
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:backgroundTint="@color/colorAccent"
+            android:onClick="done"
+            android:text="Done" />
+
+        <Space
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight="0.75" />
+
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/startHour"
+        android:layout_width="0dp"
+        android:layout_height="0dp" />
+
+    <TextView
+        android:id="@+id/startMinute"
+        android:layout_width="0dp"
+        android:layout_height="0dp" />
+
+    <TextView
+        android:id="@+id/endHour"
+        android:layout_width="0dp"
+        android:layout_height="0dp" />
+
+    <TextView
+        android:id="@+id/endMinute"
+        android:layout_width="0dp"
+        android:layout_height="0dp" />
 </android.support.constraint.ConstraintLayout>

@@ -6,6 +6,8 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -142,6 +144,22 @@ public class LocationScheduleEditActivity extends AppCompatActivity {
         day6.setChecked(existingSchedule.getDays()[6]);
     }
 
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.location_schedule_edit_options_menu, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.delete_schedule:
+                delete();
+                return true;
+        }
+        return super.onOptionsItemSelected(item);
+    }
+
     public void done(View view) {
         if (nameEdit.getText().toString().isEmpty()) {
             Toast.makeText(getApplicationContext(), "Enter a schedule name.", Toast.LENGTH_SHORT).show();
@@ -178,7 +196,7 @@ public class LocationScheduleEditActivity extends AppCompatActivity {
         }
     }
 
-    public void startTimeButton(View view) {
+    public void chooseStartTime(View view) {
         Bundle bundle = new Bundle();
         bundle.putString("Time", "Start");
         DialogFragment newFragment = new LocationScheduleTimePickerFragment();
@@ -186,7 +204,7 @@ public class LocationScheduleEditActivity extends AppCompatActivity {
         newFragment.show(getFragmentManager(), "TimePicker");
     }
 
-    public void endTimeButton(View view) {
+    public void chooseEndTime(View view) {
         Bundle bundle = new Bundle();
         bundle.putString("Time", "End");
         DialogFragment newFragment = new LocationScheduleTimePickerFragment();
@@ -194,7 +212,7 @@ public class LocationScheduleEditActivity extends AppCompatActivity {
         newFragment.show(getFragmentManager(), "TimePicker");
     }
 
-    public void delete(View view) {
+    private void delete() {
         ArrayList<LocationSchedule> locationSchedule = Data.getInstance().getLocationSchedules();
         locationSchedule.remove(position);
         saveSchedule();

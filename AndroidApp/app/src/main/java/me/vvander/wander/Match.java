@@ -1,6 +1,6 @@
 package me.vvander.wander;
 
-public class Match {
+public class Match implements Comparable<Match> {
     private String uid;
     private String name;
     private String about;
@@ -45,5 +45,13 @@ public class Match {
 
     public boolean getApproved() {
         return approved;
+    }
+
+    @Override
+    public int compareTo(Match match) {
+        if (this.timesCrossed < match.timesCrossed) {
+            return 1;
+        }
+        return -1;
     }
 }

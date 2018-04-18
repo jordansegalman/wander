@@ -4,14 +4,123 @@
     <string name="navigation_drawer_close">Close navigation drawer</string>
     <string name="facebook_app_id">***REMOVED***</string>
     <string name="fb_login_protocol_scheme">fb***REMOVED***</string>
-    <string name="interests_prompt">Select or type an interest</string>
     <string-array name="interests_array">
-        <item>Select interest</item>
-        <item>Reading</item>
+        <item>Select an interest</item>
+        <item>Acting</item>
+        <item>Airsoft</item>
+        <item>Animals</item>
+        <item>Antiquing</item>
+        <item>Archery</item>
+        <item>Arts</item>
+        <item>Astrology</item>
+        <item>Astronomy</item>
+        <item>Auto Racing</item>
+        <item>Backpacking</item>
+        <item>Badminton</item>
+        <item>Base Jumping</item>
+        <item>Baseball</item>
+        <item>Basketball</item>
+        <item>Beach Volleyball</item>
+        <item>Beekeeping</item>
+        <item>Belly Dancing</item>
+        <item>Bicycling</item>
+        <item>Billiards</item>
+        <item>Board Games</item>
+        <item>Boating</item>
+        <item>Bodybuilding</item>
+        <item>Bowling</item>
+        <item>Breakdancing</item>
+        <item>Calligraphy</item>
+        <item>Camping</item>
+        <item>Chess</item>
+        <item>Climbing</item>
+        <item>Coloring</item>
+        <item>Computer Programming</item>
+        <item>Cooking</item>
+        <item>Crafts</item>
+        <item>Cricket</item>
+        <item>Dancing</item>
+        <item>Darts</item>
+        <item>Dodgeball</item>
+        <item>Dominoes</item>
+        <item>Drawing</item>
+        <item>Driving</item>
+        <item>Electronics</item>
+        <item>Entertaining</item>
+        <item>Fencing</item>
+        <item>Field Hockey</item>
+        <item>Figure Skating</item>
+        <item>Fishing</item>
+        <item>Football</item>
+        <item>Gambling</item>
+        <item>Games</item>
+        <item>Gardening</item>
+        <item>Golfing</item>
+        <item>Guitar</item>
+        <item>Gymnastics</item>
+        <item>Handball</item>
         <item>Hiking</item>
-        <item>Eating</item>
+        <item>Ice Hockey</item>
+        <item>Ice Skating</item>
+        <item>Inline Skating</item>
+        <item>Inventing</item>
+        <item>Jogging</item>
+        <item>Juggling</item>
+        <item>Jump Roping</item>
+        <item>Kayaking</item>
+        <item>Knitting</item>
+        <item>Lacrosse</item>
+        <item>Laser Tag</item>
+        <item>Magic</item>
+        <item>Meditation</item>
+        <item>Motor Sports</item>
+        <item>Motorcycles</item>
+        <item>Mountain Biking</item>
+        <item>Mountain Climbing</item>
+        <item>Music</item>
+        <item>Paintball</item>
+        <item>Painting</item>
+        <item>Parkour</item>
+        <item>Photography</item>
+        <item>Piano</item>
+        <item>Planking</item>
+        <item>Poker</item>
+        <item>Pottery</item>
+        <item>Puzzles</item>
+        <item>Rapping</item>
+        <item>Reading</item>
+        <item>Relaxing</item>
+        <item>Robotics</item>
+        <item>Rugby</item>
+        <item>Running</item>
+        <item>Sailing</item>
+        <item>Sculpting</item>
+        <item>Sewing</item>
+        <item>Singing</item>
+        <item>Skateboarding</item>
+        <item>Skiing</item>
+        <item>Skydiving</item>
         <item>Sleeping</item>
-        <item>Video Games</item>
+        <item>Snowboarding</item>
+        <item>Soccer</item>
         <item>Sports</item>
+        <item>Squash</item>
+        <item>Storytelling</item>
+        <item>Sudoku</item>
+        <item>Surfing</item>
+        <item>Swimming</item>
+        <item>Tennis</item>
+        <item>Texting</item>
+        <item>Traveling</item>
+        <item>Ultimate Frisbee</item>
+        <item>Video Games</item>
+        <item>Volleyball</item>
+        <item>Volunteering</item>
+        <item>Walking</item>
+        <item>Weightlifting</item>
+        <item>Wrestling</item>
+        <item>Writing</item>
+        <item>Yoga</item>
+        <item>Zumba</item>
     </string-array>
 </resources>

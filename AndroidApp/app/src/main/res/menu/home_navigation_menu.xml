@@ -10,6 +10,10 @@
             android:icon="@drawable/nav_matches_icon"
             android:title="Matches" />
         <item
+            android:id="@+id/nav_statistics"
+            android:icon="@drawable/nav_statistics_icon"
+            android:title="Statistics" />
+        <item
             android:id="@+id/nav_profile"
             android:icon="@drawable/nav_profile_icon"
             android:title="Profile" />

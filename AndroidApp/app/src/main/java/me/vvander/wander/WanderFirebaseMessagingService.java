@@ -33,38 +33,50 @@ public class WanderFirebaseMessagingService extends FirebaseMessagingService {
         if (remoteMessage.getData().size() > 0) {
             switch (remoteMessage.getData().get("type")) {
                 case "New Matches": {
-                    NotificationManager notificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
-                    if (notificationManager != null) {
-                        String channel_id = "new_matches_id";
-                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                            CharSequence channel_name = "New Matches";
-                            int importance = NotificationManager.IMPORTANCE_HIGH;
-                            NotificationChannel notificationChannel = new NotificationChannel(channel_id, channel_name, importance);
-                            notificationChannel.enableLights(true);
-                            notificationChannel.setLightColor(R.color.colorAccent);
-                            notificationChannel.enableVibration(true);
-                            notificationChannel.setVibrationPattern(new long[]{100, 200, 300, 200, 100});
-                            notificationManager.createNotificationChannel(notificationChannel);
+                    if (remoteMessage.getData().get("uid").isEmpty()) {
+                        NotificationManager notificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
+                        if (notificationManager != null) {
+                            String channel_id = "new_matches_id";
+                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                                CharSequence channel_name = "New Matches";
+                                int importance = NotificationManager.IMPORTANCE_HIGH;
+                                NotificationChannel notificationChannel = new NotificationChannel(channel_id, channel_name, importance);
+                                notificationChannel.enableLights(true);
+                                notificationChannel.setLightColor(R.color.colorAccent);
+                                notificationChannel.enableVibration(true);
+                                notificationChannel.setVibrationPattern(new long[]{100, 200, 300, 200, 100});
+                                notificationManager.createNotificationChannel(notificationChannel);
+                            }
+                            Intent intent;
+                            if (Data.getInstance().getLoggedIn() || Data.getInstance().getLoggedInGoogle() || Data.getInstance().getLoggedInFacebook()) {
+                                intent = new Intent(getApplicationContext(), MatchesActivity.class);
+                            } else {
+                                intent = new Intent(getApplicationContext(), LoginActivity.class);
+                            }
+                            PendingIntent pendingIntent = PendingIntent.getActivity(getApplicationContext(), 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+                            NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(getApplicationContext(), channel_id)
+                                    .setContentTitle(remoteMessage.getData().get("title"))
+                                    .setContentText(remoteMessage.getData().get("body"))
+                                    .setSmallIcon(R.drawable.match_notification_icon)
+                                    .setAutoCancel(true)
+                                    .setContentIntent(pendingIntent);
+                            notificationManager.notify(1, notificationBuilder.build());
                         }
-                        Intent intent;
-                        if (Data.getInstance().getLoggedIn() || Data.getInstance().getLoggedInGoogle() || Data.getInstance().getLoggedInFacebook()) {
-                            intent = new Intent(getApplicationContext(), MatchesActivity.class);
-                        } else {
-                            intent = new Intent(getApplicationContext(), LoginActivity.class);
-                        }
-                        PendingIntent pendingIntent = PendingIntent.getActivity(getApplicationContext(), 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
-                        NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(getApplicationContext(), channel_id)
-                                .setContentTitle(remoteMessage.getData().get("title"))
-                                .setContentText(remoteMessage.getData().get("body"))
-                                .setSmallIcon(R.drawable.match_notification_icon)
-                                .setAutoCancel(true)
-                                .setContentIntent(pendingIntent);
-                        notificationManager.notify(1, notificationBuilder.build());
+                    } else {
+                        setupMatchProfileIntent(remoteMessage.getData().get("title"), remoteMessage.getData().get("body"), remoteMessage.getData().get("uid"), "new_matches_id", "New Matches", R.drawable.match_notification_icon);
                     }
                     break;
                 }
                 case "Crossed Paths": {
-                    setupMatchProfileIntent(remoteMessage.getData().get("title"), remoteMessage.getData().get("body"), remoteMessage.getData().get("uid"));
+                    setupMatchProfileIntent(remoteMessage.getData().get("title"), remoteMessage.getData().get("body"), remoteMessage.getData().get("uid"), "crossed_paths_id", "Crossed Paths", R.drawable.cross_notification_icon);
+                    break;
+                }
+                case "Match Approval": {
+                    setupMatchProfileIntent(remoteMessage.getData().get("title"), remoteMessage.getData().get("body"), remoteMessage.getData().get("uid"), "match_approvals_id", "Match Approvals", R.drawable.approval_notification_icon);
+                    break;
+                }
+                case "Shared Interests": {
+                    setupMatchProfileIntent(remoteMessage.getData().get("title"), remoteMessage.getData().get("body"), remoteMessage.getData().get("uid"), "shared_interests_id", "Shared Interests", R.drawable.interests_notification_icon);
                     break;
                 }
                 case "Chat Message": {
@@ -100,11 +112,42 @@ public class WanderFirebaseMessagingService extends FirebaseMessagingService {
                     }
                     break;
                 }
+                case "Offense Warning": {
+                    NotificationManager notificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
+                    if (notificationManager != null) {
+                        String channel_id = "offense_warnings_id";
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                            CharSequence channel_name = "Offense Warnings";
+                            int importance = NotificationManager.IMPORTANCE_HIGH;
+                            NotificationChannel notificationChannel = new NotificationChannel(channel_id, channel_name, importance);
+                            notificationChannel.enableLights(true);
+                            notificationChannel.setLightColor(R.color.colorAccent);
+                            notificationChannel.enableVibration(true);
+                            notificationChannel.setVibrationPattern(new long[]{100, 200, 300, 200, 100});
+                            notificationManager.createNotificationChannel(notificationChannel);
+                        }
+                        Intent intent;
+                        if (Data.getInstance().getLoggedIn() || Data.getInstance().getLoggedInGoogle() || Data.getInstance().getLoggedInFacebook()) {
+                            intent = new Intent(getApplicationContext(), HomeActivity.class);
+                        } else {
+                            intent = new Intent(getApplicationContext(), LoginActivity.class);
+                        }
+                        PendingIntent pendingIntent = PendingIntent.getActivity(getApplicationContext(), 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+                        NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(getApplicationContext(), channel_id)
+                                .setContentTitle(remoteMessage.getData().get("title"))
+                                .setContentText(remoteMessage.getData().get("body"))
+                                .setSmallIcon(R.drawable.offense_notification_icon)
+                                .setAutoCancel(true)
+                                .setContentIntent(pendingIntent);
+                        notificationManager.notify(1, notificationBuilder.build());
+                    }
+                    break;
+                }
             }
         }
     }
 
-    private void setupMatchProfileIntent(final String title, final String body, String uid) {
+    private void setupMatchProfileIntent(final String title, final String body, String uid, final String channel_id, final CharSequence channel_name, final int icon) {
         RequestQueue requestQueue = Volley.newRequestQueue(this);
         String url = Data.getInstance().getUrl() + "/getMatch";
         Map<String, String> params = new HashMap<>();
@@ -126,9 +169,7 @@ public class WanderFirebaseMessagingService extends FirebaseMessagingService {
 
                             NotificationManager notificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
                             if (notificationManager != null) {
-                                String channel_id = "crossed_paths_id";
                                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                                    CharSequence channel_name = "Crossed Paths";
                                     int importance = NotificationManager.IMPORTANCE_HIGH;
                                     NotificationChannel notificationChannel = new NotificationChannel(channel_id, channel_name, importance);
                                     notificationChannel.enableLights(true);
@@ -154,7 +195,7 @@ public class WanderFirebaseMessagingService extends FirebaseMessagingService {
                                 NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(getApplicationContext(), channel_id)
                                         .setContentTitle(title)
                                         .setContentText(body)
-                                        .setSmallIcon(R.drawable.cross_notification_icon)
+                                        .setSmallIcon(icon)
                                         .setAutoCancel(true)
                                         .setContentIntent(pendingIntent);
                                 notificationManager.notify(1, notificationBuilder.build());

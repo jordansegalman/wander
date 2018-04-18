@@ -1,148 +1,113 @@
 <?xml version="1.0" encoding="utf-8"?>
 <android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context="me.vvander.wander.SettingsActivity">
 
-    <android.support.design.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
-        xmlns:app="http://schemas.android.com/apk/res-auto"
-        android:id="@+id/myCoordinatorLayout"
-        android:layout_width="0dp"
-        android:layout_height="0dp"
-        android:padding="20dp"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent">
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="fill_parent"
+        android:orientation="vertical"
+        android:padding="20dp">
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:paddingBottom="15dp"
+            android:text="Settings"
+            android:textAlignment="center"
+            android:textColor="#000000"
+            android:textSize="30sp" />
 
         <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="fill_parent"
-            android:orientation="vertical"
-            android:padding="20dp">
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="10dp"
-                android:orientation="horizontal">
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="0"
-                    android:text="Location Tracking" />
-
-                <Space
-                    android:layout_width="10dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1" />
-
-                <Switch
-                    android:id="@+id/tracking"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="0"
-                    android:onClick="locationToggle" />
-            </LinearLayout>
-            <!--
-                        <LinearLayout
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:layout_marginBottom="10dp"
-                            android:orientation="horizontal">
-
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:id="@+id/textView"
-                                android:layout_weight="0"
-                                android:text="Cross Radius: " />
-
-                            <Space
-                                android:layout_width="10dp"
-                                android:layout_height="wrap_content"
-                                android:layout_weight="1" />
-
-                            <SeekBar
-                                android:id="@+id/seekBar"
-                                android:min="10"
-                                android:max="5280"
-                                android:progress="150"
-                                android:layout_width="match_parent"
-                                android:layout_height="wrap_content"/>
-                        </LinearLayout>
-            -->
-
-            <Button
-                android:id="@+id/setSchedule"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:onClick="setSchedule"
-                android:text="Schedule Location Tracking" />
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="10dp"
+            android:orientation="horizontal">
 
             <TextView
-                android:id="@+id/textView"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_weight="0"
-                android:text="Cross Radius: " />
-
-            <SeekBar
-                android:id="@+id/seekBar"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:max="5290"
-                android:min="10"
-                android:progress="150" />
-
-            <Button
-                android:id="@+id/changeEmail"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:onClick="changeEmail"
-                android:text="Change Email" />
-
-            <Button
-                android:id="@+id/changeUsername"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:onClick="changeUsername"
-                android:text="Change Username" />
-
-            <Button
-                android:id="@+id/changePassword"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:onClick="changePassword"
-                android:text="Change Password" />
+                android:text="Location Tracking" />
 
             <Space
-                android:layout_width="match_parent"
+                android:layout_width="10dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1" />
 
-            <Button
-                android:layout_width="match_parent"
+            <Switch
+                android:id="@+id/tracking"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_weight="0"
-                android:backgroundTint="@color/colorAccent"
-                android:onClick="logout"
-                android:text="Log Out" />
-
-            <Button
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_weight="0"
-                android:backgroundTint="#DB3236"
-                android:onClick="delete"
-                android:text="Delete Account" />
-
+                android:onClick="locationToggle" />
         </LinearLayout>
 
+        <Button
+            android:id="@+id/setSchedule"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:onClick="setSchedule"
+            android:text="Schedule Location Tracking" />
 
-    </android.support.design.widget.CoordinatorLayout>
+        <TextView
+            android:id="@+id/textView"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="0"
+            android:text="Cross Radius: " />
 
+        <SeekBar
+            android:id="@+id/seekBar"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:max="5290"
+            android:min="10"
+            android:progress="150" />
+
+        <Button
+            android:id="@+id/changeEmail"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:onClick="changeEmail"
+            android:text="Change Email" />
+
+        <Button
+            android:id="@+id/changeUsername"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:onClick="changeUsername"
+            android:text="Change Username" />
+
+        <Button
+            android:id="@+id/changePassword"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:onClick="changePassword"
+            android:text="Change Password" />
+
+        <Space
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight="1" />
+
+        <Button
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight="0"
+            android:backgroundTint="@color/colorAccent"
+            android:onClick="logout"
+            android:text="Log Out" />
+
+        <Button
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight="0"
+            android:backgroundTint="#DB3236"
+            android:onClick="delete"
+            android:text="Delete Account" />
+
+    </LinearLayout>
 </android.support.constraint.ConstraintLayout>

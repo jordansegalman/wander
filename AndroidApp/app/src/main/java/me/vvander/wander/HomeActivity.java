@@ -52,6 +52,7 @@ import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.TileOverlay;
 import com.google.android.gms.maps.model.TileOverlayOptions;
 import com.google.gson.Gson;
+import com.google.gson.JsonArray;
 import com.google.gson.reflect.TypeToken;
 import com.google.maps.android.heatmaps.Gradient;
 import com.google.maps.android.heatmaps.HeatmapTileProvider;
@@ -63,6 +64,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
@@ -86,6 +88,7 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
     private ArrayList<LatLng> crossList;
     private Map<Marker, LocationTag> markers;
     private Map<Marker, LocationTag> otherMarkers;
+    private ArrayList<Marker> locationSuggestions;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -115,6 +118,7 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
         overlayAllOn = false;
         markers = new HashMap<Marker, LocationTag>();
         otherMarkers = new HashMap<Marker, LocationTag>();
+        locationSuggestions = new ArrayList<Marker>();
 
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
@@ -147,6 +151,9 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
             case R.id.nav_matches:
                 startActivity(new Intent(HomeActivity.this, MatchesActivity.class));
                 return true;
+            case R.id.nav_statistics:
+                startActivity(new Intent(HomeActivity.this, StatisticsActivity.class));
+                return true;
             case R.id.nav_profile:
                 startActivity(new Intent(HomeActivity.this, ProfileActivity.class));
                 return true;
@@ -174,6 +181,9 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
                 return true;
             case R.id.tag_location:
                 addTag();
+                return true;
+            case R.id.location_suggestion:
+                getLocationSuggestions();
                 return true;
         }
         return super.onOptionsItemSelected(item);
@@ -379,6 +389,66 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
         }
     }
 
+    private void getLocationSuggestions() {
+        if (locationSuggestions.size() != 0) {
+            for (int i = 0; i < locationSuggestions.size(); i++) {
+                locationSuggestions.get(i).remove();
+            }
+            locationSuggestions.clear();
+            return;
+        }
+        String url = Data.getInstance().getUrl() + "/getSuggestions";
+        JsonArrayRequest postRequest = new JsonArrayRequest(Request.Method.POST, url, null,
+                new Response.Listener<JSONArray>() {
+                    @Override
+                    public void onResponse(JSONArray response) {
+                        for (int i = 0; i < response.length(); i++) {
+                            try {
+                                JSONObject jsonObject = (JSONObject) response.get(i);
+                                Log.d("jsonObject", jsonObject.toString());
+                                JSONArray centroid = jsonObject.getJSONArray("centroid");
+                                double lat = centroid.getDouble(0);
+                                double lon = centroid.getDouble(1);
+                                Log.d("Lat", "" + lat);
+                                Log.d("Lon", "" + lon);
+
+                                JSONArray elements = jsonObject.getJSONArray("elements");
+                                for (int j = 0; j < elements.length(); j++) {
+                                    JSONArray element = (JSONArray) elements.get(j);
+                                    double lat_point = centroid.getDouble(0);
+                                    double lon_point = centroid.getDouble(1);
+                                }
+
+                                Marker m = googleMap.addMarker(new MarkerOptions().position(new LatLng(lat, lon)).title("Popular Location").snippet("This area has been walked passed " + elements.length() + " times in the past week.").icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN)));
+                                locationSuggestions.add(m);
+                                //Log.d("jsonObject", jsonObject.toString());
+                                //JSONArray centroid = (JSONArray) jsonObject.get("Centroid");
+                                //double lat = (Double)centroid.get(0);
+                                //double lon = (Double)centroid.get(1);
+
+                                //Log.d("Lat", "" + lat);
+                                //Log.d("Lon", "" + lon);
+                            } catch (JSONException e) {
+                                e.printStackTrace();
+                            }
+                        }
+                    }
+                },
+                new Response.ErrorListener() {
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+                        Toast.makeText(getApplicationContext(), "Getting location suggestions has failed.", Toast.LENGTH_SHORT).show();
+                        Log.d(TAG, error.toString());
+                    }
+                }
+        );
+        postRequest.setRetryPolicy(new DefaultRetryPolicy(
+                0,
+                DefaultRetryPolicy.DEFAULT_MAX_RETRIES,
+                DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
+        requestQueue.add(postRequest);
+    }
+
     private void storeTagData() {
         Map<String, String> params = new HashMap<>();
 
@@ -493,7 +563,7 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
                 new Response.ErrorListener() {
                     @Override
                     public void onErrorResponse(VolleyError error) {
-                        Toast.makeText(getApplicationContext(), "No match tag data to display.", Toast.LENGTH_SHORT).show();
+                        //Toast.makeText(getApplicationContext(), "No match tag data to display.", Toast.LENGTH_SHORT).show();
                         Log.d(TAG, error.toString());
                     }
                 }
@@ -566,6 +636,11 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
 
     @Override
     public boolean onMarkerClick(Marker marker) {
+        final Marker m = marker;
+        if (m.getTitle() != null && !m.getTitle().equals("My Tag") && !m.getTitle().equals("Match's Tag")) {
+            return false;
+        }
+
         final BottomSheetDialog dialog = new BottomSheetDialog(this);
         View sheetView = this.getLayoutInflater().inflate(R.layout.activity_location_tag, null);
         dialog.setContentView(sheetView);
@@ -579,7 +654,7 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
         tag_title.setEnabled(false);
         tag_review.setEnabled(false);
 
-        final Marker m = marker;
+
 
         if (m.getTitle() != null && m.getTitle().equals("Match's Tag")) {
             edit.setEnabled(false);
@@ -590,7 +665,7 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
                 tag_title.setText(td.getTagTitle());
                 tag_review.setText(td.getTagReview());
             }
-        } else {
+        } else if (m.getTitle() != null && m.getTitle().equals("My Tag")) {
 
             final LocationTag td = markers.get(marker);
             if (td == null) Log.d("NullForAll", "NULLNULL");
@@ -605,7 +680,7 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
                 public void onClick(View v) {
                     if (edit.getText().equals("Edit")) {
                         tag_title.setInputType(InputType.TYPE_CLASS_TEXT);
-                        tag_review.setInputType(InputType.TYPE_CLASS_TEXT);
+                        tag_review.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_FLAG_MULTI_LINE);
                         tag_title.setEnabled(true);
                         tag_review.setEnabled(true);
                         edit.setText("Done");

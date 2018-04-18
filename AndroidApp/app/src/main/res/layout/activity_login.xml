@@ -1,137 +1,118 @@
 <?xml version="1.0" encoding="utf-8"?>
 <android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context="me.vvander.wander.LoginActivity">
 
-    <android.support.design.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
-        xmlns:app="http://schemas.android.com/apk/res-auto"
-        android:id="@+id/myCoordinatorLayout"
-        android:layout_width="0dp"
-        android:layout_height="0dp"
-        android:padding="20dp"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent">
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="fill_parent"
+        android:orientation="vertical"
+        android:padding="20dp">
 
+        <ImageView
+            android:layout_width="192dp"
+            android:layout_height="192dp"
+            android:layout_gravity="center_horizontal"
+            android:layout_weight="1"
+            android:contentDescription="Wander Logo"
+            android:src="@drawable/wander_logo" />
 
         <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="fill_parent"
-            android:orientation="vertical"
-            android:paddingBottom="10dp">
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="5dp">
 
-            <ImageView
-                android:layout_width="192dp"
-                android:layout_height="192dp"
-                android:layout_gravity="center_horizontal"
-                android:layout_weight="1"
-                android:contentDescription="Wander Logo"
-                android:src="@drawable/wander_logo" />
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="5dp">
-
-                <Space
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1" />
-
-                <ImageButton
-                    android:layout_width="64dp"
-                    android:layout_height="64dp"
-                    android:layout_weight="0"
-                    android:background="@drawable/google_logo"
-                    android:contentDescription="Google Logo"
-                    android:onClick="googleButton" />
-
-                <Space
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1" />
-
-                <ImageButton
-                    android:layout_width="64dp"
-                    android:layout_height="64dp"
-                    android:layout_weight="0"
-                    android:background="@drawable/facebook_logo"
-                    android:contentDescription="Facebook Logo"
-                    android:onClick="facebookButton" />
-
-                <Space
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1" />
-
-            </LinearLayout>
-
-            <EditText
-                android:id="@+id/username"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:backgroundTint="#000000"
-                android:hint="Username"
-                android:imeOptions="actionNext"
-                android:inputType="textNoSuggestions"
-                android:maxLines="1"
-                android:singleLine="false"
-                android:textColor="#000000"
-                android:textCursorDrawable="@null" />
-
-            <EditText
-                android:id="@+id/password"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:backgroundTint="#000000"
-                android:hint="Password"
-                android:imeOptions="actionDone"
-                android:inputType="textPassword"
-                android:maxLines="1"
-                android:textColor="#000000"
-                android:textCursorDrawable="@null" />
-
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center"
-                android:layout_margin="0dp"
-                android:layout_weight="1"
-                android:clickable="true"
-                android:focusable="true"
-                android:onClick="forgotPassword"
-                android:padding="0dp"
-                android:text="Forgot your password?"
-                android:textColor="#0645AD" />
-
-            <Button
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:backgroundTint="@color/colorAccent"
-                android:onClick="login"
-                android:text="Log In" />
-
-            <TextView
+            <Space
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_gravity="center"
-                android:layout_margin="0dp"
-                android:layout_weight="1"
-                android:clickable="true"
-                android:focusable="true"
-                android:gravity="center"
-                android:onClick="registerButton"
-                android:padding="0dp"
-                android:text="Don't have an account?"
-                android:textColor="#0645AD" />
+                android:layout_weight="1" />
+
+            <ImageButton
+                android:layout_width="64dp"
+                android:layout_height="64dp"
+                android:layout_weight="0"
+                android:background="@drawable/google_logo"
+                android:contentDescription="Google Logo"
+                android:onClick="googleButton" />
+
+            <Space
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="1" />
+
+            <ImageButton
+                android:layout_width="64dp"
+                android:layout_height="64dp"
+                android:layout_weight="0"
+                android:background="@drawable/facebook_logo"
+                android:contentDescription="Facebook Logo"
+                android:onClick="facebookButton" />
+
+            <Space
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="1" />
 
         </LinearLayout>
-    </android.support.design.widget.CoordinatorLayout>
+
+        <EditText
+            android:id="@+id/username"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:backgroundTint="#000000"
+            android:hint="Username"
+            android:inputType="textNoSuggestions"
+            android:maxLines="1"
+            android:textColor="#000000" />
+
+        <EditText
+            android:id="@+id/password"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:backgroundTint="#000000"
+            android:hint="Password"
+            android:inputType="textPassword"
+            android:maxLines="1"
+            android:textColor="#000000" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:layout_margin="0dp"
+            android:layout_weight="1"
+            android:clickable="true"
+            android:focusable="true"
+            android:onClick="forgotPassword"
+            android:padding="0dp"
+            android:text="Forgot your password?"
+            android:textColor="#0645AD" />
+
+        <Button
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:backgroundTint="@color/colorAccent"
+            android:onClick="login"
+            android:text="Log In" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:layout_margin="0dp"
+            android:layout_weight="1"
+            android:clickable="true"
+            android:focusable="true"
+            android:gravity="center"
+            android:onClick="registerButton"
+            android:padding="0dp"
+            android:text="Don't have an account?"
+            android:textColor="#0645AD" />
+
+    </LinearLayout>
 </android.support.constraint.ConstraintLayout>

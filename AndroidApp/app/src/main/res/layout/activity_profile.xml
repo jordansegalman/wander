@@ -6,169 +6,146 @@
     android:layout_height="match_parent"
     tools:context="me.vvander.wander.ProfileActivity">
 
-    <android.support.design.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
-        xmlns:app="http://schemas.android.com/apk/res-auto"
-        android:id="@+id/myCoordinatorLayout"
-        android:layout_width="0dp"
-        android:layout_height="0dp"
-        android:padding="20dp"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent">
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="fill_parent"
+        android:gravity="top"
+        android:orientation="vertical"
+        android:padding="20dp">
 
-        <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="match_parent">
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
 
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="fill_parent"
-                android:layout_above="@+id/button_layer"
-                android:gravity="top"
-                android:orientation="vertical">
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal">
-
-                    <Space
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1" />
-
-                    <android.support.v7.widget.CardView xmlns:app="http://schemas.android.com/apk/res-auto"
-                        android:layout_width="96dp"
-                        android:layout_height="96dp"
-                        android:layout_weight="0"
-                        app:cardCornerRadius="30dp"
-                        app:cardElevation="0dp">
-
-                        <ImageView
-                            android:id="@+id/picture"
-                            android:layout_width="match_parent"
-                            android:layout_height="match_parent"
-                            android:contentDescription="Profile Picture"
-                            app:srcCompat="@drawable/default_profile" />
-
-                    </android.support.v7.widget.CardView>
-
-                    <Space
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1" />
-
-                </LinearLayout>
-
-                <TextView
-                    android:id="@+id/name"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:gravity="center"
-                    android:inputType="none"
-                    android:text="No Name"
-                    android:textColor="#000000"
-                    android:textSize="25sp" />
-
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="About Me:"
-                    android:textColor="#000000"
-                    android:textSize="20sp" />
-
-                <TextView
-                    android:id="@+id/about"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="No About" />
-
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:inputType="none"
-                    android:text="Interests:"
-                    android:textColor="#000000"
-                    android:textSize="20sp" />
-
-                <TextView
-                    android:id="@+id/interests"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="No Interests" />
-
-
-                <Space
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1" />
-
-
-            </LinearLayout>
-
-            <LinearLayout
-                android:id="@+id/button_layer"
-                android:layout_width="match_parent"
+            <Space
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_alignParentBottom="true"
-                android:gravity="bottom"
-                android:orientation="horizontal">
+                android:layout_weight="1" />
 
-                <LinearLayout
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="0"
-                    android:orientation="vertical">
+            <android.support.v7.widget.CardView xmlns:app="http://schemas.android.com/apk/res-auto"
+                android:layout_width="96dp"
+                android:layout_height="96dp"
+                android:layout_weight="0"
+                app:cardCornerRadius="30dp"
+                app:cardElevation="0dp">
 
-                    <Button
-                        android:id="@+id/editButton"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_gravity="end"
-                        android:layout_weight="0"
-                        android:backgroundTint="@color/colorAccent"
-                        android:onClick="edit"
-                        android:text="Edit" />
-
-                </LinearLayout>
-
-                <Space
+                <ImageView
+                    android:id="@+id/picture"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
-                    android:layout_weight="1" />
+                    android:contentDescription="Profile Picture"
+                    app:srcCompat="@drawable/default_profile" />
 
-                <LinearLayout
-                    android:layout_width="wrap_content"
+            </android.support.v7.widget.CardView>
+
+            <Space
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="1" />
+
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/name"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:inputType="none"
+            android:textColor="#000000"
+            android:textSize="25sp" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="About Me"
+            android:textColor="#000000"
+            android:textSize="20sp" />
+
+        <TextView
+            android:id="@+id/about"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:inputType="none"
+            android:text="Interests"
+            android:textColor="#000000"
+            android:textSize="20sp" />
+
+        <TextView
+            android:id="@+id/interests"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" />
+
+
+        <Space
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight="1" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight="0"
+            android:gravity="bottom"
+            android:orientation="horizontal">
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="0"
+                android:orientation="vertical">
+
+                <Button
+                    android:id="@+id/editButton"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_weight="0"
-                    android:orientation="vertical">
-
-                    <Button
-                        android:id="@+id/importFacebookButton"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_gravity="end"
-                        android:layout_weight="0"
-                        android:backgroundTint="@color/colorAccent"
-                        android:onClick="importFacebookProfile"
-                        android:text="Import Facebook" />
-
-                    <Button
-                        android:id="@+id/importLinkedInButton"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_gravity="end"
-                        android:layout_weight="0"
-                        android:backgroundTint="@color/colorAccent"
-                        android:onClick="importLinkedInProfile"
-                        android:text="Import LinkedIn" />
-
-                </LinearLayout>
+                    android:layout_gravity="end"
+                    android:backgroundTint="@color/colorAccent"
+                    android:onClick="edit"
+                    android:text="Edit" />
 
             </LinearLayout>
 
-        </RelativeLayout>
+            <Space
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_weight="1" />
 
-    </android.support.design.widget.CoordinatorLayout>
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="0"
+                android:orientation="vertical">
+
+                <Button
+                    android:id="@+id/importFacebookButton"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="end"
+                    android:layout_weight="0"
+                    android:backgroundTint="@color/colorAccent"
+                    android:onClick="importFacebookProfile"
+                    android:text="Import Facebook" />
+
+                <Button
+                    android:id="@+id/importLinkedInButton"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="end"
+                    android:layout_weight="0"
+                    android:backgroundTint="@color/colorAccent"
+                    android:onClick="importLinkedInProfile"
+                    android:text="Import LinkedIn" />
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+
+    </LinearLayout>
+
 </android.support.constraint.ConstraintLayout>
