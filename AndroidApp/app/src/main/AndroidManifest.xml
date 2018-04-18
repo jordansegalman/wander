@@ -96,6 +96,8 @@
         </service>
 
         <receiver android:name=".LocationScheduleAlarmReceiver" />
+
+        <activity android:name=".CustomizeAppActivity"></activity>
     </application>
 
 </manifest>

@@ -52,6 +52,13 @@
             android:onClick="setSchedule"
             android:text="Schedule Location Tracking" />
 
+        <Button
+            android:id="@+id/Customize"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:onClick="customize"
+            android:text="Customize App" />
+
         <TextView
             android:id="@+id/textView"
             android:layout_width="wrap_content"
