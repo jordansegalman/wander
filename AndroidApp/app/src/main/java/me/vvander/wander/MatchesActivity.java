@@ -26,6 +26,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -163,6 +164,7 @@ public class MatchesActivity extends AppCompatActivity {
             noMatchesText.setVisibility(View.GONE);
             noMatchesBottomSpace.setVisibility(View.GONE);
             matchListView.setVisibility(View.VISIBLE);
+            Collections.sort(matchList);
             MatchAdapter matchAdapter = new MatchAdapter(this, matchList);
             matchListView.setAdapter(matchAdapter);
             matchListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {

@@ -563,7 +563,7 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
                 new Response.ErrorListener() {
                     @Override
                     public void onErrorResponse(VolleyError error) {
-                        Toast.makeText(getApplicationContext(), "No match tag data to display.", Toast.LENGTH_SHORT).show();
+                        //Toast.makeText(getApplicationContext(), "No match tag data to display.", Toast.LENGTH_SHORT).show();
                         Log.d(TAG, error.toString());
                     }
                 }
