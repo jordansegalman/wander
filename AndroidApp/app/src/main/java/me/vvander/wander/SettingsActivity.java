@@ -5,6 +5,7 @@ import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
@@ -41,8 +42,13 @@ public class SettingsActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        setTheme(Customize.getCustomTheme(this));
+
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_settings);
+
+        //android.support.v7.app.ActionBar bar = getSupportActionBar();
+        //bar.setBackgroundDrawable(new ColorDrawable(Customize.getCustomColor(this)));
 
         Button changeEmailButton = findViewById(R.id.changeEmail);
         Button changeUsernameButton = findViewById(R.id.changeUsername);
@@ -240,6 +246,14 @@ public class SettingsActivity extends AppCompatActivity {
                 DefaultRetryPolicy.DEFAULT_MAX_RETRIES,
                 DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
         requestQueue.add(postRequest);
+    }
+
+    public void customize(View view){
+        startActivity(new Intent(SettingsActivity.this, CustomizeAppActivity.class));
+    }
+
+    public void onBackPressed(){
+        startActivity(new Intent(SettingsActivity.this, HomeActivity.class));
     }
 
     private void getCrossRadius() {

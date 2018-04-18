@@ -39,6 +39,8 @@ public class LoginActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        setTheme(Customize.getCustomTheme(this));
+
         super.onCreate(savedInstanceState);
 
         requestQueue = Volley.newRequestQueue(this);
@@ -87,6 +89,7 @@ public class LoginActivity extends AppCompatActivity {
     }
 
     public void login(View view) {
+
         EditText usernameText = findViewById(R.id.username);
         EditText passwordText = findViewById(R.id.password);
         String username = usernameText.getText().toString();

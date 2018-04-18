@@ -104,7 +104,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_gravity="end"
-                    android:backgroundTint="@color/colorAccent"
+                    android:backgroundTint="?attr/colorAccent"
                     android:onClick="edit"
                     android:text="Edit" />
 
@@ -127,7 +127,7 @@
                     android:layout_height="wrap_content"
                     android:layout_gravity="end"
                     android:layout_weight="0"
-                    android:backgroundTint="@color/colorAccent"
+                    android:backgroundTint="?attr/colorAccent"
                     android:onClick="importFacebookProfile"
                     android:text="Import Facebook" />
 
@@ -137,15 +137,16 @@
                     android:layout_height="wrap_content"
                     android:layout_gravity="end"
                     android:layout_weight="0"
-                    android:backgroundTint="@color/colorAccent"
+                    android:backgroundTint="?attr/colorAccent"
                     android:onClick="importLinkedInProfile"
                     android:text="Import LinkedIn" />
+
+
+
+                </LinearLayout>
 
             </LinearLayout>
 
         </LinearLayout>
-
-
-    </LinearLayout>
 
 </android.support.constraint.ConstraintLayout>

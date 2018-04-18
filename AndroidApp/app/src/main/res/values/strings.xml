@@ -123,4 +123,19 @@
         <item>Yoga</item>
         <item>Zumba</item>
     </string-array>
+
+    <string-array name="colorList">
+        <item>Default</item>
+        <item>Red</item>
+        <item>Orange</item>
+        <item>Yellow</item>
+        <item>Blue</item>
+        <item>Green</item>
+        <item>Purple</item>
+    </string-array>
+
+    <string-array name="fontList">
+        <item>Sans-Serif</item>
+        <item>Serif</item>
+    </string-array>
 </resources>
