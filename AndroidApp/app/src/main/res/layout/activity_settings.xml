@@ -123,6 +123,19 @@
                 android:min="10"
                 android:progress="150" />
 
+            <TextView
+                android:id="@+id/maximumText"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Maximum Number of Matches: " />
+
+            <SeekBar
+                android:id="@+id/maximumMatches"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:max="10"
+                android:min="1"/>
+
             <Button
                 android:id="@+id/changeEmail"
                 android:layout_width="match_parent"

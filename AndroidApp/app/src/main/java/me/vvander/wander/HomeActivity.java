@@ -59,6 +59,7 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
     private static final int PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION = 2222;
     private static final String SP_LOCATION = "locationSwitch";
     private static final String SP_SCHEDULE = "locationSchedule";
+    private static final String SP_NOTIFICATIONS = "notificationSwitch";
     private Toolbar toolbar;
     private RequestQueue requestQueue;
     private GoogleMap googleMap;
@@ -88,6 +89,7 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
             setupDrawer();
             initializeManualLocationSwitch();
             initializeScheduleLocationSwitch();
+            initializeNotificationSwitch();
             setupLocationScheduleAlarm();
             setupActivityRecognition();
         }
@@ -100,6 +102,7 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
     }
+
 
     @Override
     protected void onResume() {
@@ -160,6 +163,10 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
     private void initializeManualLocationSwitch() {
         SharedPreferences sharedPreferences = getSharedPreferences(SP_LOCATION, Context.MODE_PRIVATE);
         Data.getInstance().setManualLocationSwitch(sharedPreferences.getBoolean("manualLocationSwitch", true));
+    }
+    private void initializeNotificationSwitch() {
+        SharedPreferences sharedPreferences = getSharedPreferences(SP_NOTIFICATIONS, Context.MODE_PRIVATE);
+        Data.getInstance().setNotificationStatus(sharedPreferences.getBoolean("notificationSwitch", true));
     }
 
     private void initializeScheduleLocationSwitch() {
