@@ -39,6 +39,8 @@ public class LoginActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        setTheme(Customize.getCustomTheme(this));
+
         super.onCreate(savedInstanceState);
 
         requestQueue = Volley.newRequestQueue(this);

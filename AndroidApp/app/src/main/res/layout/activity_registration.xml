@@ -94,9 +94,10 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="end"
-            android:backgroundTint="@color/colorAccent"
+            android:backgroundTint="?attr/colorAccent"
             android:onClick="submit"
             android:text="Submit" />
+
 
     </LinearLayout>
 </android.support.constraint.ConstraintLayout>

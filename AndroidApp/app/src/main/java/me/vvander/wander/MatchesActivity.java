@@ -38,6 +38,8 @@ public class MatchesActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        setTheme(Customize.getCustomTheme(this));
+
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_matches);
         requestQueue = Volley.newRequestQueue(this);

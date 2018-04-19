@@ -17,4 +17,133 @@
 
     <style name="AppTheme.PopupOverlay" parent="ThemeOverlay.AppCompat.Light" />
 
+    <style name="AppTheme.serif">
+        <item name="fontFamily">serif</item>
+    </style>
+
+    <style name="AppTheme.NoActionBar.serif">
+        <item name="fontFamily">serif</item>
+    </style>
+
+    <style name="AppTheme.Red">
+        <item name="colorPrimary">@color/Red</item>
+        <item name="colorPrimaryDark">@color/DarkRed</item>
+        <item name="colorAccent">@color/Red</item>
+    </style>
+
+    <style name="AppTheme.Orange">
+        <item name="colorPrimary">@color/Orange</item>
+        <item name="colorPrimaryDark">@color/DarkOrange</item>
+        <item name="colorAccent">@color/Orange</item>
+        <item name="android:fontFamily">serif</item>
+    </style>
+
+    <style name="AppTheme.Yellow">
+        <item name="colorPrimary">@color/Yellow</item>
+        <item name="colorPrimaryDark">@color/DarkYellow</item>
+        <item name="colorAccent">@color/Yellow</item>
+    </style>
+
+    <style name="AppTheme.Green">
+        <item name="colorPrimary">@color/Green</item>
+        <item name="colorPrimaryDark">@color/DarkGreen</item>
+        <item name="colorAccent">@color/Green</item>
+    </style>
+
+    <style name="AppTheme.Blue">
+        <item name="colorPrimary">@color/Blue</item>
+        <item name="colorPrimaryDark">@color/DarkBlue</item>
+        <item name="colorAccent">@color/Blue</item>
+    </style>
+
+    <style name="AppTheme.Purple">
+        <item name="colorPrimary">@color/Purple</item>
+        <item name="colorPrimaryDark">@color/DarkPurple</item>
+        <item name="colorAccent">@color/Purple</item>
+    </style>
+
+    <style name="AppTheme.NoActionBar.Red">
+        <item name="colorPrimary">@color/Red</item>
+        <item name="colorPrimaryDark">@color/DarkRed</item>
+        <item name="colorAccent">@color/Red</item>
+    </style>
+
+    <style name="AppTheme.NoActionBar.Orange">
+        <item name="colorPrimary">@color/Orange</item>
+        <item name="colorPrimaryDark">@color/DarkOrange</item>
+        <item name="colorAccent">@color/Orange</item>
+    </style>
+
+    <style name="AppTheme.NoActionBar.Yellow">
+        <item name="colorPrimary">@color/Yellow</item>
+        <item name="colorPrimaryDark">@color/DarkYellow</item>
+        <item name="colorAccent">@color/Yellow</item>
+    </style>
+
+    <style name="AppTheme.NoActionBar.Green">
+        <item name="colorPrimary">@color/Green</item>
+        <item name="colorPrimaryDark">@color/DarkGreen</item>
+        <item name="colorAccent">@color/Green</item>
+    </style>
+
+    <style name="AppTheme.NoActionBar.Blue">
+        <item name="colorPrimary">@color/Blue</item>
+        <item name="colorPrimaryDark">@color/DarkBlue</item>
+        <item name="colorAccent">@color/Blue</item>
+    </style>
+
+    <style name="AppTheme.NoActionBar.Purple">
+        <item name="colorPrimary">@color/Purple</item>
+        <item name="colorPrimaryDark">@color/DarkPurple</item>
+        <item name="colorAccent">@color/Purple</item>
+    </style>
+
+    <style name="AppTheme.Red.serif">
+        <item name="fontFamily">serif</item>
+    </style>
+
+    <style name="AppTheme.Orange.serif">
+        <item name="fontFamily">serif</item>
+    </style>
+
+    <style name="AppTheme.Yellow.serif">
+        <item name="fontFamily">serif</item>
+    </style>
+
+    <style name="AppTheme.Green.serif">
+        <item name="fontFamily">serif</item>
+    </style>
+
+    <style name="AppTheme.Blue.serif">
+        <item name="fontFamily">serif</item>
+    </style>
+
+    <style name="AppTheme.Purple.serif">
+        <item name="fontFamily">serif</item>
+    </style>
+
+    <style name="AppTheme.NoActionBar.Red.serif">
+        <item name="fontFamily">serif</item>
+    </style>
+
+    <style name="AppTheme.NoActionBar.Orange.serif">
+        <item name="fontFamily">serif</item>
+    </style>
+
+    <style name="AppTheme.NoActionBar.Yellow.serif">
+        <item name="fontFamily">serif</item>
+    </style>
+
+    <style name="AppTheme.NoActionBar.Green.serif">
+        <item name="fontFamily">serif</item>
+    </style>
+
+    <style name="AppTheme.NoActionBar.Blue.serif">
+        <item name="fontFamily">serif</item>
+    </style>
+
+    <style name="AppTheme.NoActionBar.Purple.serif">
+        <item name="fontFamily">serif</item>
+    </style>
+
 </resources>

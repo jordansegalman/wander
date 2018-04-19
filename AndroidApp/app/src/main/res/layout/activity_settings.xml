@@ -113,6 +113,13 @@
             android:min="0" />
 
         <Button
+            android:id="@+id/Customize"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:onClick="customize"
+            android:text="Customize App" />
+
+        <Button
             android:id="@+id/changeEmail"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -142,7 +149,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_weight="0"
-            android:backgroundTint="@color/colorAccent"
+            android:backgroundTint="?attr/colorAccent"
             android:onClick="logout"
             android:text="Log Out" />
 
