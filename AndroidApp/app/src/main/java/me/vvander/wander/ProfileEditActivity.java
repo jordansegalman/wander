@@ -49,7 +49,7 @@ public class ProfileEditActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        setTheme(Customize.getCustomTheme(this));
+        setTheme(Theme.getTheme(this));
 
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_profile_edit);
@@ -59,7 +59,7 @@ public class ProfileEditActivity extends AppCompatActivity {
         pictureImageView = findViewById(R.id.picture);
         nameEditText = findViewById(R.id.name);
         aboutEditText = findViewById(R.id.about);
-        Spinner firstInterestSpinner = findViewById(R.id.first_interest_spinner);
+        Spinner firstInterestSpinner = findViewById(R.id.firstInterestsSpinner);
         firstInterestSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> adapterView, View view, int position, long id) {
@@ -75,7 +75,7 @@ public class ProfileEditActivity extends AppCompatActivity {
             public void onNothingSelected(AdapterView<?> adapterView) {
             }
         });
-        Spinner secondInterestSpinner = findViewById(R.id.second_interest_spinner);
+        Spinner secondInterestSpinner = findViewById(R.id.secondInterestsSpinner);
         secondInterestSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> adapterView, View view, int position, long id) {
@@ -91,7 +91,7 @@ public class ProfileEditActivity extends AppCompatActivity {
             public void onNothingSelected(AdapterView<?> adapterView) {
             }
         });
-        Spinner thirdInterestSpinner = findViewById(R.id.third_interest_spinner);
+        Spinner thirdInterestSpinner = findViewById(R.id.thirdInterestsSpinner);
         thirdInterestSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> adapterView, View view, int position, long id) {

@@ -4,17 +4,23 @@
     <color name="colorPrimaryDark">#303f9f</color>
     <color name="colorAccent">#009688</color>
 
-    <color name="Red">#ff0000</color>
-    <color name="DarkRed">#cc0000</color>
-    <color name="Orange">#ff9900</color>
-    <color name="DarkOrange">#cc5200</color>
-    <color name="Yellow">#ffff00</color>
-    <color name="DarkYellow">#cccc00</color>
-    <color name="Green">#00ff00</color>
-    <color name="DarkGreen">#00cc00</color>
-    <color name="Blue">#0000ff</color>
-    <color name="DarkBlue">#0000cc</color>
-    <color name="Purple">#ff00ff</color>
-    <color name="DarkPurple">#cc00cc</color>
+    <color name="Red">#F44336</color>
+    <color name="DarkRed">#C62828</color>
+    <color name="AccentRed">#FF1744</color>
+    <color name="Orange">#FF9800</color>
+    <color name="DarkOrange">#EF6C00</color>
+    <color name="AccentOrange">#FF9100</color>
+    <color name="Yellow">#FFEB3B</color>
+    <color name="DarkYellow">#F9A825</color>
+    <color name="AccentYellow">#FFEA00</color>
+    <color name="Green">#4CAF50</color>
+    <color name="DarkGreen">#2E7D32</color>
+    <color name="AccentGreen">#00E676</color>
+    <color name="Blue">#2196F3</color>
+    <color name="DarkBlue">#1565C0</color>
+    <color name="AccentBlue">#2979FF</color>
+    <color name="Purple">#9C27B0</color>
+    <color name="DarkPurple">#6A1B9A</color>
+    <color name="AccentPurple">#D500F9</color>
 
 </resources>

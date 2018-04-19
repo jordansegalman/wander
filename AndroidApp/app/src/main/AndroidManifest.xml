@@ -51,7 +51,7 @@
         <activity android:name=".ChatActivity" />
         <activity android:name=".StatisticsActivity" />
         <activity android:name=".BlockedActivity" />
-        <activity android:name=".CustomizeAppActivity" />
+        <activity android:name=".ChangeThemeActivity" />
         <activity
             android:name="com.facebook.FacebookActivity"
             android:configChanges="keyboard|keyboardHidden|screenLayout|screenSize|orientation"

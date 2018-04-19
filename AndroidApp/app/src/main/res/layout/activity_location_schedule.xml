@@ -53,7 +53,7 @@
                 android:layout_height="wrap_content"
                 android:layout_margin="10dp"
                 android:layout_weight="0"
-                android:backgroundTint="?attr/colorAccent"
+                android:backgroundTint="?android:attr/colorAccent"
                 android:onClick="newSchedule"
                 android:text="New Schedule" />
 

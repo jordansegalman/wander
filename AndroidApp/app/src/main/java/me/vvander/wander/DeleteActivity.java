@@ -34,12 +34,13 @@ public class DeleteActivity extends AppCompatActivity {
     private static final String SP_LOCATION = "locationSwitch";
     private static final String SP_SCHEDULE = "locationSchedule";
     private static final String SP_NOTIFICATIONS = "notificationSwitch";
+    private static final String SP_THEME = "theme";
     EditText passwordEditText;
     private RequestQueue requestQueue;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        setTheme(Customize.getCustomTheme(this));
+        setTheme(Theme.getTheme(this));
 
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_delete);
@@ -92,6 +93,7 @@ public class DeleteActivity extends AppCompatActivity {
                                     resetScheduleLocationSwitch();
                                     resetNotificationSwitch();
                                     cancelLocationScheduleAlarm();
+                                    resetTheme();
                                     Data.getInstance().logout();
                                     Data.getInstance().removeAllCookies();
                                     Toast.makeText(getApplicationContext(), "Account deleted!", Toast.LENGTH_SHORT).show();
@@ -139,6 +141,7 @@ public class DeleteActivity extends AppCompatActivity {
                                     resetScheduleLocationSwitch();
                                     resetNotificationSwitch();
                                     cancelLocationScheduleAlarm();
+                                    resetTheme();
                                     Data.getInstance().logoutGoogle();
                                     Data.getInstance().removeAllCookies();
                                     Toast.makeText(getApplicationContext(), "Account deleted!", Toast.LENGTH_SHORT).show();
@@ -182,6 +185,7 @@ public class DeleteActivity extends AppCompatActivity {
                                     resetScheduleLocationSwitch();
                                     resetNotificationSwitch();
                                     cancelLocationScheduleAlarm();
+                                    resetTheme();
                                     Data.getInstance().logoutFacebook();
                                     Data.getInstance().removeAllCookies();
                                     Toast.makeText(getApplicationContext(), "Account deleted!", Toast.LENGTH_SHORT).show();
@@ -239,6 +243,11 @@ public class DeleteActivity extends AppCompatActivity {
         if (alarmManager != null) {
             alarmManager.cancel(pendingIntent);
         }
+    }
+
+    private void resetTheme() {
+        SharedPreferences sharedPreferences = getSharedPreferences(SP_THEME, Context.MODE_PRIVATE);
+        sharedPreferences.edit().clear().apply();
     }
 
     public void cancel(View view) {

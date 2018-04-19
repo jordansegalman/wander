@@ -34,6 +34,8 @@ public class StatisticsActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        setTheme(Theme.getTheme(this));
+
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_statistics);
 

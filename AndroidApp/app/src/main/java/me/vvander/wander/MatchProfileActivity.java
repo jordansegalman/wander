@@ -47,7 +47,7 @@ public class MatchProfileActivity extends AppCompatActivity {
     private String name;
 
     protected void onCreate(Bundle savedInstanceState) {
-        setTheme(Customize.getCustomTheme(this));
+        setTheme(Theme.getTheme(this));
 
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_match_profile);

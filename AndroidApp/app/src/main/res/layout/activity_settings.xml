@@ -78,11 +78,11 @@
             android:text="Schedule Location Tracking" />
 
         <Button
-            android:id="@+id/Customize"
+            android:id="@+id/changeTheme"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:onClick="customize"
-            android:text="Customize App" />
+            android:onClick="changeTheme"
+            android:text="Change Theme" />
 
         <TextView
             android:id="@+id/crossRadiusText"
@@ -111,13 +111,6 @@
             android:layout_height="wrap_content"
             android:max="25"
             android:min="0" />
-
-        <Button
-            android:id="@+id/Customize"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:onClick="customize"
-            android:text="Customize App" />
 
         <Button
             android:id="@+id/changeEmail"
@@ -149,7 +142,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_weight="0"
-            android:backgroundTint="?attr/colorAccent"
+            android:backgroundTint="?android:attr/colorAccent"
             android:onClick="logout"
             android:text="Log Out" />
 

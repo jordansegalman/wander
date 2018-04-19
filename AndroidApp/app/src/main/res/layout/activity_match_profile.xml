@@ -110,7 +110,7 @@
                 android:id="@+id/chatButton"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:backgroundTint="?attr/colorAccent"
+                android:backgroundTint="?android:attr/colorAccent"
                 android:onClick="chat"
                 android:text="Chat" />
 
@@ -121,7 +121,7 @@
                 android:layout_gravity="end"
                 android:onClick="approveUser"
                 android:layout_weight="0"
-                android:backgroundTint="?attr/colorAccent"
+                android:backgroundTint="?android:attr/colorAccent"
                 android:text="Approve"
                 android:visibility="visible" />
 
@@ -132,7 +132,7 @@
                 android:layout_gravity="end"
                 android:onClick="unapproveUser"
                 android:layout_weight="0"
-                android:backgroundTint="?attr/colorAccent"
+                android:backgroundTint="?android:attr/colorAccent"
                 android:text="Unapprove"
                 android:visibility="gone" />
 
@@ -141,7 +141,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="end"
-                android:backgroundTint="?attr/colorAccent"
+                android:backgroundTint="?android:attr/colorAccent"
                 android:onClick="getCrossLocations"
                 android:layout_weight="0"
                 android:text="View Crossed Paths" />

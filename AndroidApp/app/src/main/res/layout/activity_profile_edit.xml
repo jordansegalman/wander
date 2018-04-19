@@ -83,7 +83,7 @@
             android:textSize="20sp" />
 
         <Spinner
-            android:id="@+id/first_interest_spinner"
+            android:id="@+id/firstInterestsSpinner"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:entries="@array/interests_array"
@@ -91,7 +91,7 @@
             android:spinnerMode="dialog" />
 
         <Spinner
-            android:id="@+id/second_interest_spinner"
+            android:id="@+id/secondInterestsSpinner"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:entries="@array/interests_array"
@@ -99,7 +99,7 @@
             android:spinnerMode="dialog" />
 
         <Spinner
-            android:id="@+id/third_interest_spinner"
+            android:id="@+id/thirdInterestsSpinner"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:entries="@array/interests_array"
@@ -116,7 +116,7 @@
             android:layout_height="wrap_content"
             android:layout_gravity="end"
             android:layout_weight="0"
-            android:backgroundTint="?attr/colorAccent"
+            android:backgroundTint="?android:attr/colorAccent"
             android:onClick="done"
             android:text="Done" />
 

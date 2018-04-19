@@ -35,7 +35,7 @@ public class GoogleLoginActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        setTheme(Customize.getCustomTheme(this));
+        setTheme(Theme.getTheme(this));
 
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_google_login);

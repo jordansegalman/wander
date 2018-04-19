@@ -124,17 +124,17 @@
         <item>Zumba</item>
     </string-array>
 
-    <string-array name="colorList">
+    <string-array name="colors_array">
         <item>Default</item>
         <item>Red</item>
         <item>Orange</item>
         <item>Yellow</item>
-        <item>Blue</item>
         <item>Green</item>
+        <item>Blue</item>
         <item>Purple</item>
     </string-array>
 
-    <string-array name="fontList">
+    <string-array name="fonts_array">
         <item>Sans-Serif</item>
         <item>Serif</item>
     </string-array>
