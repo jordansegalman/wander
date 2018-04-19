@@ -1,39 +1,32 @@
 package me.vvander.wander;
 
 public class LocationTag {
-    private String tagTitle = "Tag Location Title";
-    private String tagReview = "Enter a review or description of the location.";
-    private String tagImage;
+    private String title;
+    private String description;
 
-    public LocationTag() {
+    LocationTag() {
+        title = "Location Tag Title";
+        description = "Enter a description for the tag.";
     }
 
-    public LocationTag(String title, String review) {
-        this.tagTitle = title;
-        this.tagReview = review;
+    LocationTag(String title, String description) {
+        this.title = title;
+        this.description = description;
     }
 
-    public String getTagTitle() {
-        return tagTitle;
+    public String getTitle() {
+        return title;
     }
 
-    public void setTagTitle(String tagTitle) {
-        this.tagTitle = tagTitle;
+    public void setTitle(String title) {
+        this.title = title;
     }
 
-    public String getTagReview() {
-        return tagReview;
+    public String getDescription() {
+        return description;
     }
 
-    public void setTagReview(String tagReview) {
-        this.tagReview = tagReview;
-    }
-
-    public String getTagImage() {
-        return tagImage;
-    }
-
-    public void setTagImage(String tagImage) {
-        this.tagImage = tagImage;
+    public void setDescription(String description) {
+        this.description = description;
     }
 }

@@ -45,7 +45,7 @@ const message = "message";
 const uidFrom = "uidFrom";
 const uidTo = "uidTo";
 const title = "title";
-const review = "review";
+const description = "description";
 const reason = "reason";
 const banned = "banned";
 const populationMultiplier = "populationMultiplier";
@@ -68,23 +68,25 @@ const db_offenses = "offenses";
 const saltRounds = 10;
 
 // Constants used for matching
-//const MATCH_THRESHOLD = 10;			// 10 crossed paths
-const MATCH_THRESHOLD = 1;			// 1 crossed path (DEVELOPMENT)
+//const MATCH_THRESHOLD = 10;				// 10 crossed paths
+const MATCH_THRESHOLD = 1;				// 1 crossed path (DEVELOPMENT)
 const UNMATCHED_MATCH_THRESHOLD = 3 * MATCH_THRESHOLD;
-const CROSS_TIME = 30000;			// 30 seconds
+const CROSS_TIME = 30000;				// 30 seconds
 //const CROSS_COOLDOWN = 1800000;			// 30 minutes
-const CROSS_COOLDOWN = 1000;			// 1 second (DEVELOPMENT)
-//const MATCH_NOTIFY_CRON = '0 20 * * * *';	// Every day at 20:00
-const MATCH_NOTIFY_CRON = '0 * * * * *';	// Every minute (DEVELOPMENT)
-//const WARN_THRESHOLD = 3;			// Warn after 3 offenses
-const WARN_THRESHOLD = 1;			// Warn after 1 offense (DEVELOPMENT)
-//const BAN_THRESHOLD = 5;			// Ban after 5 offenses
-const BAN_THRESHOLD = 2;			// Ban after 2 offenses (DEVELOPMENT)
-//const POPULAR_LOCATION_CRON = '0 0 * * * *';	// Every day at 0:00
-const POPULAR_LOCATION_CRON = '0 * * * * *';	// Every minute (DEVELOPMENT)
-const NEARBY_USERS_RADIUS = 5280;		// 1 mile
-const POPULATION_MULTIPLIER_LOW_CUTOFF = 10;	// 10 users
-const POPULATION_MULTIPLIER_HIGH_CUTOFF = 500;	// 500 users
+const CROSS_COOLDOWN = 1000;				// 1 second (DEVELOPMENT)
+//const MATCHES_NOTIFY_CRON = '0 20 * * * *';		// Every day at 20:00
+const MATCHES_NOTIFY_CRON = '0 * * * * *';		// Every minute (DEVELOPMENT)
+//const NO_MATCHES_NOTIFY_CRON = '0 20 * * * *';	// Every day at 20:00
+const NO_MATCHES_NOTIFY_CRON = '*/5 * * * *';		// Every 5 minutes (DEVELOPMENT)
+//const WARN_THRESHOLD = 3;				// Warn after 3 offenses
+const WARN_THRESHOLD = 1;				// Warn after 1 offense (DEVELOPMENT)
+//const BAN_THRESHOLD = 5;				// Ban after 5 offenses
+const BAN_THRESHOLD = 2;				// Ban after 2 offenses (DEVELOPMENT)
+//const POPULAR_LOCATION_CRON = '0 0 * * * *';		// Every day at 0:00
+const POPULAR_LOCATION_CRON = '0 * * * * *';		// Every minute (DEVELOPMENT)
+const NEARBY_USERS_RADIUS = 5280;			// 1 mile
+const POPULATION_MULTIPLIER_LOW_CUTOFF = 10;		// 10 users
+const POPULATION_MULTIPLIER_HIGH_CUTOFF = 500;		// 500 users
 const POPULATION_MULTIPLIER_LOW = 1.25;
 const POPULATION_MULTIPLIER_HIGH = 0.75;
 
@@ -148,8 +150,8 @@ function startServer() {
 			httpServer = http.createServer(app);
 			// Setup Socket.IO
 			setupSocketIO();
-			// Schedule match notifications
-			scheduleMatchNotifications();
+			// Setup scheduled tasks
+			setupSchedules();
 			// Start HTTP server
 			httpServer.listen(port, (err) => {
 				if (err) {
@@ -180,8 +182,8 @@ function startServer() {
 				httpServer = http.createServer(app);
 				// Setup Socket.IO
 				setupSocketIO();
-				// Schedule match notifications
-				scheduleMatchNotifications();
+				// Setup scheduled tasks
+				setupSchedules();
 				// Start HTTP server
 				httpServer.listen(port, (err) => {
 					if (err) {
@@ -294,16 +296,14 @@ function setupSocketIO() {
 	});
 }
 
-// Setup schedule for notifying users who have matched
-function scheduleMatchNotifications() {
-	schedule.scheduleJob(MATCH_NOTIFY_CRON, function() {
+// Setup scheduled tasks
+function setupSchedules() {
+	schedule.scheduleJob(MATCHES_NOTIFY_CRON, function() {
 		notifyMatches();
+	});
+	schedule.scheduleJob(NO_MATCHES_NOTIFY_CRON, function() {
 		notifyNoMatches();
 	});
-}
-
-// Setup schedule for generating popular locations
-function schedulePopularLocationGeneration() {
 	schedule.scheduleJob(POPULAR_LOCATION_CRON, function() {
 		calculateDensity();
 	});
@@ -1077,8 +1077,8 @@ app.post('/reportUser', function(request, response){
 	reportUser(u, r, request, response);
 });
 
-// Called when a POST request is made to /getLocationForHeatmap
-app.post('/getLocationForHeatmap', function(request, response){
+// Called when a POST request is made to /getLocationsForHeatmap
+app.post('/getLocationsForHeatmap', function(request, response){
 	// If the object request.body is null, respond with status 500 'Internal Server Error'
 	if (!request.body) return response.send(500);
 
@@ -1092,7 +1092,7 @@ app.post('/getLocationForHeatmap', function(request, response){
 		return response.status(400).send("User not logged in.");
 	}
 
-	getLocationForHeatmap(request, response);
+	getLocationsForHeatmap(request, response);
 });
 
 // Called when a POST request is made to /getAllLocationsForHeatmap
@@ -1254,8 +1254,8 @@ app.post('/storeTagData', function(request, response){
 	// If the object request.body is null, respond with status 500 'Internal Server Error'
 	if (!request.body) return response.sendStatus(500);
 
-	// POST request must have 1 parameter (uid)
-	if (Object.keys(request.body).length == 0) {
+	// POST request must have 1 parameter (tag)
+	if (Object.keys(request.body).length != 1 || !request.body.tag) {
 		return response.status(400).send("Invalid POST request");
 	}
 
@@ -1264,16 +1264,17 @@ app.post('/storeTagData', function(request, response){
 		return response.status(400).send("User not logged in.");
 	}
 
-	storeTagData(request, response);
-});
+	var t = request.body.tag;
 
+	storeTagData(t, request, response);
+});
 
 // Called when a POST request is made to /getTagData
 app.post('/getTagData', function(request, response){
 	// If the object request.body is null, respond with status 500 'Internal Server Error'
 	if (!request.body) return response.sendStatus(500);
 
-	// POST request must have 1 parameter (uid)
+	// POST request must have 0 parameters
 	if (Object.keys(request.body).length != 0) {
 		return response.status(400).send("Invalid POST request");
 	}
@@ -1286,31 +1287,13 @@ app.post('/getTagData', function(request, response){
 	getTagData(request, response);
 });
 
-// Called when POST request is made to /deleteTagData
-app.post('/deleteTagData', function(request, response){
-	// If the object request.body is null, respond with status 500 'Internal Server Error'
-	if (!request.body) return response.sendStatus(500);
-
-	// POST request must have 1 parameter (uid)
-	if (Object.keys(request.body).length == 0) {
-		return response.status(400).send("Invalid POST request");
-	}
-
-	// If session not authenticated
-	if (!request.session || ((!request.session.authenticated || request.session.authenticated === false) && (!request.session.googleAuthenticated || request.session.googleAuthenticated === false) && (!request.session.facebookAuthenticated || request.session.facebookAuthenticated === false))) {
-		return response.status(400).send("User not logged in.");
-	}
-
-	deleteTagData(request, response);
-});
-
 // Called when POST request is made to /getMatchTagData
 app.post('/getMatchTagData', function(request, response){
 	// If the object request.body is null, respond with status 500 'Internal Server Error'
 	if (!request.body) return response.sendStatus(500);
 
 	// POST request must have 1 parameter (uid)
-	if (Object.keys(request.body).length != 0) {
+	if (Object.keys(request.body).length != 1 || !request.body.uid) {
 		return response.status(400).send("Invalid POST request");
 	}
 
@@ -1319,7 +1302,34 @@ app.post('/getMatchTagData', function(request, response){
 		return response.status(400).send("User not logged in.");
 	}
 
-	getMatchTagData(request, response);
+	// Validate uid
+	if (validateUid(request.body.uid)) {
+		var u = request.body.uid;
+	} else {
+		return response.status(400).send("Invalid user ID.");
+	}
+
+	getMatchTagData(u, request, response);
+});
+
+// Called when POST request is made to /deleteTagData
+app.post('/deleteTagData', function(request, response){
+	// If the object request.body is null, respond with status 500 'Internal Server Error'
+	if (!request.body) return response.sendStatus(500);
+
+	// POST request must have 1 parameter (tag)
+	if (Object.keys(request.body).length != 1 || !request.body.tag) {
+		return response.status(400).send("Invalid POST request");
+	}
+
+	// If session not authenticated
+	if (!request.session || ((!request.session.authenticated || request.session.authenticated === false) && (!request.session.googleAuthenticated || request.session.googleAuthenticated === false) && (!request.session.facebookAuthenticated || request.session.facebookAuthenticated === false))) {
+		return response.status(400).send("User not logged in.");
+	}
+
+	var t = request.body.tag;
+
+	deleteTagData(t, request, response);
 });
 
 // Called when a POST request is made to /getStatistics
@@ -2476,16 +2486,16 @@ function updatePopulationMultiplier(lat, lon, currentTime, request) {
 function findCrossedPaths(lat, lon, currentTime, request) {
 	// Get cross radius and population multiplier for user ID
 	var sql = "SELECT ??, ?? FROM ?? WHERE ??=?";
-	var post = [crossRadius, popMultiplier, db_accounts, uid, request.session.uid];
+	var post = [crossRadius, populationMultiplier, db_accounts, uid, request.session.uid];
 	dbConnection.query(sql, post, function(err, result) {
 		if (err) throw err;
 		// Get all user IDs and coordinates within cross time and cross radius
 		sql = "SELECT ??, ??, ?? FROM ?? WHERE ??!=? AND ?? BETWEEN ? AND ? AND ?? BETWEEN ? AND ? AND ?? BETWEEN ? AND ?";
 		var timeMin = currentTime - CROSS_TIME;
-		var latMin = lat - feetToLat(result[0].crossRadius * result[0].popMultiplier);
-		var latMax = lat + feetToLat(result[0].crossRadius * result[0].popMultiplier);
-		var lonMin = lon - feetToLon(result[0].crossRadius * result[0].popMultiplier, lat);
-		var lonMax = lon + feetToLon(result[0].crossRadius * result[0].popMultiplier, lat);
+		var latMin = lat - feetToLat(result[0].crossRadius * result[0].populationMultiplier);
+		var latMax = lat + feetToLat(result[0].crossRadius * result[0].populationMultiplier);
+		var lonMin = lon - feetToLon(result[0].crossRadius * result[0].populationMultiplier, lat);
+		var lonMax = lon + feetToLon(result[0].crossRadius * result[0].populationMultiplier, lat);
 		post = [uid, latitude, longitude, db_locations, uid, request.session.uid, time, timeMin, currentTime, latitude, latMin, latMax, longitude, lonMin, lonMax];
 		dbConnection.query(sql, post, function(err, result) {
 			if (err) throw err;
@@ -2497,7 +2507,7 @@ function findCrossedPaths(lat, lon, currentTime, request) {
 				if (!matchGraph.hasEdge(request.session.uid, uidOther, "blocked") && !matchGraph.hasEdge(uidOther, request.session.uid, "blocked")) {
 					// Get cross radius, match limit, and population multiplier for other user ID
 					sql = "SELECT ??, ??, ?? FROM ?? WHERE ??=?";
-					post = [crossRadius, matchLimit, popMultiplier, db_accounts, uid, uidOther];
+					post = [crossRadius, matchLimit, populationMultiplier, db_accounts, uid, uidOther];
 					dbConnection.query(sql, post, function(err, result) {
 						if (err) throw err;
 						var newMatches = 0;
@@ -2509,10 +2519,10 @@ function findCrossedPaths(lat, lon, currentTime, request) {
 						}
 						if (newMatches < result[0].matchLimit) {
 							// If other user match limit not reached
-							var otherLatMin = latOther - feetToLat(result[0].crossRadius * result[0].popMultiplier);
-							var otherLatMax = latOther + feetToLat(result[0].crossRadius * result[0].popMultiplier);
-							var otherLonMin = lonOther - feetToLon(result[0].crossRadius * result[0].popMultiplier, latOther);
-							var otherLonMax = lonOther + feetToLon(result[0].crossRadius * result[0].popMultiplier, latOther);
+							var otherLatMin = latOther - feetToLat(result[0].crossRadius * result[0].populationMultiplier);
+							var otherLatMax = latOther + feetToLat(result[0].crossRadius * result[0].populationMultiplier);
+							var otherLonMin = lonOther - feetToLon(result[0].crossRadius * result[0].populationMultiplier, latOther);
+							var otherLonMax = lonOther + feetToLon(result[0].crossRadius * result[0].populationMultiplier, latOther);
 							if (lat >= otherLatMin && lat <= otherLatMax && lon >= otherLonMin && lon <= otherLonMax) {
 								// If also within other user ID's cross radius
 								if (!matchGraph.hasEdge(request.session.uid, uidOther, "timesCrossed") && !matchGraph.hasEdge(uidOther, request.session.uid, "timesCrossed")) {
@@ -3036,7 +3046,7 @@ function reportUser(u, r, request, response) {
 }
 
 // Gets all location coordinates for user ID for heatmap generation
-function getLocationForHeatmap(request, response) {
+function getLocationsForHeatmap(request, response) {
 	var sql = "SELECT ??,?? FROM ?? WHERE ??=?";
 	var post = [latitude, longitude, db_locations, uid, request.session.uid];
 	dbConnection.query(sql, post, function(err, result){
@@ -3049,7 +3059,7 @@ function getLocationForHeatmap(request, response) {
 			var data = {latitude: lat, longitude: lon};
 			object[key].push(data);
 		}
-		console.log("User location for heatmap sent.");
+		console.log("User locations for heatmap sent.");
 		return response.status(200).send(JSON.stringify(object));
 	});
 }
@@ -3178,123 +3188,61 @@ function getMessages(u, request, response) {
 	});
 }
 
-// Stores a users tags and reviews
-function storeTagData(request, response) {
-	var counter = 0;
-	console.log(Object.keys(request.body).length);
-	for (var key in request.body) {
-		var arr = request.body[key].split("@@@");
-		if (arr.length === 4) {
-			var sql = "INSERT INTO ?? (??,??,??,??,??) VALUES (?,?,?,?,?) ON DUPLICATE KEY UPDATE ??=?, ??=?";
-			var lat = arr[0];
-			var lon = arr[1];
-			var t = arr[2];
-			var r = arr[3];
-
-			var post = [db_tags, uid, latitude, longitude, title, review, request.session.uid, lat, lon, t, r, title, t, review, r];
-			dbConnection.query(sql, post, function(err, result){
-				if (err) throw err;
-				counter++;
-				if (counter === Object.keys(request.body).length)
-					return response.status(200).send(JSON.stringify({"response":"pass"}));
-			});
-		}
-		console.log(request.body[key]);
-	}
+// Stores a location tag
+function storeTagData(t, request, response) {
+	var tag = JSON.parse(t);
+	var sql = "INSERT INTO ?? (??,??,??,??,??) VALUES (?,?,?,?,?) ON DUPLICATE KEY UPDATE ??=?, ??=?";
+	var post = [db_tags, uid, latitude, longitude, title, description, request.session.uid, tag.latitude, tag.longitude, tag.title, tag.description, title, tag.title, description, tag.description];
+	dbConnection.query(sql, post, function(err, result) {
+		if (err) throw err;
+		return response.status(200).send(JSON.stringify({"response":"pass"}));
+	});
 }
 
-// Obtains a users tags and reviews
+// Gets all tags for user
 function getTagData(request, response) {
 	var sql = "SELECT * FROM ?? WHERE ??=?";
 	var post = [db_tags, uid, request.session.uid]; 
-	dbConnection.query(sql, post, function(err, result){
+	dbConnection.query(sql, post, function(err, result) {
 		if (err) throw err;
 		var object = {};
-		var key = "Tag";
+		var key = "Tags";
 		object[key] = [];
 		for (var i = 0; i < result.length; i++) {
-			var lat = result[i].latitude;
-			var lon = result[i].longitude;
-			var t = result[i].title;
-			var r = result[i].review;
-			var data = {latitude: lat, longitude: lon, title: t, review: r};
+			var data = {latitude: result[i].latitude, longitude: result[i].longitude, title: result[i].title, description: result[i].description};
 			object[key].push(data);
 		}
 		console.log("User tags sent.");
 		return response.status(200).send(JSON.stringify(object));
-
 	});
 }
 
-// Deletes tag data
-function deleteTagData(request, response) {
-	var counter = 0;
-	console.log(Object.keys(request.body).length);
-	for (var key in request.body) {
-		var arr = request.body[key].split("@@@");
-		if (arr.length === 2) {
-			//var sql = "DELETE FROM ?? WHERE ??=?, ??=?, ??=?";
-			var sql = "DELETE FROM ?? WHERE ??=? AND ??=? AND ??=?";
-			var lat = parseFloat(arr[0]);
-			var lon = parseFloat(arr[1]);
-
-			var post = [db_tags, uid, request.session.uid, latitude, lat, longitude, lon];
-			dbConnection.query(sql, post, function(err, result){
-				if (err) throw err;
-				counter++;
-				if (counter === Object.keys(request.body).length)
-					return response.status(200).send(JSON.stringify({"response":"pass"}));
-			});
+// Gets tags of matched user
+function getMatchTagData(u, request, response) {
+	var sql = "SELECT * FROM ?? WHERE ??=?";
+	var post = [db_tags, uid, u]; 
+	dbConnection.query(sql, post, function(err, result) {
+		if (err) throw err;
+		var object = {};
+		var key = "Tags";
+		object[key] = [];
+		for (var i = 0; i < result.length; i++) {
+			var data = {latitude: result[i].latitude, longitude: result[i].longitude, title: result[i].title, description: result[i].description};
+			object[key].push(data);
 		}
-		console.log(request.body[key]);
-	}
-
+		return response.status(200).send(JSON.stringify(object));
+	});
 }
 
-// Gets tags of matched users
-function getMatchTagData(request, response) {
-	var edges = matchGraph.outEdges(request.session.uid);
-	var counter = 0;
-	for (var i = 0; i < edges.length; i++) {
-		if (matchGraph.hasEdge(request.session.uid, edges[i].w, "approved")) {
-			counter++;
-		}
-	}
-	var object = {};
-	var key = "Tag";
-	object[key] = [];
-	for (var i = 0; i < edges.length; i++) {
-		if (edges[i].name === "matched") {
-			if (matchGraph.hasEdge(request.session.uid, edges[i].w, "approved")) {
-				var sql = "SELECT * FROM ?? WHERE ??=?";
-				var post = [db_tags, uid, edges[i].w]; 
-				dbConnection.query(sql, post, function(err, result){
-					if (err) throw err;
-					//var object = {};
-					//var tag_key = "Tag";
-					//object[key] = [];
-					for (var j = 0; j < result.length; j++) {
-						var lat = result[j].latitude;
-						var lon = result[j].longitude;
-						var t = result[j].title;
-						var r = result[j].review;
-						var data = {latitude: lat, longitude: lon, title: t, review: r};
-						object[key].push(data);
-
-
-						if (i === counter && j === result.length - 1) {
-							console.log("Array: " + object[key]);
-							console.log("JSON: " + JSON.stringify(object[key]));
-							return response.status(200).send(JSON.stringify(object[key]));
-						}
-						//console.log(object[key]);
-						//object[tag_key].push(data);
-					}
-					//return response.status(200).send(JSON.stringify(object));
-				});
-			}
-		}
-	}
+// Deletes a location tag
+function deleteTagData(t, request, response) {
+	var tag = JSON.parse(t);
+	var sql = "DELETE FROM ?? WHERE ??=? AND ??=? AND ??=?";
+	var post = [db_tags, uid, request.session.uid, latitude, tag.latitude, longitude, tag.longitude];
+	dbConnection.query(sql, post, function(err, result) {
+		if (err) throw err;
+		return response.status(200).send(JSON.stringify({"response":"pass"}));
+	});
 }
 
 // Gets statistics about users, matches, and location

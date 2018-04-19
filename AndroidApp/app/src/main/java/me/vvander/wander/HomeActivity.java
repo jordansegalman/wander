@@ -2,6 +2,7 @@ package me.vvander.wander;
 
 import android.Manifest;
 import android.app.AlarmManager;
+import android.app.AlertDialog;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
@@ -14,7 +15,6 @@ import android.location.LocationManager;
 import android.os.Bundle;
 import android.os.SystemClock;
 import android.support.annotation.NonNull;
-import android.support.design.widget.BottomSheetDialog;
 import android.support.design.widget.NavigationView;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.view.GravityCompat;
@@ -22,7 +22,7 @@ import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
-import android.text.InputType;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -85,8 +85,8 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
     private boolean overlayPersonalOn;
     private boolean overlayAllOn;
     private ArrayList<LatLng> crossList;
-    private Map<Marker, LocationTag> markers;
-    private Map<Marker, LocationTag> otherMarkers;
+    private Map<Marker, LocationTag> locationTags;
+    private Map<Marker, LocationTag> matchLocationTags;
     private ArrayList<Marker> locationSuggestions;
 
     @Override
@@ -119,9 +119,9 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
         listAll = new ArrayList<>();
         overlayPersonalOn = false;
         overlayAllOn = false;
-        markers = new HashMap<Marker, LocationTag>();
-        otherMarkers = new HashMap<Marker, LocationTag>();
-        locationSuggestions = new ArrayList<Marker>();
+        locationTags = new HashMap<>();
+        matchLocationTags = new HashMap<>();
+        locationSuggestions = new ArrayList<>();
 
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
@@ -134,7 +134,6 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
             if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED && Data.getInstance().getManualLocationSwitch() && Data.getInstance().getScheduleLocationSwitch()) {
                 this.googleMap.setMyLocationEnabled(true);
                 this.googleMap.setOnMyLocationButtonClickListener(this);
-                this.googleMap.setOnMarkerClickListener(this);
             } else {
                 this.googleMap.setMyLocationEnabled(false);
             }
@@ -142,6 +141,7 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
         listPersonal.clear();
         listAll.clear();
         getHeatmapData();
+        getTagData();
     }
 
     private void setupDrawer() {
@@ -244,17 +244,17 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
             for (int i = 0; i < crossList.size(); i++) {
                 this.googleMap.addMarker(new MarkerOptions()
                         .position(crossList.get(i))
-                        .title("Crossed paths here!"));
+                        .title("Crossed Paths"));
             }
             this.googleMap.animateCamera(CameraUpdateFactory.newLatLngZoom(crossList.get(crossList.size() - 1), 15));
         }
+        this.googleMap.setOnMarkerClickListener(this);
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED || ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION);
         } else {
             if (Data.getInstance().getManualLocationSwitch() && Data.getInstance().getScheduleLocationSwitch()) {
                 this.googleMap.setMyLocationEnabled(true);
                 this.googleMap.setOnMyLocationButtonClickListener(this);
-                this.googleMap.setOnMarkerClickListener(this);
                 if (crossList == null) {
                     LocationManager locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
                     if (locationManager != null) {
@@ -268,7 +268,6 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
             } else {
                 Toast.makeText(getApplicationContext(), "Location tracking disabled.", Toast.LENGTH_SHORT).show();
             }
-            getTagData();
         }
     }
 
@@ -289,7 +288,6 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
                             }
                         }
                     }
-                    return;
                 } else {
                     Toast.makeText(getApplicationContext(), "Location tracking disabled.", Toast.LENGTH_SHORT).show();
                 }
@@ -303,15 +301,14 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
     }
 
     private void getHeatmapData() {
-        String url = Data.getInstance().getUrl() + "/getLocationForHeatmap";
+        String url = Data.getInstance().getUrl() + "/getLocationsForHeatmap";
         JsonObjectRequest firstPostRequest = new JsonObjectRequest(Request.Method.POST, url, null,
                 new Response.Listener<JSONObject>() {
                     @Override
                     public void onResponse(JSONObject response) {
                         try {
                             JSONArray array = response.getJSONArray("Location");
-                            int length = array.length();
-                            for (int i = 0; i < length; i++) {
+                            for (int i = 0; i < array.length(); i++) {
                                 JSONObject object = array.getJSONObject(i);
                                 double lat = object.getDouble("latitude");
                                 double lon = object.getDouble("longitude");
@@ -343,8 +340,7 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
                     public void onResponse(JSONObject response) {
                         try {
                             JSONArray array = response.getJSONArray("Location");
-                            int length = array.length();
-                            for (int i = 0; i < length; i++) {
+                            for (int i = 0; i < array.length(); i++) {
                                 JSONObject object = array.getJSONObject(i);
                                 double lat = object.getDouble("latitude");
                                 double lon = object.getDouble("longitude");
@@ -415,6 +411,292 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
         }
     }
 
+    public void addTag() {
+        try {
+            PlacePicker.IntentBuilder builder = new PlacePicker.IntentBuilder();
+            startActivityForResult(builder.build(this), PLACE_PICKER_REQUEST);
+        } catch (GooglePlayServicesNotAvailableException | GooglePlayServicesRepairableException e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if (requestCode == PLACE_PICKER_REQUEST && resultCode == RESULT_OK) {
+            Place place = PlacePicker.getPlace(this, data);
+            Marker marker = googleMap.addMarker(new MarkerOptions().position(place.getLatLng()).title("My Tag"));
+            this.googleMap.animateCamera(CameraUpdateFactory.newLatLngZoom(place.getLatLng(), 15));
+            locationTags.put(marker, new LocationTag());
+            storeTagData(marker);
+        }
+    }
+
+    private void storeTagData(final Marker marker) {
+        String url = Data.getInstance().getUrl() + "/storeTagData";
+        Map<String, String> params = new HashMap<>();
+
+        LocationTag locationTag = locationTags.get(marker);
+
+        JSONObject tag = new JSONObject();
+        try {
+            tag.put("latitude", marker.getPosition().latitude);
+            tag.put("longitude", marker.getPosition().longitude);
+            tag.put("title", locationTag.getTitle());
+            tag.put("description", locationTag.getDescription());
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+
+        params.put("tag", tag.toString());
+        JsonObjectRequest postRequest = new JsonObjectRequest(Request.Method.POST, url, new JSONObject(params),
+                new Response.Listener<JSONObject>() {
+                    @Override
+                    public void onResponse(JSONObject response) {
+                        try {
+                            String res = response.getString("response");
+                            if (res.equalsIgnoreCase("pass")) {
+                                Toast.makeText(getApplicationContext(), "Location tagged.", Toast.LENGTH_SHORT).show();
+                            }
+                        } catch (JSONException j) {
+                            j.printStackTrace();
+                        }
+                    }
+                },
+                new Response.ErrorListener() {
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+                        Log.d(TAG, error.toString());
+                    }
+                }
+        );
+        postRequest.setRetryPolicy(new DefaultRetryPolicy(
+                0,
+                DefaultRetryPolicy.DEFAULT_MAX_RETRIES,
+                DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
+        requestQueue.add(postRequest);
+    }
+
+    private void getTagData() {
+        String url = Data.getInstance().getUrl() + "/getTagData";
+        JsonObjectRequest firstPostRequest = new JsonObjectRequest(Request.Method.POST, url, null,
+                new Response.Listener<JSONObject>() {
+                    @Override
+                    public void onResponse(JSONObject response) {
+                        for (Marker marker : locationTags.keySet()) {
+                            marker.remove();
+                        }
+                        for (Marker marker : matchLocationTags.keySet()) {
+                            marker.remove();
+                        }
+                        locationTags.clear();
+                        matchLocationTags.clear();
+                        try {
+                            JSONArray array = response.getJSONArray("Tags");
+                            for (int i = 0; i < array.length(); i++) {
+                                JSONObject object = array.getJSONObject(i);
+                                double lat = object.getDouble("latitude");
+                                double lon = object.getDouble("longitude");
+                                String title = object.getString("title");
+                                String description = object.getString("description");
+                                Marker marker = googleMap.addMarker(new MarkerOptions().position(new LatLng(lat, lon)).title("My Tag"));
+                                locationTags.put(marker, new LocationTag(title, description));
+                            }
+                        } catch (JSONException j) {
+                            j.printStackTrace();
+                        }
+                    }
+                },
+                new Response.ErrorListener() {
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+                        Toast.makeText(getApplicationContext(), "Location tag data retrieval failed.", Toast.LENGTH_SHORT).show();
+                        Log.d(TAG, error.toString());
+                    }
+                }
+        );
+        firstPostRequest.setRetryPolicy(new DefaultRetryPolicy(
+                0,
+                DefaultRetryPolicy.DEFAULT_MAX_RETRIES,
+                DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
+        requestQueue.add(firstPostRequest);
+        url = Data.getInstance().getUrl() + "/getAllMatches";
+        JsonObjectRequest secondPostRequest = new JsonObjectRequest(Request.Method.POST, url, null,
+                new Response.Listener<JSONObject>() {
+                    @Override
+                    public void onResponse(JSONObject response) {
+                        try {
+                            JSONArray array = response.getJSONArray("UIDs");
+                            for (int i = 0; i < array.length(); i++) {
+                                JSONObject object = array.getJSONObject(i);
+                                String uid = object.getString("uid");
+                                getMatchTags(uid);
+                            }
+                        } catch (JSONException j) {
+                            j.printStackTrace();
+                        }
+                    }
+                },
+                new Response.ErrorListener() {
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+                        Log.d(TAG, error.toString());
+                    }
+                }
+        );
+        secondPostRequest.setRetryPolicy(new DefaultRetryPolicy(
+                0,
+                DefaultRetryPolicy.DEFAULT_MAX_RETRIES,
+                DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
+        requestQueue.add(secondPostRequest);
+    }
+
+    private void getMatchTags(String uid) {
+        String url = Data.getInstance().getUrl() + "/getMatchTagData";
+        Map<String, String> params = new HashMap<>();
+        params.put("uid", uid);
+        JsonObjectRequest postRequest = new JsonObjectRequest(Request.Method.POST, url, new JSONObject(params),
+                new Response.Listener<JSONObject>() {
+                    @Override
+                    public void onResponse(JSONObject response) {
+                        try {
+                            JSONArray array = response.getJSONArray("Tags");
+                            for (int i = 0; i < array.length(); i++) {
+                                JSONObject object = array.getJSONObject(i);
+                                double lat = object.getDouble("latitude");
+                                double lon = object.getDouble("longitude");
+                                String title = object.getString("title");
+                                String description = object.getString("description");
+                                Marker marker = googleMap.addMarker(new MarkerOptions().position(new LatLng(lat, lon)).title("Match Tag"));
+                                matchLocationTags.put(marker, new LocationTag(title, description));
+                            }
+                        } catch (JSONException j) {
+                            j.printStackTrace();
+                        }
+                    }
+                },
+                new Response.ErrorListener() {
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+                        Log.d(TAG, error.toString());
+                    }
+                }
+        );
+        postRequest.setRetryPolicy(new DefaultRetryPolicy(
+                0,
+                DefaultRetryPolicy.DEFAULT_MAX_RETRIES,
+                DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
+        requestQueue.add(postRequest);
+    }
+
+    private void deleteTagData(final Marker marker) {
+        String url = Data.getInstance().getUrl() + "/deleteTagData";
+        Map<String, String> params = new HashMap<>();
+
+        JSONObject tag = new JSONObject();
+        try {
+            tag.put("latitude", marker.getPosition().latitude);
+            tag.put("longitude", marker.getPosition().longitude);
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+
+        params.put("tag", tag.toString());
+        JsonObjectRequest postRequest = new JsonObjectRequest(Request.Method.POST, url, new JSONObject(params),
+                new Response.Listener<JSONObject>() {
+                    @Override
+                    public void onResponse(JSONObject response) {
+                        try {
+                            String res = response.getString("response");
+                            if (res.equalsIgnoreCase("pass")) {
+                                marker.remove();
+                                locationTags.remove(marker);
+                                Toast.makeText(getApplicationContext(), "Tag removed.", Toast.LENGTH_SHORT).show();
+                            }
+                        } catch (JSONException j) {
+                            j.printStackTrace();
+                        }
+                    }
+                },
+                new Response.ErrorListener() {
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+                        Log.d(TAG, error.toString());
+                    }
+                }
+        );
+        postRequest.setRetryPolicy(new DefaultRetryPolicy(
+                0,
+                DefaultRetryPolicy.DEFAULT_MAX_RETRIES,
+                DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
+        requestQueue.add(postRequest);
+    }
+
+    @Override
+    public boolean onMarkerClick(final Marker marker) {
+        if (marker.getTitle() != null && !marker.getTitle().equals("My Tag") && !marker.getTitle().equals("Match Tag")) {
+            return false;
+        }
+
+        final AlertDialog alertDialog = new AlertDialog.Builder(this).setView(R.layout.activity_location_tag).create();
+        alertDialog.show();
+
+        final Button editButton = alertDialog.findViewById(R.id.edit_button);
+        final Button doneButton = alertDialog.findViewById(R.id.done_button);
+        Button deleteButton = alertDialog.findViewById(R.id.delete_button);
+        final EditText tagTitleEditText = alertDialog.findViewById(R.id.tag_title);
+        final EditText tagDescriptionEditText = alertDialog.findViewById(R.id.tag_description);
+
+        tagTitleEditText.setEnabled(false);
+        tagDescriptionEditText.setEnabled(false);
+
+        if (marker.getTitle() != null && marker.getTitle().equals("Match Tag")) {
+            editButton.setVisibility(View.GONE);
+            doneButton.setVisibility(View.GONE);
+            deleteButton.setVisibility(View.GONE);
+            LocationTag locationTag = matchLocationTags.get(marker);
+            tagTitleEditText.setText(locationTag.getTitle());
+            tagDescriptionEditText.setText(locationTag.getDescription());
+        } else if (marker.getTitle() != null && marker.getTitle().equals("My Tag")) {
+            final LocationTag locationTag = locationTags.get(marker);
+            tagTitleEditText.setText(locationTag.getTitle());
+            tagDescriptionEditText.setText(locationTag.getDescription());
+            editButton.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    tagTitleEditText.setEnabled(true);
+                    tagDescriptionEditText.setEnabled(true);
+                    editButton.setVisibility(View.GONE);
+                    doneButton.setVisibility(View.VISIBLE);
+                }
+            });
+            doneButton.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    tagTitleEditText.setEnabled(false);
+                    tagDescriptionEditText.setEnabled(false);
+                    editButton.setVisibility(View.VISIBLE);
+                    doneButton.setVisibility(View.GONE);
+                    String title = tagTitleEditText.getText().toString();
+                    String description = tagDescriptionEditText.getText().toString();
+                    if (!TextUtils.isEmpty(title) && !TextUtils.isEmpty(description) && (!title.equals(locationTag.getTitle()) || !description.equals(locationTag.getDescription()))) {
+                        locationTag.setTitle(tagTitleEditText.getText().toString());
+                        locationTag.setDescription(tagDescriptionEditText.getText().toString());
+                        locationTags.put(marker, locationTag);
+                        storeTagData(marker);
+                    }
+                }
+            });
+            deleteButton.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    deleteTagData(marker);
+                    alertDialog.dismiss();
+                }
+            });
+        }
+        return false;
+    }
+
     private void getLocationSuggestions() {
         if (locationSuggestions.size() != 0) {
             for (int i = 0; i < locationSuggestions.size(); i++) {
@@ -473,266 +755,6 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
                 DefaultRetryPolicy.DEFAULT_MAX_RETRIES,
                 DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
         requestQueue.add(postRequest);
-    }
-
-    private void storeTagData() {
-        Map<String, String> params = new HashMap<>();
-
-        int counter = 0;
-        for (Map.Entry<Marker, LocationTag> entry : markers.entrySet()) {
-            String value = "";
-
-            Marker marker = (Marker) entry.getKey();
-            LocationTag tagData = (LocationTag) entry.getValue();
-
-            value += Double.toString(marker.getPosition().latitude) + "@@@";
-            value += Double.toString(marker.getPosition().longitude) + "@@@";
-            if (tagData.getTagTitle() == null || tagData.getTagTitle().equals("")) {
-                value += "No Title@@@";
-            } else {
-                value += tagData.getTagTitle() + "@@@";
-            }
-            if (tagData.getTagReview() == null || tagData.getTagReview().equals("")) {
-                value += "No Review@@@";
-            } else {
-                value += tagData.getTagReview();
-            }
-
-            Log.d("LocationTag", value);
-
-            params.put(Integer.toString(counter), value);
-            counter++;
-        }
-
-        String url = Data.getInstance().getUrl() + "/storeTagData";
-        JsonObjectRequest firstPostRequest = new JsonObjectRequest(Request.Method.POST, url, new JSONObject(params),
-                new Response.Listener<JSONObject>() {
-                    @Override
-                    public void onResponse(JSONObject response) {
-
-                    }
-                },
-                new Response.ErrorListener() {
-                    @Override
-                    public void onErrorResponse(VolleyError error) {
-                        Toast.makeText(getApplicationContext(), "Storing tag data has failed.", Toast.LENGTH_SHORT).show();
-                        Log.d(TAG, error.toString());
-                    }
-                }
-        );
-        firstPostRequest.setRetryPolicy(new DefaultRetryPolicy(
-                0,
-                DefaultRetryPolicy.DEFAULT_MAX_RETRIES,
-                DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
-        requestQueue.add(firstPostRequest);
-    }
-
-    private void getTagData() {
-        String url = Data.getInstance().getUrl() + "/getTagData";
-        JsonObjectRequest firstPostRequest = new JsonObjectRequest(Request.Method.POST, url, null,
-                new Response.Listener<JSONObject>() {
-                    @Override
-                    public void onResponse(JSONObject response) {
-                        try {
-                            JSONArray array = response.getJSONArray("Tag");
-                            int length = array.length();
-                            for (int i = 0; i < length; i++) {
-                                JSONObject object = array.getJSONObject(i);
-                                double lat = object.getDouble("latitude");
-                                double lon = object.getDouble("longitude");
-                                String title = object.getString("title");
-                                String review = object.getString("review");
-                                Marker m = googleMap.addMarker(new MarkerOptions().position(new LatLng(lat, lon)).title("My Tag"));
-                                markers.put(m, new LocationTag(title, review));
-                            }
-                        } catch (JSONException j) {
-                            j.printStackTrace();
-                        }
-                    }
-                },
-                new Response.ErrorListener() {
-                    @Override
-                    public void onErrorResponse(VolleyError error) {
-                        Toast.makeText(getApplicationContext(), "Retrieving tag data has failed.", Toast.LENGTH_SHORT).show();
-                        Log.d(TAG, error.toString());
-                    }
-                }
-        );
-        firstPostRequest.setRetryPolicy(new DefaultRetryPolicy(
-                0,
-                DefaultRetryPolicy.DEFAULT_MAX_RETRIES,
-                DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
-        requestQueue.add(firstPostRequest);
-
-        url = Data.getInstance().getUrl() + "/getMatchTagData";
-        JsonArrayRequest secondPostRequest = new JsonArrayRequest(Request.Method.POST, url, null,
-                new Response.Listener<JSONArray>() {
-                    @Override
-                    public void onResponse(JSONArray response) {
-                        try {
-                            int length = response.length();
-                            for (int i = 0; i < length; i++) {
-                                JSONObject object = response.getJSONObject(i);
-                                double lat = object.getDouble("latitude");
-                                double lon = object.getDouble("longitude");
-                                String title = object.getString("title");
-                                String review = object.getString("review");
-                                Marker m = googleMap.addMarker(new MarkerOptions().title("Match's Tag").position(new LatLng(lat, lon)).icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_CYAN)));
-                                otherMarkers.put(m, new LocationTag(title, review));
-                            }
-                        } catch (JSONException j) {
-                            j.printStackTrace();
-                        }
-
-                    }
-                },
-                new Response.ErrorListener() {
-                    @Override
-                    public void onErrorResponse(VolleyError error) {
-                        //Toast.makeText(getApplicationContext(), "No match tag data to display.", Toast.LENGTH_SHORT).show();
-                        Log.d(TAG, error.toString());
-                    }
-                }
-        );
-        secondPostRequest.setRetryPolicy(new DefaultRetryPolicy(
-                0,
-                DefaultRetryPolicy.DEFAULT_MAX_RETRIES,
-                DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
-        requestQueue.add(secondPostRequest);
-    }
-
-    public void addTag() {
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED || ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION);
-        } else {
-            try {
-                PlacePicker.IntentBuilder builder = new PlacePicker.IntentBuilder();
-                startActivityForResult(builder.build(this), PLACE_PICKER_REQUEST);
-            } catch (GooglePlayServicesNotAvailableException e) {
-                e.printStackTrace();
-            } catch (GooglePlayServicesRepairableException e) {
-                e.printStackTrace();
-            }
-        }
-    }
-
-    private void deleteTagData(Marker marker) {
-        Map<String, String> params = new HashMap<>();
-
-        String value = "";
-        value += Double.toString(marker.getPosition().latitude) + "@@@";
-        value += Double.toString(marker.getPosition().longitude);
-
-        params.put("marker", value);
-
-        String url = Data.getInstance().getUrl() + "/deleteTagData";
-        JsonObjectRequest firstPostRequest = new JsonObjectRequest(Request.Method.POST, url, new JSONObject(params),
-                new Response.Listener<JSONObject>() {
-                    @Override
-                    public void onResponse(JSONObject response) {
-
-                    }
-                },
-                new Response.ErrorListener() {
-                    @Override
-                    public void onErrorResponse(VolleyError error) {
-                        Toast.makeText(getApplicationContext(), "Deleting tag data has failed.", Toast.LENGTH_SHORT).show();
-                        Log.d(TAG, error.toString());
-                    }
-                }
-        );
-        firstPostRequest.setRetryPolicy(new DefaultRetryPolicy(
-                0,
-                DefaultRetryPolicy.DEFAULT_MAX_RETRIES,
-                DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
-        requestQueue.add(firstPostRequest);
-    }
-
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        if (requestCode == PLACE_PICKER_REQUEST) {
-            if (resultCode == RESULT_OK) {
-                Place place = PlacePicker.getPlace(this, data);
-                Marker marker = googleMap.addMarker(new MarkerOptions().position(place.getLatLng()).title("My Tag"));
-                markers.put(marker, new LocationTag());
-                this.googleMap.animateCamera(CameraUpdateFactory.newLatLngZoom(place.getLatLng(), 15));
-                storeTagData();
-            }
-        }
-    }
-
-    @Override
-    public boolean onMarkerClick(Marker marker) {
-        final Marker m = marker;
-        if (m.getTitle() != null && !m.getTitle().equals("My Tag") && !m.getTitle().equals("Match's Tag")) {
-            return false;
-        }
-
-        final BottomSheetDialog dialog = new BottomSheetDialog(this);
-        View sheetView = this.getLayoutInflater().inflate(R.layout.activity_location_tag, null);
-        dialog.setContentView(sheetView);
-        dialog.show();
-
-        final Button edit = (Button) dialog.findViewById(R.id.edit_button);
-        final Button delete = (Button) dialog.findViewById(R.id.delete_button);
-        final EditText tag_title = (EditText) dialog.findViewById(R.id.tag_title);
-        final EditText tag_review = (EditText) dialog.findViewById(R.id.tag_review);
-
-        tag_title.setEnabled(false);
-        tag_review.setEnabled(false);
-
-
-        if (m.getTitle() != null && m.getTitle().equals("Match's Tag")) {
-            edit.setEnabled(false);
-            delete.setEnabled(false);
-            final LocationTag td = otherMarkers.get(marker);
-            if (td == null) Log.d("NullForAll", "NULLNULL");
-            else {
-                tag_title.setText(td.getTagTitle());
-                tag_review.setText(td.getTagReview());
-            }
-        } else if (m.getTitle() != null && m.getTitle().equals("My Tag")) {
-
-            final LocationTag td = markers.get(marker);
-            if (td == null) Log.d("NullForAll", "NULLNULL");
-            else {
-                tag_title.setText(td.getTagTitle());
-                tag_review.setText(td.getTagReview());
-            }
-
-            // Setting the information in the review from the info stored in hash map
-            edit.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    if (edit.getText().equals("Edit")) {
-                        tag_title.setInputType(InputType.TYPE_CLASS_TEXT);
-                        tag_review.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_FLAG_MULTI_LINE);
-                        tag_title.setEnabled(true);
-                        tag_review.setEnabled(true);
-                        edit.setText("Done");
-                    } else if (edit.getText().equals("Done")) {
-                        tag_title.setInputType(InputType.TYPE_NULL);
-                        tag_review.setInputType(InputType.TYPE_NULL);
-                        edit.setText("Edit");
-                        td.setTagTitle(tag_title.getText().toString());
-                        td.setTagReview(tag_review.getText().toString());
-                        markers.put(m, td);
-                        storeTagData();
-                        dialog.dismiss();
-                    }
-                }
-            });
-        }
-
-        delete.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                m.remove();
-                deleteTagData(m);
-                dialog.dismiss();
-            }
-        });
-
-        return false;
     }
 
     @Override

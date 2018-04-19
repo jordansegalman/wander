@@ -88,7 +88,7 @@ public class StatisticsActivity extends AppCompatActivity {
         Map<String, String> params = new HashMap<>();
         params.put("latitude", Double.toString(lat));
         params.put("longitude", Double.toString(lon));
-        JsonObjectRequest firstPostRequest = new JsonObjectRequest(Request.Method.POST, url, new JSONObject(params),
+        JsonObjectRequest postRequest = new JsonObjectRequest(Request.Method.POST, url, new JSONObject(params),
                 new Response.Listener<JSONObject>() {
                     @Override
                     public void onResponse(JSONObject response) {
@@ -118,10 +118,10 @@ public class StatisticsActivity extends AppCompatActivity {
                     }
                 }
         );
-        firstPostRequest.setRetryPolicy(new DefaultRetryPolicy(
+        postRequest.setRetryPolicy(new DefaultRetryPolicy(
                 0,
                 DefaultRetryPolicy.DEFAULT_MAX_RETRIES,
                 DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
-        requestQueue.add(firstPostRequest);
+        requestQueue.add(postRequest);
     }
 }

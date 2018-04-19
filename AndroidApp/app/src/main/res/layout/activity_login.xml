@@ -79,14 +79,6 @@
             android:maxLines="1"
             android:textColor="#000000" />
 
-        <Button
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:backgroundTint="?android:attr/colorAccent"
-            android:onClick="login"
-            android:text="Log In" />
-
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -99,6 +91,14 @@
             android:padding="0dp"
             android:text="Forgot your password?"
             android:textColor="#0645AD" />
+
+        <Button
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:backgroundTint="?android:attr/colorAccent"
+            android:onClick="login"
+            android:text="Log In" />
 
 
         <TextView
