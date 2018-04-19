@@ -276,9 +276,9 @@ function setupSocketIO() {
 											.then((response) => {
 												console.log('Successfully sent message notification.');
 											})
-											.catch((error) => {
-												console.log(error);
-											});
+										.catch((error) => {
+											console.log(error);
+										});
 									}
 								}
 							});
@@ -294,14 +294,15 @@ function setupSocketIO() {
 function scheduleMatchNotifications() {
 	schedule.scheduleJob(MATCH_NOTIFY_CRON, function() {
 		notifyMatches();
+		notifyNoMatches();
 		updatePopulationMultipliers();
 	});
 }
 
 // Setup schedule for generating popular locations
 function schedulePopularLocationGeneration() {
-		schedule.scheduleJob(POPULAR_LOCATION_CRON, function() {
-			calculateDensity();
+	schedule.scheduleJob(POPULAR_LOCATION_CRON, function() {
+		calculateDensity();
 	});
 }
 
@@ -2644,9 +2645,9 @@ function notifyMatches() {
 								.then((response) => {
 									console.log('Successfully sent new matches notification.');
 								})
-								.catch((error) => {
-									console.log(error);
-								});
+							.catch((error) => {
+								console.log(error);
+							});
 						}
 					}
 				});
@@ -2654,6 +2655,53 @@ function notifyMatches() {
 		}
 	}
 	writeMatchGraph();
+}
+
+// Notifies all users that have no new matches
+function notifyNoMatches() {
+	var nodes = matchGraph.nodes();
+	for (var i = 0; i < nodes.length; i++) {
+		// Check for users without matches
+		var edges = matchGraph.outEdges(nodes[i]);
+		var hasMatches = false;
+		for (var j = 0; j < edges.length; j++) {
+			if (edges[j].name === "matched" || edges[j].name === "newMatch") {
+				hasMatches = true;
+				break;
+			}
+		}
+		if (!hasMatches) {
+			// Notify user of no matches and suggest locations
+			var sql = "SELECT ?? FROM ?? WHERE ??=?";
+			var post = [registrationToken, db_firebase, uid, nodes[i]];
+			dbConnection.query(sql, post, function(err, result) {
+				if (err) throw err;
+				if (result.length > 0) {
+					for (var j = 0; j < result.length; j++) {
+						var message = {
+							data: {
+								type: 'Location Suggestions',
+								title: 'You didn\'t match with anyone.',
+								body: 'You can see suggested locations with heavy user activity by tapping the map options menu.'
+							},
+							token: result[j].registrationToken,
+							android: {
+								ttl: 3600000,
+								priority: 'high'
+							}
+						};
+						admin.messaging().send(message)
+							.then((response) => {
+								console.log('Successfully sent location suggestions notification.');
+							})
+						.catch((error) => {
+							console.log(error);
+						});
+					}
+				}
+			});
+		}
+	}
 }
 
 // Determines if users who matched share interests
