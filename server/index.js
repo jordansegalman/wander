@@ -48,7 +48,7 @@ const title = "title";
 const review = "review";
 const reason = "reason";
 const banned = "banned";
-const popMultiplier = "popMultiplier";
+const populationMultiplier = "populationMultiplier";
 const matchLimit = "matchLimit";
 
 // Constants used for MySQL
@@ -82,8 +82,11 @@ const WARN_THRESHOLD = 1;			// Warn after 1 offense (DEVELOPMENT)
 const BAN_THRESHOLD = 2;			// Ban after 2 offenses (DEVELOPMENT)
 //const POPULAR_LOCATION_CRON = '0 0 * * * *';	// Every day at 0:00
 const POPULAR_LOCATION_CRON = '0 * * * * *';	// Every minute (DEVELOPMENT)
-const MIN_CUTOFF = 150;
-const MED_CUTOFF = 500;
+const NEARBY_USERS_RADIUS = 5280;		// 1 mile
+const POPULATION_MULTIPLIER_LOW_CUTOFF = 10;	// 10 users
+const POPULATION_MULTIPLIER_HIGH_CUTOFF = 500;	// 500 users
+const POPULATION_MULTIPLIER_LOW = 1.25;
+const POPULATION_MULTIPLIER_HIGH = 0.75;
 
 // Constant used for password reset and session
 const crypto = require('crypto');
@@ -277,9 +280,9 @@ function setupSocketIO() {
 											.then((response) => {
 												console.log('Successfully sent message notification.');
 											})
-											.catch((error) => {
-												console.log(error);
-											});
+										.catch((error) => {
+											console.log(error);
+										});
 									}
 								}
 							});
@@ -296,7 +299,6 @@ function scheduleMatchNotifications() {
 	schedule.scheduleJob(MATCH_NOTIFY_CRON, function() {
 		notifyMatches();
 		notifyNoMatches();
-		updatePopulationMultipliers();
 	});
 }
 
@@ -2422,7 +2424,8 @@ function updateLocation(lat, lon, request, response) {
 				}
 			}
 			if (newMatches < result[0].matchLimit) {
-				// If match limit not reached, find crossed paths
+				// If match limit not reached, update population multiplier and find crossed paths
+				updatePopulationMultiplier(lat, lon, currentTime, request);
 				findCrossedPaths(lat, lon, currentTime, request);
 			}
 		});		
@@ -2437,6 +2440,36 @@ function feetToLat(feet) {
 // Converts feet to degrees longitude
 function feetToLon(feet, lat) {
 	return Math.abs(feet / (364537.4016 * Math.cos(lat)));
+}
+
+// Updates population multiplier depending on number of nearby users
+function updatePopulationMultiplier(lat, lon, currentTime, request) {
+	// Get number of users nearby
+	var timeMin = currentTime - CROSS_TIME;
+	var latMin = lat - feetToLat(NEARBY_USERS_RADIUS);
+	var latMax = lat + feetToLat(NEARBY_USERS_RADIUS);
+	var lonMin = lon - feetToLon(NEARBY_USERS_RADIUS, lat);
+	var lonMax = lon + feetToLon(NEARBY_USERS_RADIUS, lat);
+	sql = "SELECT DISTINCT ?? FROM ?? WHERE ??!=? AND ?? BETWEEN ? AND ? AND ?? BETWEEN ? AND ? AND ?? BETWEEN ? AND ?";
+	post = [uid, db_locations, uid, request.session.uid, time, timeMin, currentTime, latitude, latMin, latMax, longitude, lonMin, lonMax];
+	dbConnection.query(sql, post, function(err, result) {
+		if (err) throw err;
+		if (result.length < POPULATION_MULTIPLIER_LOW_CUTOFF) {
+			// If less than POPULATION_MULTIPLIER_LOW_CUTOFF users in the area
+			var sql = "UPDATE ?? SET ??=? WHERE ??=?";
+			var post = [db_accounts, populationMultiplier, POPULATION_MULTIPLIER_LOW, uid, request.session.uid];
+			dbConnection.query(sql, post, function(err, result) {
+				if (err) throw err;
+			});
+		} else if (result.length > POPULATION_MULTIPLIER_HIGH_CUTOFF) {
+			// If greater than POPULATION_MULTIPLIER_HIGH_CUTOFF users in the area
+			var sql = "UPDATE ?? SET ??=? WHERE ??=?";
+			var post = [db_accounts, populationMultiplier, POPULATION_MULTIPLIER_HIGH, uid, request.session.uid];
+			dbConnection.query(sql, post, function(err, result) {
+				if (err) throw err;
+			});
+		}
+	});
 }
 
 // Checks if anyone crossed paths
@@ -2557,9 +2590,9 @@ function findCrossedPaths(lat, lon, currentTime, request) {
 													.then((response) => {
 														console.log('Successfully sent crossed paths notification.');
 													})
-													.catch((error) => {
-														console.log(error);
-													});
+												.catch((error) => {
+													console.log(error);
+												});
 											}
 										}
 									});
@@ -2586,9 +2619,9 @@ function findCrossedPaths(lat, lon, currentTime, request) {
 													.then((response) => {
 														console.log('Successfully sent crossed paths notification.');
 													})
-													.catch((error) => {
-														console.log(error);
-													});
+												.catch((error) => {
+													console.log(error);
+												});
 											}
 										}
 									});
@@ -2661,9 +2694,9 @@ function notifyMatches() {
 								.then((response) => {
 									console.log('Successfully sent new matches notification.');
 								})
-								.catch((error) => {
-									console.log(error);
-								});
+							.catch((error) => {
+								console.log(error);
+							});
 						}
 					}
 				});
@@ -2710,9 +2743,9 @@ function notifyNoMatches() {
 							.then((response) => {
 								console.log('Successfully sent location suggestions notification.');
 							})
-							.catch((error) => {
-								console.log(error);
-							});
+						.catch((error) => {
+							console.log(error);
+						});
 					}
 				}
 			});
@@ -2771,9 +2804,9 @@ function notifyMatchNoSharedInterests(firstUid, secondUid) {
 					.then((response) => {
 						console.log('Successfully sent new match notification.');
 					})
-					.catch((error) => {
-						console.log(error);
-					});
+				.catch((error) => {
+					console.log(error);
+				});
 			}
 		}
 	});
@@ -2804,9 +2837,9 @@ function notifyMatchSharedInterests(firstUid, secondUid) {
 					.then((response) => {
 						console.log('Successfully sent new match with shared interests notification.');
 					})
-					.catch((error) => {
-						console.log(error);
-					});
+				.catch((error) => {
+					console.log(error);
+				});
 			}
 		}
 	});
@@ -2840,9 +2873,9 @@ function approveUser(u, request, response) {
 					.then((response) => {
 						console.log('Successfully sent match approval notification.');
 					})
-					.catch((error) => {
-						console.log(error);
-					});
+				.catch((error) => {
+					console.log(error);
+				});
 			}
 		}
 	});
@@ -2968,9 +3001,9 @@ function reportUser(u, r, request, response) {
 									.then((response) => {
 										console.log('Successfully sent offense warning notification.');
 									})
-									.catch((error) => {
-										console.log(error);
-									});
+								.catch((error) => {
+									console.log(error);
+								});
 							}
 						}
 					});
@@ -3273,22 +3306,18 @@ function getStatistics(lat, lon, request, response) {
 	dbConnection.query(sql, post, function(err, result) {
 		if (err) throw err;
 		statistics['numUsers'] = result.length;
-		// Get number of users in location
+		// Get number of users nearby
 		var currentTime = Date.now();
 		var timeMin = currentTime - CROSS_TIME;
-		var latMin = lat - feetToLat(5280);
-		var latMax = lat + feetToLat(5280);
-		var lonMin = lon - feetToLon(5280, lat);
-		var lonMax = lon + feetToLon(5280, lat);
-		sql = "SELECT ?? FROM ?? WHERE ??!=? AND ?? BETWEEN ? AND ? AND ?? BETWEEN ? AND ? AND ?? BETWEEN ? AND ?";
+		var latMin = lat - feetToLat(NEARBY_USERS_RADIUS);
+		var latMax = lat + feetToLat(NEARBY_USERS_RADIUS);
+		var lonMin = lon - feetToLon(NEARBY_USERS_RADIUS, lat);
+		var lonMax = lon + feetToLon(NEARBY_USERS_RADIUS, lat);
+		sql = "SELECT DISTINCT ?? FROM ?? WHERE ??!=? AND ?? BETWEEN ? AND ? AND ?? BETWEEN ? AND ? AND ?? BETWEEN ? AND ?";
 		post = [uid, db_locations, uid, request.session.uid, time, timeMin, currentTime, latitude, latMin, latMax, longitude, lonMin, lonMax];
 		dbConnection.query(sql, post, function(err, result) {
 			if (err) throw err;
-			var unique = {};
-			for (var i = 0; i < result.length; i++) {
-				unique[result[i].uid] = 1 + (unique[result[i].uid] || 0);
-			}
-			statistics['numNearYou'] = Object.keys(unique).length;
+			statistics['numNearYou'] = result.length;
 			// Get number of matches and new matches
 			var edges = matchGraph.edges();
 			var numMatches = 0;
@@ -3394,9 +3423,9 @@ function notifyInterestsChange(request, response) {
 										.then((response) => {
 											console.log('Successfully sent shared interests notification.');
 										})
-										.catch((error) => {
-											console.log(error);
-										});
+									.catch((error) => {
+										console.log(error);
+									});
 								}
 							}
 						});
@@ -3424,9 +3453,9 @@ function notifyInterestsChange(request, response) {
 										.then((response) => {
 											console.log('Successfully sent shared interests notification.');
 										})
-										.catch((error) => {
-											console.log(error);
-										});
+									.catch((error) => {
+										console.log(error);
+									});
 								}
 							}
 						});
@@ -3453,56 +3482,3 @@ app.use(function(err, req, res, next) {
 	console.error(err.stack);
 	res.status(500).sendFile(__dirname + '/website/500.html');
 });
-
-function updatePopulationMultipliers(){
-	//for each user, check number of unique users in a 5? mile radius of their last known point and change multiplyer based on that.
-	var sql = "SELECT DISTINCT ?? FROM ??";
-	var post =[uid, db_locations];
-	dbConnection.query(sql, post, function(err, result){
-		if(err) throw err;
-		if(result.length > 0){
-			for(var k = 0; k < result.length; k++){
-				var sql = "SELECT ??, ??, ?? FROM ?? WHERE ??=?";
-				var post =[uid, latitude, longitude, db_locations, uid, result[k].uid];
-				dbConnection.query(sql, post, function(err, result){
-					if(err) throw err;
-					if(result.length == 0)
-						throw err;
-					var lat5miles= .07246376811;
-					var long5miles = 5/(Math.cos(Math.PI * (result[0].latitude / 180)) * 69.172);
-					var lowerLat = result[0].latitude - lat5miles;
-					var upperLat = result[0].latitude + lat5miles;
-					var lowerLong = result[0].longitude - long5miles;
-					var upperLong = result[0].longitude + long5miles;
-					var multiplier = 1;
-					var tempUID = result[0].uid;
-					var sql= "SELECT DISTINCT ?? FROM ?? WHERE ?? BETWEEN ? AND ? AND ?? BETWEEN ? AND ?";
-					var post=[uid, db_locations, latitude, lowerLat, upperLat, longitude, lowerLong, upperLong];
-					dbConnection.query(sql, post, function(err, result){
-						if(err) throw err;
-						else{
-							if(result.length < MIN_CUTOFF){
-								multiplier = 1.25;
-								var sql = "UPDATE ?? SET ??=? WHERE ??=?";
-								var post=[db_accounts, popMultiplier, multiplier, uid, tempUID];
-								dbConnection.query(sql, post, function(err, result){
-									if(err) throw err;
-								});
-							}
-							else if(result.length > MED_CUTOFF){
-								multiplier = .75;
-								var sql = "UPDATE ?? SET ??=? WHERE ??=?";
-								var post=[db_accounts, popMultiplier, multiplier, uid, tempUID];
-								dbConnection.query(sql, post, function(err, result){
-									if(err) throw err;
-
-								});
-							}
-						}
-					});
-				});
-			}
-		}
-	});
-}
-
