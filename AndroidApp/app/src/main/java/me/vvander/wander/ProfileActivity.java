@@ -166,7 +166,7 @@ public class ProfileActivity extends AppCompatActivity {
     }
 
     public void importLinkedInProfile(View view) {
-        Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse("https://vvander.me/linkedInProfile"));
+        Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(Data.getInstance().getUrl() + "/linkedInProfile"));
         if (intent.resolveActivity(getPackageManager()) != null) {
             startActivity(intent);
         }

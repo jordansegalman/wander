@@ -30,7 +30,7 @@ public class WanderFirebaseMessagingService extends FirebaseMessagingService {
 
     @Override
     public void onMessageReceived(RemoteMessage remoteMessage) {
-        if (remoteMessage.getData().size() > 0) {
+        if (Data.getInstance().getNotificationSwitch() && remoteMessage.getData().size() > 0) {
             switch (remoteMessage.getData().get("type")) {
                 case "New Matches": {
                     if (remoteMessage.getData().get("uid").isEmpty()) {

@@ -65,7 +65,7 @@ public class SettingsActivity extends AppCompatActivity {
         locationSwitch = findViewById(R.id.tracking);
         locationSwitch.setChecked(Data.getInstance().getManualLocationSwitch());
         notificationSwitch = findViewById(R.id.notifcations);
-        notificationSwitch.setChecked(Data.getInstance().getNotificationStatus());
+        notificationSwitch.setChecked(Data.getInstance().getNotificationSwitch());
         requestQueue = Volley.newRequestQueue(this);
 
         seekBar = findViewById(R.id.seekBar);
@@ -94,15 +94,15 @@ public class SettingsActivity extends AppCompatActivity {
         }
     }
 
-    public void notificationToggle(View view){
+    public void notificationToggle(View view) {
         boolean value = notificationSwitch.isChecked();
-        Data.getInstance().setNotificationStatus(value);
+        Data.getInstance().setNotificationSwitch(value);
         SharedPreferences sharedPreferences = getSharedPreferences(SP_NOTIFICATIONS, Context.MODE_PRIVATE);
         SharedPreferences.Editor editor = sharedPreferences.edit();
         editor.putBoolean("notificationSwitch", value);
         editor.apply();
-        Log.i("SWITCH", "Notifications Switch");
     }
+
     public void delete(View view) {
         startActivity(new Intent(SettingsActivity.this, DeleteActivity.class));
         finish();
@@ -144,8 +144,8 @@ public class SettingsActivity extends AppCompatActivity {
                             if (res.equalsIgnoreCase("pass")) {
                                 stopService(new Intent(getApplicationContext(), LocationCollectionService.class));
                                 resetManualLocationSwitch();
-                                resetNotificationSwitch();
                                 resetScheduleLocationSwitch();
+                                resetNotificationSwitch();
                                 cancelLocationScheduleAlarm();
                                 Data.getInstance().logout();
                                 Data.getInstance().logoutGoogle();
@@ -192,17 +192,17 @@ public class SettingsActivity extends AppCompatActivity {
         Data.getInstance().setManualLocationSwitch(true);
     }
 
-    private void resetNotificationSwitch() {
-        SharedPreferences sharedPreferences = getSharedPreferences(SP_NOTIFICATIONS, Context.MODE_PRIVATE);
-        sharedPreferences.edit().clear().apply();
-        Data.getInstance().setNotificationStatus(true);
-
-    }
-
     private void resetScheduleLocationSwitch() {
         SharedPreferences sharedPreferences = getSharedPreferences(SP_SCHEDULE, Context.MODE_PRIVATE);
         sharedPreferences.edit().clear().apply();
         Data.getInstance().setScheduleLocationSwitch(true);
+    }
+
+    private void resetNotificationSwitch() {
+        SharedPreferences sharedPreferences = getSharedPreferences(SP_NOTIFICATIONS, Context.MODE_PRIVATE);
+        sharedPreferences.edit().clear().apply();
+        Data.getInstance().setNotificationSwitch(true);
+
     }
 
     private void cancelLocationScheduleAlarm() {

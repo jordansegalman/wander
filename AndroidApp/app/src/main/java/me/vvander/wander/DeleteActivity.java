@@ -134,8 +134,8 @@ public class DeleteActivity extends AppCompatActivity {
                                 if (res.equalsIgnoreCase("pass")) {
                                     stopService(new Intent(getApplicationContext(), LocationCollectionService.class));
                                     resetManualLocationSwitch();
-                                    resetNotificationSwitch();
                                     resetScheduleLocationSwitch();
+                                    resetNotificationSwitch();
                                     cancelLocationScheduleAlarm();
                                     Data.getInstance().logoutGoogle();
                                     Data.getInstance().removeAllCookies();
@@ -177,8 +177,8 @@ public class DeleteActivity extends AppCompatActivity {
                                 if (res.equalsIgnoreCase("pass")) {
                                     stopService(new Intent(getApplicationContext(), LocationCollectionService.class));
                                     resetManualLocationSwitch();
-                                    resetNotificationSwitch();
                                     resetScheduleLocationSwitch();
+                                    resetNotificationSwitch();
                                     cancelLocationScheduleAlarm();
                                     Data.getInstance().logoutFacebook();
                                     Data.getInstance().removeAllCookies();
@@ -212,21 +212,21 @@ public class DeleteActivity extends AppCompatActivity {
     }
 
     private void resetManualLocationSwitch() {
-        Data.getInstance().setManualLocationSwitch(true);
         SharedPreferences sharedPreferences = getSharedPreferences(SP_LOCATION, Context.MODE_PRIVATE);
         sharedPreferences.edit().clear().apply();
+        Data.getInstance().setManualLocationSwitch(true);
     }
 
-    private void resetNotificationSwitch() {
-        Data.getInstance().setNotificationStatus(true);
-        SharedPreferences sharedPreferences = getSharedPreferences(SP_NOTIFICATIONS, Context.MODE_PRIVATE);
-        sharedPreferences.edit().clear().apply();
-
-    }
     private void resetScheduleLocationSwitch() {
         SharedPreferences sharedPreferences = getSharedPreferences(SP_SCHEDULE, Context.MODE_PRIVATE);
         sharedPreferences.edit().clear().apply();
         Data.getInstance().setScheduleLocationSwitch(true);
+    }
+
+    private void resetNotificationSwitch() {
+        SharedPreferences sharedPreferences = getSharedPreferences(SP_NOTIFICATIONS, Context.MODE_PRIVATE);
+        sharedPreferences.edit().clear().apply();
+        Data.getInstance().setNotificationSwitch(true);
     }
 
     private void cancelLocationScheduleAlarm() {

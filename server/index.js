@@ -80,7 +80,8 @@ const MATCH_NOTIFY_CRON = '0 * * * * *';	// Every minute (DEVELOPMENT)
 const WARN_THRESHOLD = 1;			// Warn after 1 offense (DEVELOPMENT)
 //const BAN_THRESHOLD = 5;			// Ban after 5 offenses
 const BAN_THRESHOLD = 2;			// Ban after 2 offenses (DEVELOPMENT)
-const POPULAR_LOCATION_CRON = '0 0 * * * *';	// Every day at 0:00
+//const POPULAR_LOCATION_CRON = '0 0 * * * *';	// Every day at 0:00
+const POPULAR_LOCATION_CRON = '0 * * * * *';	// Every minute (DEVELOPMENT)
 const MIN_CUTOFF = 150;
 const MED_CUTOFF = 500;
 
@@ -2682,7 +2683,7 @@ function notifyNoMatches() {
 							data: {
 								type: 'Location Suggestions',
 								title: 'You didn\'t match with anyone.',
-								body: 'You can see suggested locations with heavy user activity by tapping the map options menu.'
+								body: 'Tap the map options menu to see suggested locations.'
 							},
 							token: result[j].registrationToken,
 							android: {
@@ -3444,10 +3445,7 @@ function updatePopulationMultipliers(){
 	var post =[uid, db_locations];
 	dbConnection.query(sql, post, function(err, result){
 		if(err) throw err;
-		if(result.length == 0){
-			return response.status(400).send("The locations database is empty");
-		}
-		else{
+		if(result.length > 0){
 			for(var k = 0; k < result.length; k++){
 				var sql = "SELECT ??, ??, ?? FROM ?? WHERE ??=?";
 				var post =[uid, latitude, longitude, db_locations, uid, result[k].uid];

@@ -52,7 +52,6 @@ import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.TileOverlay;
 import com.google.android.gms.maps.model.TileOverlayOptions;
 import com.google.gson.Gson;
-import com.google.gson.JsonArray;
 import com.google.gson.reflect.TypeToken;
 import com.google.maps.android.heatmaps.Gradient;
 import com.google.maps.android.heatmaps.HeatmapTileProvider;
@@ -64,7 +63,6 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
@@ -198,7 +196,7 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
     }
     private void initializeNotificationSwitch() {
         SharedPreferences sharedPreferences = getSharedPreferences(SP_NOTIFICATIONS, Context.MODE_PRIVATE);
-        Data.getInstance().setNotificationStatus(sharedPreferences.getBoolean("notificationSwitch", true));
+        Data.getInstance().setNotificationSwitch(sharedPreferences.getBoolean("notificationSwitch", true));
     }
 
     private void initializeScheduleLocationSwitch() {
