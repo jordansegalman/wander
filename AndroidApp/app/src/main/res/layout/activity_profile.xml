@@ -142,11 +142,10 @@
                     android:text="Import LinkedIn" />
 
 
-
-                </LinearLayout>
-
             </LinearLayout>
 
         </LinearLayout>
+
+    </LinearLayout>
 
 </android.support.constraint.ConstraintLayout>

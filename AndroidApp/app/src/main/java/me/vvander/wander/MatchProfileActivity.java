@@ -120,7 +120,7 @@ public class MatchProfileActivity extends AppCompatActivity {
                 final EditText reasonEditText = new EditText(this);
                 reasonEditText.setHint("Reason");
                 reasonEditText.setLayoutParams(new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
-                reasonEditText.setFilters(new InputFilter[] {new InputFilter.LengthFilter(MAX_REASON_LENGTH)});
+                reasonEditText.setFilters(new InputFilter[]{new InputFilter.LengthFilter(MAX_REASON_LENGTH)});
                 new AlertDialog.Builder(this)
                         .setTitle("What is your reason for reporting " + name + "?")
                         .setView(reasonEditText)

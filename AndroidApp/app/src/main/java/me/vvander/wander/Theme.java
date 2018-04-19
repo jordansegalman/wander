@@ -51,7 +51,7 @@ public class Theme {
         SharedPreferences sharedPref = context.getSharedPreferences(SP_THEME, Context.MODE_PRIVATE);
         String color = sharedPref.getString("color", "Default");
         String font = sharedPref.getString("font", "Sans-Serif");
-        if(font.equalsIgnoreCase("Serif")) {
+        if (font.equalsIgnoreCase("Serif")) {
             switch (color) {
                 case "Red":
                     return R.style.AppTheme_NoActionBar_Red_serif;

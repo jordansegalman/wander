@@ -39,7 +39,10 @@ import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonArrayRequest;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.Volley;
+import com.google.android.gms.common.GooglePlayServicesNotAvailableException;
+import com.google.android.gms.common.GooglePlayServicesRepairableException;
 import com.google.android.gms.location.ActivityRecognitionClient;
+import com.google.android.gms.location.places.Place;
 import com.google.android.gms.location.places.ui.PlacePicker;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
@@ -55,9 +58,6 @@ import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import com.google.maps.android.heatmaps.Gradient;
 import com.google.maps.android.heatmaps.HeatmapTileProvider;
-import com.google.android.gms.location.places.Place;
-import com.google.android.gms.common.GooglePlayServicesNotAvailableException;
-import com.google.android.gms.common.GooglePlayServicesRepairableException;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -67,7 +67,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
-public class HomeActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener, OnMapReadyCallback, GoogleMap.OnMyLocationButtonClickListener, GoogleMap.OnMarkerClickListener{
+public class HomeActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener, OnMapReadyCallback, GoogleMap.OnMyLocationButtonClickListener, GoogleMap.OnMarkerClickListener {
     private static final String TAG = HomeActivity.class.getSimpleName();
     private static final int ACTIVITY_RECOGNITION_DETECTION_INTERVAL = 15000;
     private static final int PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION = 2222;
@@ -104,7 +104,8 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
         String json = getIntent().getStringExtra("Cross List");
         if (json != null) {
             Gson gson = new Gson();
-            crossList = gson.fromJson(json, new TypeToken<ArrayList<LatLng>>() {}.getType());
+            crossList = gson.fromJson(json, new TypeToken<ArrayList<LatLng>>() {
+            }.getType());
         } else {
             setupDrawer();
             initializeManualLocationSwitch();
@@ -126,10 +127,18 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
         mapFragment.getMapAsync(this);
     }
 
-
     @Override
     protected void onResume() {
         super.onResume();
+        if (this.googleMap != null) {
+            if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED && Data.getInstance().getManualLocationSwitch() && Data.getInstance().getScheduleLocationSwitch()) {
+                this.googleMap.setMyLocationEnabled(true);
+                this.googleMap.setOnMyLocationButtonClickListener(this);
+                this.googleMap.setOnMarkerClickListener(this);
+            } else {
+                this.googleMap.setMyLocationEnabled(false);
+            }
+        }
         listPersonal.clear();
         listAll.clear();
         getHeatmapData();
@@ -196,6 +205,7 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
         SharedPreferences sharedPreferences = getSharedPreferences(SP_LOCATION, Context.MODE_PRIVATE);
         Data.getInstance().setManualLocationSwitch(sharedPreferences.getBoolean("manualLocationSwitch", true));
     }
+
     private void initializeNotificationSwitch() {
         SharedPreferences sharedPreferences = getSharedPreferences(SP_NOTIFICATIONS, Context.MODE_PRIVATE);
         Data.getInstance().setNotificationSwitch(sharedPreferences.getBoolean("notificationSwitch", true));
@@ -241,18 +251,22 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED || ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION);
         } else {
-            this.googleMap.setMyLocationEnabled(true);
-            this.googleMap.setOnMyLocationButtonClickListener(this);
-            this.googleMap.setOnMarkerClickListener(this);
-            if (crossList == null) {
-                LocationManager locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
-                if (locationManager != null) {
-                    Criteria criteria = new Criteria();
-                    Location location = locationManager.getLastKnownLocation(locationManager.getBestProvider(criteria, false));
-                    if (location != null) {
-                        this.googleMap.animateCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(location.getLatitude(), location.getLongitude()), 15));
+            if (Data.getInstance().getManualLocationSwitch() && Data.getInstance().getScheduleLocationSwitch()) {
+                this.googleMap.setMyLocationEnabled(true);
+                this.googleMap.setOnMyLocationButtonClickListener(this);
+                this.googleMap.setOnMarkerClickListener(this);
+                if (crossList == null) {
+                    LocationManager locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+                    if (locationManager != null) {
+                        Criteria criteria = new Criteria();
+                        Location location = locationManager.getLastKnownLocation(locationManager.getBestProvider(criteria, false));
+                        if (location != null) {
+                            this.googleMap.animateCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(location.getLatitude(), location.getLongitude()), 15));
+                        }
                     }
                 }
+            } else {
+                Toast.makeText(getApplicationContext(), "Location tracking disabled.", Toast.LENGTH_SHORT).show();
             }
             getTagData();
         }
@@ -262,17 +276,22 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         if (requestCode == PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION) {
             if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
-                googleMap.setMyLocationEnabled(true);
-                googleMap.setOnMyLocationButtonClickListener(this);
-                if (crossList == null) {
-                    LocationManager locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
-                    if (locationManager != null) {
-                        Criteria criteria = new Criteria();
-                        Location location = locationManager.getLastKnownLocation(locationManager.getBestProvider(criteria, false));
-                        if (location != null) {
-                            googleMap.animateCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(location.getLatitude(), location.getLongitude()), 15));
+                if (Data.getInstance().getManualLocationSwitch() && Data.getInstance().getScheduleLocationSwitch()) {
+                    googleMap.setMyLocationEnabled(true);
+                    googleMap.setOnMyLocationButtonClickListener(this);
+                    if (crossList == null) {
+                        LocationManager locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+                        if (locationManager != null) {
+                            Criteria criteria = new Criteria();
+                            Location location = locationManager.getLastKnownLocation(locationManager.getBestProvider(criteria, false));
+                            if (location != null) {
+                                googleMap.animateCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(location.getLatitude(), location.getLongitude()), 15));
+                            }
                         }
                     }
+                    return;
+                } else {
+                    Toast.makeText(getApplicationContext(), "Location tracking disabled.", Toast.LENGTH_SHORT).show();
                 }
             }
         }
@@ -632,7 +651,7 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (requestCode == PLACE_PICKER_REQUEST) {
             if (resultCode == RESULT_OK) {
-                Place place = PlacePicker.getPlace(this , data);
+                Place place = PlacePicker.getPlace(this, data);
                 Marker marker = googleMap.addMarker(new MarkerOptions().position(place.getLatLng()).title("My Tag"));
                 markers.put(marker, new LocationTag());
                 this.googleMap.animateCamera(CameraUpdateFactory.newLatLngZoom(place.getLatLng(), 15));
@@ -660,7 +679,6 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
 
         tag_title.setEnabled(false);
         tag_review.setEnabled(false);
-
 
 
         if (m.getTitle() != null && m.getTitle().equals("Match's Tag")) {
@@ -705,7 +723,7 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
             });
         }
 
-        delete.setOnClickListener(new View.OnClickListener(){
+        delete.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 m.remove();

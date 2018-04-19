@@ -119,9 +119,9 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="end"
-                android:onClick="approveUser"
                 android:layout_weight="0"
                 android:backgroundTint="?android:attr/colorAccent"
+                android:onClick="approveUser"
                 android:text="Approve"
                 android:visibility="visible" />
 
@@ -130,9 +130,9 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="end"
-                android:onClick="unapproveUser"
                 android:layout_weight="0"
                 android:backgroundTint="?android:attr/colorAccent"
+                android:onClick="unapproveUser"
                 android:text="Unapprove"
                 android:visibility="gone" />
 
@@ -141,9 +141,9 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="end"
+                android:layout_weight="0"
                 android:backgroundTint="?android:attr/colorAccent"
                 android:onClick="getCrossLocations"
-                android:layout_weight="0"
                 android:text="View Crossed Paths" />
 
         </LinearLayout>

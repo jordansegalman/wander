@@ -190,7 +190,7 @@ public class SettingsActivity extends AppCompatActivity {
         finish();
     }
 
-    public void changeTheme(View view){
+    public void changeTheme(View view) {
         startActivity(new Intent(SettingsActivity.this, ChangeThemeActivity.class));
         finish();
     }

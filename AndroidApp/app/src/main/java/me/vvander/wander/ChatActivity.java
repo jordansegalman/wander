@@ -52,6 +52,109 @@ public class ChatActivity extends AppCompatActivity {
     private ChatAdapter chatAdapter;
     private LinearLayoutManager linearLayoutManager;
     private ImageButton sendButton;
+    private Emitter.Listener onConnect = new Emitter.Listener() {
+        @Override
+        public void call(Object... args) {
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    Log.d(TAG, "Socket.IO connected");
+                    if (!initialized) {
+                        initialize();
+                    }
+                }
+            });
+        }
+    };
+    private Emitter.Listener onConnectError = new Emitter.Listener() {
+        @Override
+        public void call(Object... args) {
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    Log.d(TAG, "Socket.IO connection error");
+                }
+            });
+        }
+    };
+    private Emitter.Listener onConnectTimeout = new Emitter.Listener() {
+        @Override
+        public void call(Object... args) {
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    Log.d(TAG, "Socket.IO connection timeout");
+                }
+            });
+        }
+    };
+    private Emitter.Listener onMessage = new Emitter.Listener() {
+        @Override
+        public void call(final Object... args) {
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        JSONObject data = new JSONObject((String) args[0]);
+                        String from = data.getString("from");
+                        String message = data.getString("message");
+                        long time = data.getLong("time");
+                        String name = data.getString("name");
+                        if (from.equals(matchUid)) {
+                            messages.add(new Message(message, time, MessageType.RECEIVED));
+                            if (messages.size() > 1 && messages.get(messages.size() - 1).getTime() < messages.get(messages.size() - 2).getTime()) {
+                                messages.sort(new Comparator<Message>() {
+                                    @Override
+                                    public int compare(Message o1, Message o2) {
+                                        return Long.compare(o1.getTime(), o2.getTime());
+                                    }
+                                });
+                                chatAdapter.notifyDataSetChanged();
+                            } else {
+                                chatAdapter.notifyItemInserted(messages.size() - 1);
+                            }
+                            linearLayoutManager.scrollToPosition(messages.size() - 1);
+                            Log.d(TAG, "Socket.IO message received");
+                        } else {
+                            NotificationManager notificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
+                            if (notificationManager != null) {
+                                String channel_id = "chat_messages_id";
+                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                                    CharSequence channel_name = "Chat Messages";
+                                    int importance = NotificationManager.IMPORTANCE_HIGH;
+                                    NotificationChannel notificationChannel = new NotificationChannel(channel_id, channel_name, importance);
+                                    notificationChannel.enableLights(true);
+                                    notificationChannel.setLightColor(R.color.colorAccent);
+                                    notificationChannel.enableVibration(true);
+                                    notificationChannel.setVibrationPattern(new long[]{100, 200, 300, 200, 100});
+                                    notificationManager.createNotificationChannel(notificationChannel);
+                                }
+                                Intent intent;
+                                if (Data.getInstance().getLoggedIn() || Data.getInstance().getLoggedInGoogle() || Data.getInstance().getLoggedInFacebook()) {
+                                    intent = new Intent(getApplicationContext(), ChatActivity.class);
+                                    intent.putExtra("UID", from);
+                                    intent.putExtra("name", name);
+                                } else {
+                                    intent = new Intent(getApplicationContext(), LoginActivity.class);
+                                }
+                                PendingIntent pendingIntent = PendingIntent.getActivity(getApplicationContext(), 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+                                NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(getApplicationContext(), channel_id)
+                                        .setContentTitle(name)
+                                        .setContentText(message)
+                                        .setSmallIcon(R.drawable.message_notification_icon)
+                                        .setAutoCancel(true)
+                                        .setContentIntent(pendingIntent);
+                                notificationManager.notify(1, notificationBuilder.build());
+                            }
+                            Log.d(TAG, "Socket.IO message notification sent");
+                        }
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    }
+                }
+            });
+        }
+    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -207,113 +310,6 @@ public class ChatActivity extends AppCompatActivity {
         socket.off();
         Log.d(TAG, "Socket.IO disconnected");
     }
-
-    private Emitter.Listener onConnect = new Emitter.Listener() {
-        @Override
-        public void call(Object... args) {
-            runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    Log.d(TAG, "Socket.IO connected");
-                    if (!initialized) {
-                        initialize();
-                    }
-                }
-            });
-        }
-    };
-
-    private Emitter.Listener onConnectError = new Emitter.Listener() {
-        @Override
-        public void call(Object... args) {
-            runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    Log.d(TAG, "Socket.IO connection error");
-                }
-            });
-        }
-    };
-
-    private Emitter.Listener onConnectTimeout = new Emitter.Listener() {
-        @Override
-        public void call(Object... args) {
-            runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    Log.d(TAG, "Socket.IO connection timeout");
-                }
-            });
-        }
-    };
-
-    private Emitter.Listener onMessage = new Emitter.Listener() {
-        @Override
-        public void call(final Object... args) {
-            runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    try {
-                        JSONObject data = new JSONObject((String) args[0]);
-                        String from = data.getString("from");
-                        String message = data.getString("message");
-                        long time = data.getLong("time");
-                        String name = data.getString("name");
-                        if (from.equals(matchUid)) {
-                            messages.add(new Message(message, time, MessageType.RECEIVED));
-                            if (messages.size() > 1 && messages.get(messages.size() - 1).getTime() < messages.get(messages.size() - 2).getTime()) {
-                                messages.sort(new Comparator<Message>() {
-                                    @Override
-                                    public int compare(Message o1, Message o2) {
-                                        return Long.compare(o1.getTime(), o2.getTime());
-                                    }
-                                });
-                                chatAdapter.notifyDataSetChanged();
-                            } else {
-                                chatAdapter.notifyItemInserted(messages.size() - 1);
-                            }
-                            linearLayoutManager.scrollToPosition(messages.size() - 1);
-                            Log.d(TAG, "Socket.IO message received");
-                        } else {
-                            NotificationManager notificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
-                            if (notificationManager != null) {
-                                String channel_id = "chat_messages_id";
-                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                                    CharSequence channel_name = "Chat Messages";
-                                    int importance = NotificationManager.IMPORTANCE_HIGH;
-                                    NotificationChannel notificationChannel = new NotificationChannel(channel_id, channel_name, importance);
-                                    notificationChannel.enableLights(true);
-                                    notificationChannel.setLightColor(R.color.colorAccent);
-                                    notificationChannel.enableVibration(true);
-                                    notificationChannel.setVibrationPattern(new long[]{100, 200, 300, 200, 100});
-                                    notificationManager.createNotificationChannel(notificationChannel);
-                                }
-                                Intent intent;
-                                if (Data.getInstance().getLoggedIn() || Data.getInstance().getLoggedInGoogle() || Data.getInstance().getLoggedInFacebook()) {
-                                    intent = new Intent(getApplicationContext(), ChatActivity.class);
-                                    intent.putExtra("UID", from);
-                                    intent.putExtra("name", name);
-                                } else {
-                                    intent = new Intent(getApplicationContext(), LoginActivity.class);
-                                }
-                                PendingIntent pendingIntent = PendingIntent.getActivity(getApplicationContext(), 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
-                                NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(getApplicationContext(), channel_id)
-                                        .setContentTitle(name)
-                                        .setContentText(message)
-                                        .setSmallIcon(R.drawable.message_notification_icon)
-                                        .setAutoCancel(true)
-                                        .setContentIntent(pendingIntent);
-                                notificationManager.notify(1, notificationBuilder.build());
-                            }
-                            Log.d(TAG, "Socket.IO message notification sent");
-                        }
-                    } catch (JSONException e) {
-                        e.printStackTrace();
-                    }
-                }
-            });
-        }
-    };
 
     public void send(View view) {
         if (socket.connected() && initialized) {

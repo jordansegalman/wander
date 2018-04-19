@@ -139,11 +139,11 @@ public class Data {
         this.locationSchedules = locationSchedules;
     }
 
-    void setNotificationSwitch(boolean value) {
-        notificationSwitch = value;
-    }
-
     boolean getNotificationSwitch() {
         return notificationSwitch;
+    }
+
+    void setNotificationSwitch(boolean value) {
+        notificationSwitch = value;
     }
 }

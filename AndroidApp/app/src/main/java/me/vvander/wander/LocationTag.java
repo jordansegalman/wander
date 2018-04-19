@@ -5,7 +5,8 @@ public class LocationTag {
     private String tagReview = "Enter a review or description of the location.";
     private String tagImage;
 
-    public LocationTag(){}
+    public LocationTag() {
+    }
 
     public LocationTag(String title, String review) {
         this.tagTitle = title;
@@ -16,20 +17,20 @@ public class LocationTag {
         return tagTitle;
     }
 
-    public String getTagReview() {
-        return tagReview;
-    }
-
-    public String getTagImage() {
-        return tagImage;
-    }
-
     public void setTagTitle(String tagTitle) {
         this.tagTitle = tagTitle;
     }
 
+    public String getTagReview() {
+        return tagReview;
+    }
+
     public void setTagReview(String tagReview) {
         this.tagReview = tagReview;
+    }
+
+    public String getTagImage() {
+        return tagImage;
     }
 
     public void setTagImage(String tagImage) {
