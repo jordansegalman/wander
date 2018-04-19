@@ -49,7 +49,7 @@ const review = "review";
 const reason = "reason";
 const banned = "banned";
 const popMultiplier = "popMultiplier";
-const maximumMatches = "maximumMatches";
+const matchLimit = "matchLimit";
 
 // Constants used for MySQL
 const db_host = process.env.DB_HOST;
@@ -277,9 +277,9 @@ function setupSocketIO() {
 											.then((response) => {
 												console.log('Successfully sent message notification.');
 											})
-										.catch((error) => {
-											console.log(error);
-										});
+											.catch((error) => {
+												console.log(error);
+											});
 									}
 								}
 							});
@@ -696,35 +696,33 @@ app.post('/getCrossRadius', function(request, response) {
 	getCrossRadius(request, response);
 });
 
-// Called when a POST request is made to /changeMaximumMatches
-app.post('/changeMaximumMatches', function(request, response){
-	if(!request.body){
-		return response.sendStatus(500);
-		//console.log("0");
-	}
-	if(Object.keys(request.body).length != 1 || !request.body.newMaximumMatches){
-		//console.log("1");
-		return response.status(400).send("Invalid Post Request");
+// Called when a POST request is made to /changeMatchLimit
+app.post('/changeMatchLimit', function(request, response) {
+	// If the object request.body is null, respond with status 500 'Internal Server Error'
+	if (!request.body) return response.sendStatus(500);
+
+	// POST request must have 1 parameter (newMatchLimit)
+	if (Object.keys(request.body).length != 1 || !request.body.newMatchLimit) {
+		return response.status(400).send("Invalid POST request");
 	}
 
+	// If session not authenticated
 	if (!request.session || ((!request.session.authenticated || request.session.authenticated === false) && (!request.session.googleAuthenticated || request.session.googleAuthenticated === false) && (!request.session.facebookAuthenticated || request.session.facebookAuthenticated === false))) {
 		return response.status(400).send("User not logged in.");
-		//console.log("2");	
 	}
 
-	// Validate newMaximumMatches
-	if (validateMaximumMatches(request.body.newMaximumMatches)) {
-		var n = request.body.newMaximumMatches;
+	// Validate newMatchLimit
+	if (validateMatchLimit(request.body.newMatchLimit)) {
+		var n = request.body.newMatchLimit;
 	} else {
-		return response.status(400).send("Maximum Matches must be an integer with a minimum of 1 and a maximum of 10.");
-		//console.log("3");
+		return response.status(400).send("Match limit must be an integer with a minimum of 0 and a maximum of 25.");
 	}
 
-	changeMaximumMatches(n, request, response);
+	changeMatchLimit(n, request, response);
 });
 
-//Called when a POST request is made to /getMaximumMatches
-app.post('/getMaximumMatches', function(request, response){
+//Called when a POST request is made to /getMatchLimit
+app.post('/getMatchLimit', function(request, response) {
 	// If the object request.body is null, respond with status 500 'Internal Server Error'
 	if (!request.body) return response.sendStatus(500);
 
@@ -732,11 +730,13 @@ app.post('/getMaximumMatches', function(request, response){
 	if (Object.keys(request.body).length != 0) {
 		return response.status(400).send("Invalid POST request");
 	}
+
 	// If session not authenticated
 	if (!request.session || ((!request.session.authenticated || request.session.authenticated === false) && (!request.session.googleAuthenticated || request.session.googleAuthenticated === false) && (!request.session.facebookAuthenticated || request.session.facebookAuthenticated === false))) {
 		return response.status(400).send("User not logged in.");
 	}
-	getMaximumMatches(request, response);
+
+	getMatchLimit(request, response);
 });
 
 // Called when a POST request is made to /forgotPassword
@@ -1422,9 +1422,9 @@ function validateCoordinates(lat, lon) {
 	return !validator.isEmpty(lat) && !validator.isEmpty(lon) && validator.isLatLong(lat + ',' + lon);
 }
 
-// Validates maximum number of matches
-function validateMaximumMatches(maximumMatches){
-	return !validator.isEmpty(maximumMatches) && validator.isInt(maximumMatches, {min: 1, max: 10});
+// Validates match limit
+function validateMatchLimit(matchLimit){
+	return !validator.isEmpty(matchLimit) && validator.isInt(matchLimit, {min: 0, max: 25});
 }
 
 // Registers a user if username and email does not already exist
@@ -2138,33 +2138,36 @@ function getCrossRadius(request, response) {
 	});
 }
 
-// Gets the MaximumMatches of an ccount
-function getMaximumMatches(request, response){
-	var sql = "SELECT ?? FROM ?? WHERE ??=?";
-	var post = [maximumMatches, db_accounts, uid, request.session.uid];
+// Changes the matchLimit of an account
+function changeMatchLimit(n, request, response) {
+	// Update match limit for user ID
+	var sql = "UPDATE ?? SET ??=? WHERE ??=?";
+	var post = [db_accounts, matchLimit, n, uid, request.session.uid];
 	dbConnection.query(sql, post, function(err, result) {
 		if (err) throw err;
-		if (result.length == 0) {
-			return response.status(500).send("Error getting Maximum Matches.");
-		} else {
-			return response.status(200).send(JSON.stringify({"response":"pass", maximumMatches:result[0].maximumMatches}));
+		if (result.affectedRows == 1) {
+			console.log("Account match limit changed.");
+			return response.status(200).send(JSON.stringify({"response":"pass"}));
+		} else if (result.affectedRows > 1) {
+			// For testing purposes only
+			return reponse.status(500).send("Error changed multiple account match limits.");
+		} else if (result.affectedRows == 0) {
+			return response.status(500).send("Failed to change match limit.");
 		}
 	});
 }
 
-//changes the Maximum Matches a user can recieve
-function changeMaximumMatches(n, request, response){
-	var sql= "UPDATE ?? SET ??=? WHERE ??=?";
-	var post = [db_accounts, maximumMatches, n, uid, request.session.uid];
-	dbConnection.query(sql, post, function(err, result){
-		//if(err) throw err;
-		if(result.affectedRows == 1){
-			console.log("Account Maximum Matches changed.");
-			return response.status(200).send(JSON.stringify({"response":"pass"}));
-		} else if(result.affectedRows > 1){
-			return response.status(500).send("Error changed multiple accounts Maximum Matches");
-		} else if (result.affectedRows == 0){
-			return response.status(500).send("Failed to change Maximum Matches");
+// Gets the matchLimit of an account
+function getMatchLimit(request, response) {
+	// Get match limit for user ID
+	var sql = "SELECT ?? FROM ?? WHERE ??=?";
+	var post = [matchLimit, db_accounts, uid, request.session.uid];
+	dbConnection.query(sql, post, function(err, result) {
+		if (err) throw err;
+		if (result.length == 0) {
+			return response.status(500).send("Error getting match limit.");
+		} else {
+			return response.status(200).send(JSON.stringify({"response":"pass", matchLimit:result[0].matchLimit}));
 		}
 	});
 }
@@ -2406,20 +2409,22 @@ function updateLocation(lat, lon, request, response) {
 			if (err) throw err;
 		});
 		response.status(200).send(JSON.stringify({"response":"pass"}));	
+		// Get match limit
 		var sql = "SELECT ?? FROM ?? WHERE ??=?";
-		var post=[maximumMatches, db_accounts, uid, request.session.uid];
-		dbConnection.query(sql, post, function(err, result){
-			if(err) throw err;
-			if(result.length == 0 )
-				return response.status(400).send("No profile. -Maximum Matches search");
-			var t = 0;
+		var post = [matchLimit, db_accounts, uid, request.session.uid];
+		dbConnection.query(sql, post, function(err, result) {
+			if (err) throw err;
+			var newMatches = 0;
 			var edges = matchGraph.outEdges(request.session.uid);
-			for(var i = 0; i < edges.length; i++){
-				if(edges[i].name === "matched")
-					t++;
+			for (var i = 0; i < edges.length; i++) {
+				if (edges[i].name === "newMatch") {
+					newMatches++;
+				}
 			}
-			if(t < result[0].maximumMatches)
-				findCrossedPaths(lat, lon, currentTime, request, response);
+			if (newMatches < result[0].matchLimit) {
+				// If match limit not reached, find crossed paths
+				findCrossedPaths(lat, lon, currentTime, request);
+			}
 		});		
 	});
 }
@@ -2435,7 +2440,7 @@ function feetToLon(feet, lat) {
 }
 
 // Checks if anyone crossed paths
-function findCrossedPaths(lat, lon, currentTime, request, response) {
+function findCrossedPaths(lat, lon, currentTime, request) {
 	// Get cross radius and population multiplier for user ID
 	var sql = "SELECT ??, ?? FROM ?? WHERE ??=?";
 	var post = [crossRadius, popMultiplier, db_accounts, uid, request.session.uid];
@@ -2457,127 +2462,137 @@ function findCrossedPaths(lat, lon, currentTime, request, response) {
 				var latOther = result[i].latitude;
 				var lonOther = result[i].longitude;
 				if (!matchGraph.hasEdge(request.session.uid, uidOther, "blocked") && !matchGraph.hasEdge(uidOther, request.session.uid, "blocked")) {
-					// Get cross radius and population multiplier for other user ID
-					sql = "SELECT ??, ?? FROM ?? WHERE ??=?";
-					post = [crossRadius, popMultiplier, db_accounts, uid, uidOther];
+					// Get cross radius, match limit, and population multiplier for other user ID
+					sql = "SELECT ??, ??, ?? FROM ?? WHERE ??=?";
+					post = [crossRadius, matchLimit, popMultiplier, db_accounts, uid, uidOther];
 					dbConnection.query(sql, post, function(err, result) {
 						if (err) throw err;
-						var otherLatMin = latOther - feetToLat(result[0].crossRadius * result[0].popMultiplier);
-						var otherLatMax = latOther + feetToLat(result[0].crossRadius * result[0].popMultiplier);
-						var otherLonMin = lonOther - feetToLon(result[0].crossRadius * result[0].popMultiplier, latOther);
-						var otherLonMax = lonOther + feetToLon(result[0].crossRadius * result[0].popMultiplier, latOther);
-						if (lat >= otherLatMin && lat <= otherLatMax && lon >= otherLonMin && lon <= otherLonMax) {
-							// If also within other user ID's cross radius
-							if (!matchGraph.hasEdge(request.session.uid, uidOther, "timesCrossed") && !matchGraph.hasEdge(uidOther, request.session.uid, "timesCrossed")) {
-								// If never crossed before, create timesCrossed, lastTime, and crossLocations edges
-								matchGraph.setEdge(request.session.uid, uidOther, 1, "timesCrossed");
-								matchGraph.setEdge(uidOther, request.session.uid, 1, "timesCrossed");
-								matchGraph.setEdge(request.session.uid, uidOther, currentTime, "lastTime");
-								matchGraph.setEdge(uidOther, request.session.uid, currentTime, "lastTime");
-								var object = {};
-								var key = "Cross Locations";
-								object[key] = [];
-								var crossLat = (parseFloat(lat) + parseFloat(latOther)) / parseFloat(2.0);
-								var crossLon = (parseFloat(lon) + parseFloat(lonOther)) / parseFloat(2.0);
-								var data = {latitude: crossLat, longitude: crossLon};
-								object[key].push(data);
-								matchGraph.setEdge(request.session.uid, uidOther, JSON.stringify(object), "crossLocations");
-								matchGraph.setEdge(uidOther, request.session.uid, JSON.stringify(object), "crossLocations");
-								console.log('Users crossed paths for the first time.');
-							} else if (matchGraph.edge(request.session.uid, uidOther, "lastTime") < currentTime - CROSS_COOLDOWN && matchGraph.edge(uidOther, request.session.uid, "lastTime") < currentTime - CROSS_COOLDOWN) {
-								// If crossed before, increment timesCrossed edge and update lastTime and crossLocations edges
-								matchGraph.setEdge(request.session.uid, uidOther, matchGraph.edge(request.session.uid, uidOther, "timesCrossed") + 1, "timesCrossed");
-								matchGraph.setEdge(uidOther, request.session.uid, matchGraph.edge(uidOther, request.session.uid, "timesCrossed") + 1, "timesCrossed");
-								matchGraph.setEdge(request.session.uid, uidOther, currentTime, "lastTime");
-								matchGraph.setEdge(uidOther, request.session.uid, currentTime, "lastTime");
-								var object = JSON.parse(matchGraph.edge(request.session.uid, uidOther, "crossLocations"));
-								var key = "Cross Locations";
-								var crossLat = (parseFloat(lat) + parseFloat(latOther)) / parseFloat(2.0);
-								var crossLon = (parseFloat(lon) + parseFloat(lonOther)) / parseFloat(2.0);
-								var data = {latitude: crossLat, longitude: crossLon};
-								object[key].push(data);
-								matchGraph.setEdge(request.session.uid, uidOther, JSON.stringify(object), "crossLocations");
-								matchGraph.setEdge(uidOther, request.session.uid, JSON.stringify(object), "crossLocations");
-								console.log('Users crossed paths again.');
+						var newMatches = 0;
+						var edges = matchGraph.outEdges(uidOther);
+						for (var i = 0; i < edges.length; i++) {
+							if (edges[i].name === "newMatch") {
+								newMatches++;
 							}
-							if (matchGraph.edge(request.session.uid, uidOther, "timesCrossed") >= MATCH_THRESHOLD && matchGraph.edge(uidOther, request.session.uid, "timesCrossed") >= MATCH_THRESHOLD && !matchGraph.hasEdge(request.session.uid, uidOther, "matched") && !matchGraph.hasEdge(uidOther, request.session.uid, "matched") && !matchGraph.hasEdge(request.session.uid, uidOther, "newMatch") && !matchGraph.hasEdge(uidOther, request.session.uid, "newMatch")) {
-								if (!matchGraph.hasEdge(request.session.uid, uidOther, "unmatched") && !matchGraph.hasEdge(uidOther, request.session.uid, "unmatched")) {
-									// If crossed greater than or equal to match threshold times and not unmatched and not already matched, create newMatch edges
-									matchGraph.setEdge(request.session.uid, uidOther, true, "newMatch");
-									matchGraph.setEdge(uidOther, request.session.uid, true, "newMatch");
-									console.log('Users matched.');
-								} else if (matchGraph.edge(request.session.uid, uidOther, "timesCrossed") >= UNMATCHED_MATCH_THRESHOLD && matchGraph.edge(uidOther, request.session.uid, "timesCrossed") >= UNMATCHED_MATCH_THRESHOLD) {
-									// If crossed greater than or equal to unmatched match threshold times and unmatched and not already matched, create newMatch edges
-									matchGraph.setEdge(request.session.uid, uidOther, true, "newMatch");
-									matchGraph.setEdge(uidOther, request.session.uid, true, "newMatch");
-									if (matchGraph.hasEdge(request.session.uid, uidOther, "unmatched")) {
-										matchGraph.removeEdge(request.session.uid, uidOther, "unmatched");
-									}
-									if (matchGraph.hasEdge(uidOther, request.session.uid, "unmatched")) {
-										matchGraph.removeEdge(uidOther, request.session.uid, "unmatched");
-									}
-									console.log('Unmatched users matched.');
+						}
+						if (newMatches < result[0].matchLimit) {
+							// If other user match limit not reached
+							var otherLatMin = latOther - feetToLat(result[0].crossRadius * result[0].popMultiplier);
+							var otherLatMax = latOther + feetToLat(result[0].crossRadius * result[0].popMultiplier);
+							var otherLonMin = lonOther - feetToLon(result[0].crossRadius * result[0].popMultiplier, latOther);
+							var otherLonMax = lonOther + feetToLon(result[0].crossRadius * result[0].popMultiplier, latOther);
+							if (lat >= otherLatMin && lat <= otherLatMax && lon >= otherLonMin && lon <= otherLonMax) {
+								// If also within other user ID's cross radius
+								if (!matchGraph.hasEdge(request.session.uid, uidOther, "timesCrossed") && !matchGraph.hasEdge(uidOther, request.session.uid, "timesCrossed")) {
+									// If never crossed before, create timesCrossed, lastTime, and crossLocations edges
+									matchGraph.setEdge(request.session.uid, uidOther, 1, "timesCrossed");
+									matchGraph.setEdge(uidOther, request.session.uid, 1, "timesCrossed");
+									matchGraph.setEdge(request.session.uid, uidOther, currentTime, "lastTime");
+									matchGraph.setEdge(uidOther, request.session.uid, currentTime, "lastTime");
+									var object = {};
+									var key = "Cross Locations";
+									object[key] = [];
+									var crossLat = (parseFloat(lat) + parseFloat(latOther)) / parseFloat(2.0);
+									var crossLon = (parseFloat(lon) + parseFloat(lonOther)) / parseFloat(2.0);
+									var data = {latitude: crossLat, longitude: crossLon};
+									object[key].push(data);
+									matchGraph.setEdge(request.session.uid, uidOther, JSON.stringify(object), "crossLocations");
+									matchGraph.setEdge(uidOther, request.session.uid, JSON.stringify(object), "crossLocations");
+									console.log('Users crossed paths for the first time.');
+								} else if (matchGraph.edge(request.session.uid, uidOther, "lastTime") < currentTime - CROSS_COOLDOWN && matchGraph.edge(uidOther, request.session.uid, "lastTime") < currentTime - CROSS_COOLDOWN) {
+									// If crossed before, increment timesCrossed edge and update lastTime and crossLocations edges
+									matchGraph.setEdge(request.session.uid, uidOther, matchGraph.edge(request.session.uid, uidOther, "timesCrossed") + 1, "timesCrossed");
+									matchGraph.setEdge(uidOther, request.session.uid, matchGraph.edge(uidOther, request.session.uid, "timesCrossed") + 1, "timesCrossed");
+									matchGraph.setEdge(request.session.uid, uidOther, currentTime, "lastTime");
+									matchGraph.setEdge(uidOther, request.session.uid, currentTime, "lastTime");
+									var object = JSON.parse(matchGraph.edge(request.session.uid, uidOther, "crossLocations"));
+									var key = "Cross Locations";
+									var crossLat = (parseFloat(lat) + parseFloat(latOther)) / parseFloat(2.0);
+									var crossLon = (parseFloat(lon) + parseFloat(lonOther)) / parseFloat(2.0);
+									var data = {latitude: crossLat, longitude: crossLon};
+									object[key].push(data);
+									matchGraph.setEdge(request.session.uid, uidOther, JSON.stringify(object), "crossLocations");
+									matchGraph.setEdge(uidOther, request.session.uid, JSON.stringify(object), "crossLocations");
+									console.log('Users crossed paths again.');
 								}
-							} else if (matchGraph.edge(request.session.uid, uidOther, "timesCrossed") >= MATCH_THRESHOLD && matchGraph.edge(uidOther, request.session.uid, "timesCrossed") >= MATCH_THRESHOLD && matchGraph.hasEdge(request.session.uid, uidOther, "matched") && matchGraph.hasEdge(uidOther, request.session.uid, "matched") && matchGraph.hasEdge(request.session.uid, uidOther, "approved") && matchGraph.hasEdge(uidOther, request.session.uid, "approved") && matchGraph.edge(request.session.uid, uidOther, "approved") == true && matchGraph.edge(uidOther, request.session.uid, "approved") == true) {
-								// If crossed and already matched, notify users
-								var sql = "SELECT ?? FROM ?? WHERE ??=?";
-								var post = [registrationToken, db_firebase, uid, request.session.uid];
-								dbConnection.query(sql, post, function(err, result) {
-									if (err) throw err;
-									if (result.length > 0) {
-										for (var i = 0; i < result.length; i++) {
-											var message = {
-												data: {
-													type: 'Crossed Paths',
-													title: 'You just crossed paths with one of your matches!',
-													body: 'Tap to see who you crossed paths with.',
-													uid: uidOther
-												},
-												token: result[i].registrationToken,
-												android: {
-													ttl: 3600000,
-													priority: 'high',
-												}
-											};
-											admin.messaging().send(message)
-												.then((response) => {
-													console.log('Successfully sent crossed paths notification.');
-												})
-											.catch((error) => {
-												console.log(error);
-											});
+								if (matchGraph.edge(request.session.uid, uidOther, "timesCrossed") >= MATCH_THRESHOLD && matchGraph.edge(uidOther, request.session.uid, "timesCrossed") >= MATCH_THRESHOLD && !matchGraph.hasEdge(request.session.uid, uidOther, "matched") && !matchGraph.hasEdge(uidOther, request.session.uid, "matched") && !matchGraph.hasEdge(request.session.uid, uidOther, "newMatch") && !matchGraph.hasEdge(uidOther, request.session.uid, "newMatch")) {
+									if (!matchGraph.hasEdge(request.session.uid, uidOther, "unmatched") && !matchGraph.hasEdge(uidOther, request.session.uid, "unmatched")) {
+										// If crossed greater than or equal to match threshold times and not unmatched and not already matched, create newMatch edges
+										matchGraph.setEdge(request.session.uid, uidOther, true, "newMatch");
+										matchGraph.setEdge(uidOther, request.session.uid, true, "newMatch");
+										console.log('Users matched.');
+									} else if (matchGraph.edge(request.session.uid, uidOther, "timesCrossed") >= UNMATCHED_MATCH_THRESHOLD && matchGraph.edge(uidOther, request.session.uid, "timesCrossed") >= UNMATCHED_MATCH_THRESHOLD) {
+										// If crossed greater than or equal to unmatched match threshold times and unmatched and not already matched, create newMatch edges
+										matchGraph.setEdge(request.session.uid, uidOther, true, "newMatch");
+										matchGraph.setEdge(uidOther, request.session.uid, true, "newMatch");
+										if (matchGraph.hasEdge(request.session.uid, uidOther, "unmatched")) {
+											matchGraph.removeEdge(request.session.uid, uidOther, "unmatched");
 										}
-									}
-								});
-								var sql = "SELECT ?? FROM ?? WHERE ??=?";
-								var post = [registrationToken, db_firebase, uid, uidOther];
-								dbConnection.query(sql, post, function(err, result) {
-									if (err) throw err;
-									if (result.length > 0) {
-										for (var i = 0; i < result.length; i++) {
-											var message = {
-												data: {
-													type: 'Crossed Paths',
-													title: 'You just crossed paths with one of your matches!',
-													body: 'Tap to see who you crossed paths with.',
-													uid: request.session.uid
-												},
-												token: result[i].registrationToken,
-												android: {
-													ttl: 3600000,
-													priority: 'high',
-												}
-											};
-											admin.messaging().send(message)
-												.then((response) => {
-													console.log('Successfully sent crossed paths notification.');
-												})
-											.catch((error) => {
-												console.log(error);
-											});
+										if (matchGraph.hasEdge(uidOther, request.session.uid, "unmatched")) {
+											matchGraph.removeEdge(uidOther, request.session.uid, "unmatched");
 										}
+										console.log('Unmatched users matched.');
 									}
-								});
+								} else if (matchGraph.edge(request.session.uid, uidOther, "timesCrossed") >= MATCH_THRESHOLD && matchGraph.edge(uidOther, request.session.uid, "timesCrossed") >= MATCH_THRESHOLD && matchGraph.hasEdge(request.session.uid, uidOther, "matched") && matchGraph.hasEdge(uidOther, request.session.uid, "matched") && matchGraph.hasEdge(request.session.uid, uidOther, "approved") && matchGraph.hasEdge(uidOther, request.session.uid, "approved") && matchGraph.edge(request.session.uid, uidOther, "approved") == true && matchGraph.edge(uidOther, request.session.uid, "approved") == true) {
+									// If crossed and already matched, notify users
+									var sql = "SELECT ?? FROM ?? WHERE ??=?";
+									var post = [registrationToken, db_firebase, uid, request.session.uid];
+									dbConnection.query(sql, post, function(err, result) {
+										if (err) throw err;
+										if (result.length > 0) {
+											for (var i = 0; i < result.length; i++) {
+												var message = {
+													data: {
+														type: 'Crossed Paths',
+														title: 'You just crossed paths with one of your matches!',
+														body: 'Tap to see who you crossed paths with.',
+														uid: uidOther
+													},
+													token: result[i].registrationToken,
+													android: {
+														ttl: 3600000,
+														priority: 'high',
+													}
+												};
+												admin.messaging().send(message)
+													.then((response) => {
+														console.log('Successfully sent crossed paths notification.');
+													})
+													.catch((error) => {
+														console.log(error);
+													});
+											}
+										}
+									});
+									var sql = "SELECT ?? FROM ?? WHERE ??=?";
+									var post = [registrationToken, db_firebase, uid, uidOther];
+									dbConnection.query(sql, post, function(err, result) {
+										if (err) throw err;
+										if (result.length > 0) {
+											for (var i = 0; i < result.length; i++) {
+												var message = {
+													data: {
+														type: 'Crossed Paths',
+														title: 'You just crossed paths with one of your matches!',
+														body: 'Tap to see who you crossed paths with.',
+														uid: request.session.uid
+													},
+													token: result[i].registrationToken,
+													android: {
+														ttl: 3600000,
+														priority: 'high',
+													}
+												};
+												admin.messaging().send(message)
+													.then((response) => {
+														console.log('Successfully sent crossed paths notification.');
+													})
+													.catch((error) => {
+														console.log(error);
+													});
+											}
+										}
+									});
+								}
 							}
 						}
 
@@ -2646,9 +2661,9 @@ function notifyMatches() {
 								.then((response) => {
 									console.log('Successfully sent new matches notification.');
 								})
-							.catch((error) => {
-								console.log(error);
-							});
+								.catch((error) => {
+									console.log(error);
+								});
 						}
 					}
 				});
@@ -2695,9 +2710,9 @@ function notifyNoMatches() {
 							.then((response) => {
 								console.log('Successfully sent location suggestions notification.');
 							})
-						.catch((error) => {
-							console.log(error);
-						});
+							.catch((error) => {
+								console.log(error);
+							});
 					}
 				}
 			});
@@ -2756,9 +2771,9 @@ function notifyMatchNoSharedInterests(firstUid, secondUid) {
 					.then((response) => {
 						console.log('Successfully sent new match notification.');
 					})
-				.catch((error) => {
-					console.log(error);
-				});
+					.catch((error) => {
+						console.log(error);
+					});
 			}
 		}
 	});
@@ -2789,9 +2804,9 @@ function notifyMatchSharedInterests(firstUid, secondUid) {
 					.then((response) => {
 						console.log('Successfully sent new match with shared interests notification.');
 					})
-				.catch((error) => {
-					console.log(error);
-				});
+					.catch((error) => {
+						console.log(error);
+					});
 			}
 		}
 	});
@@ -2825,9 +2840,9 @@ function approveUser(u, request, response) {
 					.then((response) => {
 						console.log('Successfully sent match approval notification.');
 					})
-				.catch((error) => {
-					console.log(error);
-				});
+					.catch((error) => {
+						console.log(error);
+					});
 			}
 		}
 	});
@@ -2953,9 +2968,9 @@ function reportUser(u, r, request, response) {
 									.then((response) => {
 										console.log('Successfully sent offense warning notification.');
 									})
-								.catch((error) => {
-									console.log(error);
-								});
+									.catch((error) => {
+										console.log(error);
+									});
 							}
 						}
 					});
@@ -3379,9 +3394,9 @@ function notifyInterestsChange(request, response) {
 										.then((response) => {
 											console.log('Successfully sent shared interests notification.');
 										})
-									.catch((error) => {
-										console.log(error);
-									});
+										.catch((error) => {
+											console.log(error);
+										});
 								}
 							}
 						});
@@ -3409,9 +3424,9 @@ function notifyInterestsChange(request, response) {
 										.then((response) => {
 											console.log('Successfully sent shared interests notification.');
 										})
-									.catch((error) => {
-										console.log(error);
-									});
+										.catch((error) => {
+											console.log(error);
+										});
 								}
 							}
 						});

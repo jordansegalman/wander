@@ -85,14 +85,14 @@
             android:text="Customize App" />
 
         <TextView
-            android:id="@+id/textView"
+            android:id="@+id/crossRadiusText"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_weight="0"
             android:text="Cross Radius: " />
 
         <SeekBar
-            android:id="@+id/seekBar"
+            android:id="@+id/crossRadiusSeekBar"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:max="5290"
@@ -100,17 +100,17 @@
             android:progress="150" />
 
         <TextView
-            android:id="@+id/maximumText"
+            android:id="@+id/matchLimitText"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Maximum Number of Matches: " />
+            android:text="Daily Match Limit:" />
 
         <SeekBar
-            android:id="@+id/maximumMatches"
+            android:id="@+id/matchLimitSeekBar"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:max="10"
-            android:min="1"/>
+            android:max="25"
+            android:min="0" />
 
         <Button
             android:id="@+id/changeEmail"

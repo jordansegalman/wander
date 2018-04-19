@@ -37,10 +37,10 @@ public class SettingsActivity extends AppCompatActivity {
     private static final String SP_NOTIFICATIONS = "notificationSwitch";
     Switch locationSwitch;
     Switch notificationSwitch;
-    TextView radiusText;
-    TextView radiusTextMatches;
-    SeekBar seekBar;
-    SeekBar seekBarMatches;
+    TextView crossRadiusText;
+    TextView matchLimitText;
+    SeekBar crossRadiusSeekBar;
+    SeekBar matchLimitSeekBar;
     private RequestQueue requestQueue;
 
     @Override
@@ -68,16 +68,16 @@ public class SettingsActivity extends AppCompatActivity {
         notificationSwitch.setChecked(Data.getInstance().getNotificationSwitch());
         requestQueue = Volley.newRequestQueue(this);
 
-        seekBar = findViewById(R.id.seekBar);
-        radiusText = findViewById(R.id.textView);
+        crossRadiusSeekBar = findViewById(R.id.crossRadiusSeekBar);
+        crossRadiusText = findViewById(R.id.crossRadiusText);
 
-        seekBarMatches = findViewById(R.id.maximumMatches);
-        radiusTextMatches = findViewById(R.id.maximumText);
+        matchLimitSeekBar = findViewById(R.id.matchLimitSeekBar);
+        matchLimitText = findViewById(R.id.matchLimitText);
 
         getCrossRadius();
-        getMaximumMatches();
-        initializeSeekBar();
-        initializeSeekBarMatches();
+        getMatchLimit();
+        initializeCrossRadiusSeekBar();
+        initializeMatchLimitSeekBar();
     }
 
     public void locationToggle(View view) {
@@ -215,12 +215,12 @@ public class SettingsActivity extends AppCompatActivity {
         }
     }
 
-    private void initializeSeekBar() {
+    private void initializeCrossRadiusSeekBar() {
         SeekBar.OnSeekBarChangeListener seekBarChangeListener = new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
                 String text = "Cross Radius: " + progress + " feet";
-                radiusText.setText(text);
+                crossRadiusText.setText(text);
             }
 
             @Override
@@ -232,9 +232,8 @@ public class SettingsActivity extends AppCompatActivity {
                 updateCrossRadius(seekBar.getProgress());
             }
         };
-        seekBar.setOnSeekBarChangeListener(seekBarChangeListener);
+        crossRadiusSeekBar.setOnSeekBarChangeListener(seekBarChangeListener);
     }
-
 
     private void updateCrossRadius(int radius) {
         String url = Data.getInstance().getUrl() + "/changeCrossRadius";
@@ -248,7 +247,7 @@ public class SettingsActivity extends AppCompatActivity {
                         try {
                             String res = response.getString("response");
                             if (res.equalsIgnoreCase("pass")) {
-                                Toast.makeText(getApplicationContext(), "Radius updated!", Toast.LENGTH_SHORT).show();
+                                Toast.makeText(getApplicationContext(), "Cross radius updated!", Toast.LENGTH_SHORT).show();
                             }
                         } catch (JSONException j) {
                             j.printStackTrace();
@@ -258,7 +257,7 @@ public class SettingsActivity extends AppCompatActivity {
                 new Response.ErrorListener() {
                     @Override
                     public void onErrorResponse(VolleyError error) {
-                        Toast.makeText(getApplicationContext(), "Error setting radius!", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(getApplicationContext(), "Error setting cross radius!", Toast.LENGTH_SHORT).show();
                         Log.d(TAG, error.toString());
                     }
                 }
@@ -268,10 +267,6 @@ public class SettingsActivity extends AppCompatActivity {
                 DefaultRetryPolicy.DEFAULT_MAX_RETRIES,
                 DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
         requestQueue.add(postRequest);
-    }
-
-    public void customize(View view){
-        startActivity(new Intent(SettingsActivity.this, CustomizeAppActivity.class));
     }
 
     private void getCrossRadius() {
@@ -286,12 +281,12 @@ public class SettingsActivity extends AppCompatActivity {
                             if (r != null) {
                                 try {
                                     String text = "Cross Radius: " + r + " feet";
-                                    radiusText.setText(text);
-                                    seekBar.setProgress(Integer.parseInt(r));
+                                    crossRadiusText.setText(text);
+                                    crossRadiusSeekBar.setProgress(Integer.parseInt(r));
                                 } catch (NumberFormatException e) {
                                     String text = "Cross Radius: 150 feet";
-                                    radiusText.setText(text);
-                                    seekBar.setProgress(150);
+                                    crossRadiusText.setText(text);
+                                    crossRadiusSeekBar.setProgress(150);
                                 }
                             }
                         } catch (JSONException j) {
@@ -302,7 +297,7 @@ public class SettingsActivity extends AppCompatActivity {
                 new Response.ErrorListener() {
                     @Override
                     public void onErrorResponse(VolleyError error) {
-                        Toast.makeText(getApplicationContext(), "Error getting radius!", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(getApplicationContext(), "Error getting cross radius!", Toast.LENGTH_SHORT).show();
                         Log.d(TAG, error.toString());
                     }
                 }
@@ -314,12 +309,12 @@ public class SettingsActivity extends AppCompatActivity {
         requestQueue.add(postRequest);
     }
 
-    private void initializeSeekBarMatches() {
+    private void initializeMatchLimitSeekBar() {
         SeekBar.OnSeekBarChangeListener seekBarChangeListener = new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                String text = "Maximum Number of Matches: " + progress;
-                radiusTextMatches.setText(text);
+                String text = "Daily Match Limit: " + progress;
+                matchLimitText.setText(text);
             }
 
             @Override
@@ -328,17 +323,16 @@ public class SettingsActivity extends AppCompatActivity {
 
             @Override
             public void onStopTrackingTouch(SeekBar seekBar) {
-                updateMaximumMatches(seekBar.getProgress());
+                updateMatchLimit(seekBar.getProgress());
             }
         };
-        seekBarMatches.setOnSeekBarChangeListener(seekBarChangeListener);
-
+        matchLimitSeekBar.setOnSeekBarChangeListener(seekBarChangeListener);
     }
 
-    private void updateMaximumMatches(int newMax) {
-        String url = Data.getInstance().getUrl() + "/changeMaximumMatches";
+    private void updateMatchLimit(int newMax) {
+        String url = Data.getInstance().getUrl() + "/changeMatchLimit";
         Map<String, String> params = new HashMap<>();
-        params.put("newMaximumMatches", String.valueOf(newMax));
+        params.put("newMatchLimit", String.valueOf(newMax));
 
         JsonObjectRequest postRequest = new JsonObjectRequest(Request.Method.POST, url, new JSONObject(params),
                 new Response.Listener<JSONObject>() {
@@ -347,7 +341,7 @@ public class SettingsActivity extends AppCompatActivity {
                         try {
                             String res = response.getString("response");
                             if (res.equalsIgnoreCase("pass")) {
-                                Toast.makeText(getApplicationContext(), "Maximum Matches Updated!", Toast.LENGTH_SHORT).show();
+                                Toast.makeText(getApplicationContext(), "Match limit updated!", Toast.LENGTH_SHORT).show();
                             }
                         } catch (JSONException j) {
                             j.printStackTrace();
@@ -357,7 +351,7 @@ public class SettingsActivity extends AppCompatActivity {
                 new Response.ErrorListener() {
                     @Override
                     public void onErrorResponse(VolleyError error) {
-                        Toast.makeText(getApplicationContext(), "Error Updating Maximum Matches!", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(getApplicationContext(), "Error setting match limit!", Toast.LENGTH_SHORT).show();
                         Log.d(TAG, error.toString());
                     }
                 }
@@ -369,24 +363,24 @@ public class SettingsActivity extends AppCompatActivity {
         requestQueue.add(postRequest);
     }
 
-    private void getMaximumMatches() {
-        String url = Data.getInstance().getUrl() + "/getMaximumMatches";
+    private void getMatchLimit() {
+        String url = Data.getInstance().getUrl() + "/getMatchLimit";
 
         JsonObjectRequest postRequest = new JsonObjectRequest(Request.Method.POST, url, null,
                 new Response.Listener<JSONObject>() {
                     @Override
                     public void onResponse(JSONObject response) {
                         try {
-                            String r = response.getString("maximumMatches");
+                            String r = response.getString("matchLimit");
                             if (r != null) {
                                 try {
-                                    String text = "Maximum Number of Matches: " +r;
-                                    radiusTextMatches.setText(text);
-                                    seekBarMatches.setProgress(Integer.parseInt(r));
+                                    String text = "Daily Match Limit: " + r;
+                                    matchLimitText.setText(text);
+                                    matchLimitSeekBar.setProgress(Integer.parseInt(r));
                                 } catch (NumberFormatException e) {
-                                    String text = "Maximum Number of Matches: 1";
-                                    radiusTextMatches.setText(text);
-                                    seekBarMatches.setProgress(150);
+                                    String text = "Daily Match Limit: 25";
+                                    matchLimitText.setText(text);
+                                    matchLimitSeekBar.setProgress(25);
                                 }
                             }
                         } catch (JSONException j) {
@@ -397,7 +391,7 @@ public class SettingsActivity extends AppCompatActivity {
                 new Response.ErrorListener() {
                     @Override
                     public void onErrorResponse(VolleyError error) {
-                        Toast.makeText(getApplicationContext(), "Error getting Maximum Matches!", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(getApplicationContext(), "Error getting match limit!", Toast.LENGTH_SHORT).show();
                         Log.d(TAG, error.toString());
                     }
                 }
@@ -407,5 +401,9 @@ public class SettingsActivity extends AppCompatActivity {
                 DefaultRetryPolicy.DEFAULT_MAX_RETRIES,
                 DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
         requestQueue.add(postRequest);
+    }
+
+    public void customize(View view){
+        startActivity(new Intent(SettingsActivity.this, CustomizeAppActivity.class));
     }
 }
