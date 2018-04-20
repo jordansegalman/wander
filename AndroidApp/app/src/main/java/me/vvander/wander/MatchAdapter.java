@@ -11,7 +11,7 @@ import android.widget.TextView;
 
 import java.util.ArrayList;
 
-public class MatchAdapter extends ArrayAdapter<Match> {
+class MatchAdapter extends ArrayAdapter<Match> {
     MatchAdapter(Context context, ArrayList<Match> matchList) {
         super(context, 0, matchList);
     }

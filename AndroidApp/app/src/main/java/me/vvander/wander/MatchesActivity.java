@@ -150,7 +150,7 @@ public class MatchesActivity extends AppCompatActivity {
                             int timesCrossed = object.getInt("timesCrossed");
                             boolean approved = object.getBoolean("approved");
 
-                            if (picture == null || !picture.equalsIgnoreCase("null")) {
+                            if (picture == null || picture.equalsIgnoreCase("null")) {
                                 picture = Utilities.encodeImage(BitmapFactory.decodeResource(getResources(), R.drawable.default_profile));
                             }
 

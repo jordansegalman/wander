@@ -32,7 +32,7 @@ import java.util.Map;
 
 public class FacebookLoginActivity extends AppCompatActivity {
     private static final String TAG = FacebookLoginActivity.class.getSimpleName();
-    CallbackManager callbackManager;
+    private CallbackManager callbackManager;
     private RequestQueue requestQueue;
 
     @Override
@@ -152,7 +152,7 @@ public class FacebookLoginActivity extends AppCompatActivity {
         requestQueue.add(postRequest);
     }
 
-    public void sendFirebaseRegistrationTokenToServer() {
+    private void sendFirebaseRegistrationTokenToServer() {
         if (Data.getInstance().getLoggedInFacebook() && Data.getInstance().getFirebaseRegistrationToken() != null) {
             Map<String, String> params = new HashMap<>();
             params.put("firebaseRegistrationToken", Data.getInstance().getFirebaseRegistrationToken());

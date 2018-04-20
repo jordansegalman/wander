@@ -35,7 +35,7 @@ public class DeleteActivity extends AppCompatActivity {
     private static final String SP_SCHEDULE = "locationSchedule";
     private static final String SP_NOTIFICATIONS = "notificationSwitch";
     private static final String SP_THEME = "theme";
-    EditText passwordEditText;
+    private EditText passwordEditText;
     private RequestQueue requestQueue;
 
     @Override

@@ -32,6 +32,7 @@ import org.json.JSONObject;
 
 import java.net.URISyntaxException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Map;
@@ -103,7 +104,7 @@ public class ChatActivity extends AppCompatActivity {
                         if (from.equals(matchUid)) {
                             messages.add(new Message(message, time, MessageType.RECEIVED));
                             if (messages.size() > 1 && messages.get(messages.size() - 1).getTime() < messages.get(messages.size() - 2).getTime()) {
-                                messages.sort(new Comparator<Message>() {
+                                Collections.sort(messages, new Comparator<Message>() {
                                     @Override
                                     public int compare(Message o1, Message o2) {
                                         return Long.compare(o1.getTime(), o2.getTime());
@@ -240,7 +241,7 @@ public class ChatActivity extends AppCompatActivity {
                                     messages.add(new Message(message, time, MessageType.RECEIVED));
                                 }
                             }
-                            messages.sort(new Comparator<Message>() {
+                            Collections.sort(messages, new Comparator<Message>() {
                                 @Override
                                 public int compare(Message o1, Message o2) {
                                     return Long.compare(o1.getTime(), o2.getTime());
@@ -335,7 +336,7 @@ public class ChatActivity extends AppCompatActivity {
             socket.emit("message", data.toString());
             messages.add(new Message(message, time, MessageType.SENT));
             if (messages.size() > 1 && messages.get(messages.size() - 1).getTime() < messages.get(messages.size() - 2).getTime()) {
-                messages.sort(new Comparator<Message>() {
+                Collections.sort(messages, new Comparator<Message>() {
                     @Override
                     public int compare(Message o1, Message o2) {
                         return Long.compare(o1.getTime(), o2.getTime());

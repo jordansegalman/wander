@@ -11,7 +11,7 @@ import android.widget.TextView;
 
 import java.util.ArrayList;
 
-public class BlockedAdapter extends ArrayAdapter<Blocked> {
+class BlockedAdapter extends ArrayAdapter<Blocked> {
     BlockedAdapter(Context context, ArrayList<Blocked> blockedList) {
         super(context, 0, blockedList);
     }

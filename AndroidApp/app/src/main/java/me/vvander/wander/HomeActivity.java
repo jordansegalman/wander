@@ -366,7 +366,7 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
         requestQueue.add(secondPostRequest);
     }
 
-    public void displayHeatmapPersonal() {
+    private void displayHeatmapPersonal() {
         if (overlayPersonal == null && !overlayPersonalOn) {
             if (listPersonal.size() > 0) {
                 HeatmapTileProvider mProvider = new HeatmapTileProvider.Builder().data(listPersonal).build();
@@ -384,7 +384,7 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
         }
     }
 
-    public void displayHeatmapAll() {
+    private void displayHeatmapAll() {
         int[] colors = {
                 Color.rgb(0, 225, 215),
                 Color.rgb(125, 0, 225)
@@ -410,7 +410,7 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
         }
     }
 
-    public void addTag() {
+    private void addTag() {
         try {
             PlacePicker.IntentBuilder builder = new PlacePicker.IntentBuilder();
             startActivityForResult(builder.build(this), PLACE_PICKER_REQUEST);

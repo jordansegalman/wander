@@ -3,7 +3,7 @@ package me.vvander.wander;
 import android.content.Context;
 import android.content.SharedPreferences;
 
-public class Theme {
+class Theme {
     private static final String SP_THEME = "theme";
 
     public static int getTheme(Context context) {

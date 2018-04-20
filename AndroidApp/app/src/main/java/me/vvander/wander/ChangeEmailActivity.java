@@ -25,8 +25,8 @@ import java.util.Map;
 
 public class ChangeEmailActivity extends AppCompatActivity {
     private static final String TAG = ChangeEmailActivity.class.getSimpleName();
-    EditText emailEdit;
-    EditText passwordEdit;
+    private EditText emailEdit;
+    private EditText passwordEdit;
     private RequestQueue requestQueue;
 
     @Override

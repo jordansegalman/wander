@@ -122,24 +122,28 @@ public class ProfileEditActivity extends AppCompatActivity {
             thirdInterest = "";
         } else {
             String[] splitInterests = originalInterests.split(", ");
-            if (splitInterests.length == 1) {
-                firstInterest = splitInterests[0];
-                secondInterest = "";
-                thirdInterest = "";
-                firstInterestSpinner.setSelection(((ArrayAdapter) firstInterestSpinner.getAdapter()).getPosition(firstInterest));
-            } else if (splitInterests.length == 2) {
-                firstInterest = splitInterests[0];
-                secondInterest = splitInterests[1];
-                thirdInterest = "";
-                firstInterestSpinner.setSelection(((ArrayAdapter) firstInterestSpinner.getAdapter()).getPosition(firstInterest));
-                secondInterestSpinner.setSelection(((ArrayAdapter) secondInterestSpinner.getAdapter()).getPosition(secondInterest));
-            } else if (splitInterests.length == 3) {
-                firstInterest = splitInterests[0];
-                secondInterest = splitInterests[1];
-                thirdInterest = splitInterests[2];
-                firstInterestSpinner.setSelection(((ArrayAdapter) firstInterestSpinner.getAdapter()).getPosition(firstInterest));
-                secondInterestSpinner.setSelection(((ArrayAdapter) secondInterestSpinner.getAdapter()).getPosition(secondInterest));
-                thirdInterestSpinner.setSelection(((ArrayAdapter) thirdInterestSpinner.getAdapter()).getPosition(thirdInterest));
+            switch (splitInterests.length) {
+                case 1:
+                    firstInterest = splitInterests[0];
+                    secondInterest = "";
+                    thirdInterest = "";
+                    firstInterestSpinner.setSelection(((ArrayAdapter) firstInterestSpinner.getAdapter()).getPosition(firstInterest));
+                    break;
+                case 2:
+                    firstInterest = splitInterests[0];
+                    secondInterest = splitInterests[1];
+                    thirdInterest = "";
+                    firstInterestSpinner.setSelection(((ArrayAdapter) firstInterestSpinner.getAdapter()).getPosition(firstInterest));
+                    secondInterestSpinner.setSelection(((ArrayAdapter) secondInterestSpinner.getAdapter()).getPosition(secondInterest));
+                    break;
+                case 3:
+                    firstInterest = splitInterests[0];
+                    secondInterest = splitInterests[1];
+                    thirdInterest = splitInterests[2];
+                    firstInterestSpinner.setSelection(((ArrayAdapter) firstInterestSpinner.getAdapter()).getPosition(firstInterest));
+                    secondInterestSpinner.setSelection(((ArrayAdapter) secondInterestSpinner.getAdapter()).getPosition(secondInterest));
+                    thirdInterestSpinner.setSelection(((ArrayAdapter) thirdInterestSpinner.getAdapter()).getPosition(thirdInterest));
+                    break;
             }
         }
     }

@@ -9,7 +9,7 @@ import java.net.CookieManager;
 import java.net.CookiePolicy;
 import java.util.ArrayList;
 
-public class Data {
+class Data {
     private static final String url = "https://vvander.me";
     private static final Data data = new Data();
     private String uid;

@@ -4,7 +4,7 @@ enum MessageType {
     SENT, RECEIVED
 }
 
-public class Message {
+class Message {
     private String message;
     private long time;
     private MessageType messageType;

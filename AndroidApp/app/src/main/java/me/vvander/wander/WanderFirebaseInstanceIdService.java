@@ -30,7 +30,7 @@ public class WanderFirebaseInstanceIdService extends FirebaseInstanceIdService {
         sendTokenToServer();
     }
 
-    public void sendTokenToServer() {
+    private void sendTokenToServer() {
         if ((Data.getInstance().getLoggedIn() || Data.getInstance().getLoggedInGoogle() || Data.getInstance().getLoggedInFacebook()) && Data.getInstance().getFirebaseRegistrationToken() != null) {
             RequestQueue requestQueue = Volley.newRequestQueue(this);
             Map<String, String> params = new HashMap<>();

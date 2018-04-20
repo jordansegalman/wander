@@ -101,7 +101,7 @@ public class BlockedActivity extends AppCompatActivity {
                             String name = object.getString("name");
                             String picture = object.getString("picture");
 
-                            if (picture == null || !picture.equalsIgnoreCase("null")) {
+                            if (picture == null || picture.equalsIgnoreCase("null")) {
                                 picture = Utilities.encodeImage(BitmapFactory.decodeResource(getResources(), R.drawable.default_profile));
                             }
 

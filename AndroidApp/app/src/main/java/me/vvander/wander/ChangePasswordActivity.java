@@ -25,9 +25,9 @@ import java.util.Map;
 
 public class ChangePasswordActivity extends AppCompatActivity {
     private static final String TAG = ChangePasswordActivity.class.getSimpleName();
-    EditText oldPasswordEdit;
-    EditText newPasswordEdit;
-    EditText confirmPasswordEdit;
+    private EditText oldPasswordEdit;
+    private EditText newPasswordEdit;
+    private EditText confirmPasswordEdit;
     private RequestQueue requestQueue;
 
     @Override

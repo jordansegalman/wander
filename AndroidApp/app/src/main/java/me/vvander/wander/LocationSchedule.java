@@ -1,6 +1,6 @@
 package me.vvander.wander;
 
-public class LocationSchedule {
+class LocationSchedule {
     private String name;
     private int startHour;
     private int startMinute;

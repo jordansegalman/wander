@@ -1,6 +1,6 @@
 package me.vvander.wander;
 
-public class Blocked {
+class Blocked {
     private String uid;
     private String name;
     private String picture;

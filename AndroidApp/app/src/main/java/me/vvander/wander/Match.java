@@ -1,6 +1,8 @@
 package me.vvander.wander;
 
-public class Match implements Comparable<Match> {
+import android.support.annotation.NonNull;
+
+class Match implements Comparable<Match> {
     private String uid;
     private String name;
     private String about;
@@ -48,10 +50,7 @@ public class Match implements Comparable<Match> {
     }
 
     @Override
-    public int compareTo(Match match) {
-        if (this.timesCrossed < match.timesCrossed) {
-            return 1;
-        }
-        return -1;
+    public int compareTo(@NonNull Match o) {
+        return Integer.compare(timesCrossed, o.timesCrossed);
     }
 }

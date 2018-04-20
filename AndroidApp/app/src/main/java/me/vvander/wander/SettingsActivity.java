@@ -36,12 +36,12 @@ public class SettingsActivity extends AppCompatActivity {
     private static final String SP_SCHEDULE = "locationSchedule";
     private static final String SP_NOTIFICATIONS = "notificationSwitch";
     private static final String SP_THEME = "theme";
-    Switch locationSwitch;
-    Switch notificationSwitch;
-    TextView crossRadiusText;
-    TextView matchLimitText;
-    SeekBar crossRadiusSeekBar;
-    SeekBar matchLimitSeekBar;
+    private Switch locationSwitch;
+    private Switch notificationSwitch;
+    private TextView crossRadiusText;
+    private TextView matchLimitText;
+    private SeekBar crossRadiusSeekBar;
+    private SeekBar matchLimitSeekBar;
     private RequestQueue requestQueue;
 
     @Override

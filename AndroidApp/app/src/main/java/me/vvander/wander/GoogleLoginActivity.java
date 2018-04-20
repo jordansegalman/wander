@@ -30,7 +30,7 @@ import java.util.Map;
 public class GoogleLoginActivity extends AppCompatActivity {
     private static final String TAG = GoogleLoginActivity.class.getSimpleName();
     private static final int RC_SIGN_IN = 0;
-    GoogleSignInClient mGoogleSignInClient;
+    private GoogleSignInClient mGoogleSignInClient;
     private RequestQueue requestQueue;
 
     @Override
@@ -137,7 +137,7 @@ public class GoogleLoginActivity extends AppCompatActivity {
         requestQueue.add(postRequest);
     }
 
-    public void sendFirebaseRegistrationTokenToServer() {
+    private void sendFirebaseRegistrationTokenToServer() {
         if (Data.getInstance().getLoggedInGoogle() && Data.getInstance().getFirebaseRegistrationToken() != null) {
             Map<String, String> params = new HashMap<>();
             params.put("firebaseRegistrationToken", Data.getInstance().getFirebaseRegistrationToken());

@@ -11,8 +11,8 @@ import android.widget.Spinner;
 
 public class ChangeThemeActivity extends AppCompatActivity {
     private static final String SP_THEME = "theme";
-    Spinner colorsSpinner;
-    Spinner fontsSpinner;
+    private Spinner colorsSpinner;
+    private Spinner fontsSpinner;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {

@@ -1,6 +1,6 @@
 package me.vvander.wander;
 
-public class LocationTag {
+class LocationTag {
     private String title;
     private String description;
 

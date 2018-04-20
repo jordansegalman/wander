@@ -8,7 +8,7 @@ import android.view.ViewGroup;
 
 import java.util.List;
 
-public class ChatAdapter extends RecyclerView.Adapter<ChatViewHolder> {
+class ChatAdapter extends RecyclerView.Adapter<ChatViewHolder> {
     private static final int VIEW_TYPE_MESSAGE_SENT = 0;
     private static final int VIEW_TYPE_MESSAGE_RECEIVED = 1;
     private List<Message> messages;

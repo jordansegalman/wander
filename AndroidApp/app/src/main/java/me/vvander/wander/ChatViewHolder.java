@@ -5,7 +5,7 @@ import android.view.View;
 import android.widget.TextView;
 
 public class ChatViewHolder extends RecyclerView.ViewHolder {
-    TextView messageText;
+    private TextView messageText;
 
     ChatViewHolder(View itemView) {
         super(itemView);

@@ -26,10 +26,10 @@ import java.util.Map;
 
 public class RegistrationActivity extends AppCompatActivity {
     private static final String TAG = RegistrationActivity.class.getSimpleName();
-    EditText emailText;
-    EditText usernameText;
-    EditText passwordText;
-    EditText confirmPasswordText;
+    private EditText emailText;
+    private EditText usernameText;
+    private EditText passwordText;
+    private EditText confirmPasswordText;
     private RequestQueue requestQueue;
     private String url;
 

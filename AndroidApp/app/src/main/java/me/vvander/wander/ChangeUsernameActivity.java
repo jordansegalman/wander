@@ -25,8 +25,8 @@ import java.util.Map;
 
 public class ChangeUsernameActivity extends AppCompatActivity {
     private static final String TAG = ChangeUsernameActivity.class.getSimpleName();
-    EditText usernameEdit;
-    EditText passwordEdit;
+    private EditText usernameEdit;
+    private EditText passwordEdit;
     private RequestQueue requestQueue;
 
     @Override

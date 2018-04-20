@@ -25,8 +25,8 @@ import java.util.Map;
 
 public class ForgotPasswordActivity extends AppCompatActivity {
     private static final String TAG = ForgotPasswordActivity.class.getSimpleName();
-    EditText emailEdit;
-    EditText usernameEdit;
+    private EditText emailEdit;
+    private EditText usernameEdit;
     private RequestQueue requestQueue;
 
     @Override
