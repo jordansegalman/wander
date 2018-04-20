@@ -3311,7 +3311,7 @@ function updatePopularLocations() {
 			for (var i = 0; i < result.length; i++) {
 				coordinates.push([result[i].latitude, result[i].longitude]);
 			}
-			var bias = 0.01;
+			var bias = 1.25;
 			popularLocations = geocluster(coordinates, bias);
 			console.log('Popular locations updated.');
 		}
