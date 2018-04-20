@@ -106,7 +106,7 @@ sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 
 // Setup express
 var app = express();
-app.use(bodyParser.json());
+app.use(bodyParser.json({limit: '50mb'}));
 app.use(bodyParser.urlencoded({
 	extended: true
 }));
@@ -3231,11 +3231,15 @@ function getMatchTagData(u, request, response) {
 		var object = {};
 		var key = "Tags";
 		object[key] = [];
-		for (var i = 0; i < result.length; i++) {
-			var data = {latitude: result[i].latitude, longitude: result[i].longitude, title: result[i].title, description: result[i].description};
-			object[key].push(data);
+		if (matchGraph.hasEdge(request.session.uid, u, "approved")) {
+			for (var i = 0; i < result.length; i++) {
+				var data = {latitude: result[i].latitude, longitude: result[i].longitude, title: result[i].title, description: result[i].description};
+				object[key].push(data);
+			}
+			return response.status(200).send(JSON.stringify(object));
+		} else {
+			return response.status(400).send(JSON.stringify({"reponse":"no approved matches"}));
 		}
-		return response.status(200).send(JSON.stringify(object));
 	});
 }
 
