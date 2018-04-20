@@ -1,6 +1,7 @@
 package me.vvander.wander;
 
 import android.app.AlarmManager;
+import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
@@ -151,6 +152,7 @@ public class SettingsActivity extends AppCompatActivity {
                                 resetNotificationSwitch();
                                 cancelLocationScheduleAlarm();
                                 resetTheme();
+                                cancelNotifications();
                                 Data.getInstance().logout();
                                 Data.getInstance().logoutGoogle();
                                 Data.getInstance().logoutFacebook();
@@ -226,6 +228,13 @@ public class SettingsActivity extends AppCompatActivity {
     private void resetTheme() {
         SharedPreferences sharedPreferences = getSharedPreferences(SP_THEME, Context.MODE_PRIVATE);
         sharedPreferences.edit().clear().apply();
+    }
+
+    private void cancelNotifications() {
+        NotificationManager notificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
+        if (notificationManager != null) {
+            notificationManager.cancelAll();
+        }
     }
 
     private void initializeCrossRadiusSeekBar() {
