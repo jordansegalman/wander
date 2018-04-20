@@ -3226,7 +3226,7 @@ function getTagData(request, response) {
 
 // Gets tags of matched user
 function getMatchTagData(u, request, response) {
-	if (matchGraph.hasEdge(request.session.uid, u, "approved")) {
+	if (matchGraph.hasEdge(u, request.session.uid, "approved") && matchGraph.hasEdge(request.session.uid, u, "approved") && matchGraph.edge(u, request.session.uid, "approved") === true && matchGraph.edge(request.session.uid, u, "approved") === true) {
 		var sql = "SELECT * FROM ?? WHERE ??=?";
 		var post = [db_tags, uid, u]; 
 		dbConnection.query(sql, post, function(err, result) {
@@ -3311,7 +3311,7 @@ function updatePopularLocations() {
 			for (var i = 0; i < result.length; i++) {
 				coordinates.push([result[i].latitude, result[i].longitude]);
 			}
-			var bias = 1.25;
+			var bias = 5;
 			popularLocations = geocluster(coordinates, bias);
 			console.log('Popular locations updated.');
 		}
