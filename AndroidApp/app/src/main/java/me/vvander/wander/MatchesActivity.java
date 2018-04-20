@@ -34,6 +34,8 @@ public class MatchesActivity extends AppCompatActivity {
     private static final String TAG = MatchesActivity.class.getSimpleName();
     private RequestQueue requestQueue;
     private ArrayList<Match> matchList;
+    private MatchAdapter matchAdapter;
+    private ListView matchListView;
     private int remainingMatchesToAdd;
 
     @Override
@@ -42,14 +44,35 @@ public class MatchesActivity extends AppCompatActivity {
 
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_matches);
+
         requestQueue = Volley.newRequestQueue(this);
         matchList = new ArrayList<>();
+        matchAdapter = new MatchAdapter(this, matchList);
+
+        matchListView = findViewById(R.id.matchList);
+        matchListView.setAdapter(matchAdapter);
+        matchListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                Match match = (Match) parent.getAdapter().getItem(position);
+                Intent intent = new Intent(MatchesActivity.this, MatchProfileActivity.class);
+                intent.putExtra("uid", match.getUserID());
+                intent.putExtra("name", match.getName());
+                intent.putExtra("about", match.getAbout());
+                intent.putExtra("interests", match.getInterests());
+                intent.putExtra("picture", match.getPicture());
+                intent.putExtra("timesCrossed", String.valueOf(match.getTimesCrossed()));
+                intent.putExtra("approved", match.getApproved());
+                startActivity(intent);
+            }
+        });
     }
 
     @Override
     protected void onResume() {
         super.onResume();
         matchList.clear();
+        matchAdapter.notifyDataSetChanged();
         remainingMatchesToAdd = 0;
         requestAllMatches();
     }
@@ -159,7 +182,6 @@ public class MatchesActivity extends AppCompatActivity {
         Space noMatchesTopSpace = findViewById(R.id.noMatchesTopSpace);
         TextView noMatchesText = findViewById(R.id.noMatchesText);
         Space noMatchesBottomSpace = findViewById(R.id.noMatchesBottomSpace);
-        ListView matchListView = findViewById(R.id.matchList);
 
         if (!matchList.isEmpty() && remainingMatchesToAdd == 0) {
             noMatchesTopSpace.setVisibility(View.GONE);
@@ -167,24 +189,7 @@ public class MatchesActivity extends AppCompatActivity {
             noMatchesBottomSpace.setVisibility(View.GONE);
             matchListView.setVisibility(View.VISIBLE);
             Collections.sort(matchList);
-            MatchAdapter matchAdapter = new MatchAdapter(this, matchList);
-            matchListView.setAdapter(matchAdapter);
-            matchListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-                @Override
-                public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                    Match match = (Match) parent.getAdapter().getItem(position);
-
-                    Intent intent = new Intent(MatchesActivity.this, MatchProfileActivity.class);
-                    intent.putExtra("uid", match.getUserID());
-                    intent.putExtra("name", match.getName());
-                    intent.putExtra("about", match.getAbout());
-                    intent.putExtra("interests", match.getInterests());
-                    intent.putExtra("picture", match.getPicture());
-                    intent.putExtra("timesCrossed", String.valueOf(match.getTimesCrossed()));
-                    intent.putExtra("approved", match.getApproved());
-                    startActivity(intent);
-                }
-            });
+            matchAdapter.notifyDataSetChanged();
         } else if (matchList.isEmpty()) {
             noMatchesTopSpace.setVisibility(View.VISIBLE);
             noMatchesText.setVisibility(View.VISIBLE);
