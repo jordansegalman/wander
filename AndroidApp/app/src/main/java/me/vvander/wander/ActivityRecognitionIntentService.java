@@ -42,7 +42,7 @@ public class ActivityRecognitionIntentService extends IntentService {
                 }
                 case DetectedActivity.STILL: {
                     Log.d(TAG, "STILL - CONFIDENCE: " + detectedActivity.getConfidence());
-                    Data.getInstance().setActivityRecognitionLocationSwitch(true);
+                    Data.getInstance().setActivityRecognitionLocationSwitch(false);
                     break;
                 }
                 case DetectedActivity.TILTING: {
