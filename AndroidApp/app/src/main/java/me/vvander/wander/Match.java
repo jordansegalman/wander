@@ -51,6 +51,6 @@ class Match implements Comparable<Match> {
 
     @Override
     public int compareTo(@NonNull Match o) {
-        return Integer.compare(timesCrossed, o.timesCrossed);
+        return Integer.compare(o.timesCrossed, timesCrossed);
     }
 }
