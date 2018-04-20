@@ -74,22 +74,26 @@ public class ProfileActivity extends AppCompatActivity {
     }
 
     public void importFacebookProfile(View view) {
-        GraphRequest request = GraphRequest.newMeRequest(AccessToken.getCurrentAccessToken(),
-                new GraphRequest.GraphJSONObjectCallback() {
-                    @Override
-                    public void onCompleted(JSONObject object, GraphResponse response) {
-                        try {
-                            String name = object.getString("first_name");
-                            sendFacebookProfileToServer(name);
-                        } catch (JSONException e) {
-                            Toast.makeText(getApplicationContext(), "Failed to import Facebook profile!", Toast.LENGTH_SHORT).show();
+        if (AccessToken.getCurrentAccessToken() != null) {
+            GraphRequest request = GraphRequest.newMeRequest(AccessToken.getCurrentAccessToken(),
+                    new GraphRequest.GraphJSONObjectCallback() {
+                        @Override
+                        public void onCompleted(JSONObject object, GraphResponse response) {
+                            try {
+                                String name = object.getString("first_name");
+                                sendFacebookProfileToServer(name);
+                            } catch (JSONException e) {
+                                Toast.makeText(getApplicationContext(), "Failed to import Facebook profile!", Toast.LENGTH_SHORT).show();
+                            }
                         }
-                    }
-                });
-        Bundle parameters = new Bundle();
-        parameters.putString("fields", "first_name");
-        request.setParameters(parameters);
-        request.executeAsync();
+                    });
+            Bundle parameters = new Bundle();
+            parameters.putString("fields", "first_name");
+            request.setParameters(parameters);
+            request.executeAsync();
+        } else {
+            Toast.makeText(getApplicationContext(), "Failed to import Facebook profile!", Toast.LENGTH_SHORT).show();
+        }
     }
 
     private void sendFacebookProfileToServer(final String name) {
