@@ -30,7 +30,7 @@ public class WanderFirebaseMessagingService extends FirebaseMessagingService {
 
     @Override
     public void onMessageReceived(RemoteMessage remoteMessage) {
-        if (Data.getInstance().getNotificationSwitch() && remoteMessage.getData().size() > 0) {
+        if ((Data.getInstance().getLoggedIn() || Data.getInstance().getLoggedInGoogle() || Data.getInstance().getLoggedInFacebook()) && Data.getInstance().getNotificationSwitch() && remoteMessage.getData().size() > 0) {
             switch (remoteMessage.getData().get("type")) {
                 case "New Matches": {
                     if (remoteMessage.getData().get("uid").isEmpty()) {
@@ -47,12 +47,7 @@ public class WanderFirebaseMessagingService extends FirebaseMessagingService {
                                 notificationChannel.setVibrationPattern(new long[]{100, 200, 300, 200, 100});
                                 notificationManager.createNotificationChannel(notificationChannel);
                             }
-                            Intent intent;
-                            if (Data.getInstance().getLoggedIn() || Data.getInstance().getLoggedInGoogle() || Data.getInstance().getLoggedInFacebook()) {
-                                intent = new Intent(getApplicationContext(), MatchesActivity.class);
-                            } else {
-                                intent = new Intent(getApplicationContext(), LoginActivity.class);
-                            }
+                            Intent intent = new Intent(getApplicationContext(), MatchesActivity.class);
                             PendingIntent pendingIntent = PendingIntent.getActivity(getApplicationContext(), 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
                             NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(getApplicationContext(), channel_id)
                                     .setContentTitle(remoteMessage.getData().get("title"))
@@ -94,14 +89,9 @@ public class WanderFirebaseMessagingService extends FirebaseMessagingService {
                             notificationChannel.setVibrationPattern(new long[]{100, 200, 300, 200, 100});
                             notificationManager.createNotificationChannel(notificationChannel);
                         }
-                        Intent intent;
-                        if (Data.getInstance().getLoggedIn() || Data.getInstance().getLoggedInGoogle() || Data.getInstance().getLoggedInFacebook()) {
-                            intent = new Intent(getApplicationContext(), ChatActivity.class);
-                            intent.putExtra("UID", remoteMessage.getData().get("uid"));
-                            intent.putExtra("name", remoteMessage.getData().get("title"));
-                        } else {
-                            intent = new Intent(getApplicationContext(), LoginActivity.class);
-                        }
+                        Intent intent = new Intent(getApplicationContext(), ChatActivity.class);
+                        intent.putExtra("UID", remoteMessage.getData().get("uid"));
+                        intent.putExtra("name", remoteMessage.getData().get("title"));
                         PendingIntent pendingIntent = PendingIntent.getActivity(getApplicationContext(), 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
                         NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(getApplicationContext(), channel_id)
                                 .setContentTitle(remoteMessage.getData().get("title"))
@@ -197,19 +187,14 @@ public class WanderFirebaseMessagingService extends FirebaseMessagingService {
                                     notificationChannel.setVibrationPattern(new long[]{100, 200, 300, 200, 100});
                                     notificationManager.createNotificationChannel(notificationChannel);
                                 }
-                                Intent intent;
-                                if (Data.getInstance().getLoggedIn() || Data.getInstance().getLoggedInGoogle() || Data.getInstance().getLoggedInFacebook()) {
-                                    intent = new Intent(getApplicationContext(), MatchProfileActivity.class);
-                                    intent.putExtra("uid", uid);
-                                    intent.putExtra("name", name);
-                                    intent.putExtra("about", about);
-                                    intent.putExtra("interests", interests);
-                                    intent.putExtra("picture", picture);
-                                    intent.putExtra("timesCrossed", String.valueOf(timesCrossed));
-                                    intent.putExtra("approved", approved);
-                                } else {
-                                    intent = new Intent(getApplicationContext(), LoginActivity.class);
-                                }
+                                Intent intent = new Intent(getApplicationContext(), MatchProfileActivity.class);
+                                intent.putExtra("uid", uid);
+                                intent.putExtra("name", name);
+                                intent.putExtra("about", about);
+                                intent.putExtra("interests", interests);
+                                intent.putExtra("picture", picture);
+                                intent.putExtra("timesCrossed", String.valueOf(timesCrossed));
+                                intent.putExtra("approved", approved);
                                 PendingIntent pendingIntent = PendingIntent.getActivity(getApplicationContext(), 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
                                 NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(getApplicationContext(), channel_id)
                                         .setContentTitle(title)

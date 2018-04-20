@@ -219,6 +219,9 @@ public class ProfileEditActivity extends AppCompatActivity {
                                 Toast.makeText(getApplicationContext(), "Profile updated!", Toast.LENGTH_SHORT).show();
                                 if (!finalInterests.equals(originalInterests)) {
                                     notifyInterestsChange();
+                                } else {
+                                    startActivity(new Intent(ProfileEditActivity.this, ProfileActivity.class));
+                                    finish();
                                 }
                             }
                         } catch (JSONException j) {
