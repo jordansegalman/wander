@@ -194,7 +194,7 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
             case R.id.tag_location:
                 addTag();
                 return true;
-            case R.id.location_suggestion:
+            case R.id.location_suggestions:
                 getLocationSuggestions();
                 return true;
         }
@@ -244,7 +244,8 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
             for (int i = 0; i < crossList.size(); i++) {
                 this.googleMap.addMarker(new MarkerOptions()
                         .position(crossList.get(i))
-                        .title("Crossed Paths"));
+                        .title("Crossed Paths")
+                        .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_VIOLET)));
             }
             this.googleMap.animateCamera(CameraUpdateFactory.newLatLngZoom(crossList.get(crossList.size() - 1), 15));
         }
@@ -313,7 +314,6 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
                                 double lat = object.getDouble("latitude");
                                 double lon = object.getDouble("longitude");
                                 listPersonal.add(new LatLng(lat, lon));
-                                Log.d(TAG, "Latitude: " + lat + ", Longitude: " + lon);
                             }
                         } catch (JSONException j) {
                             j.printStackTrace();
@@ -345,7 +345,6 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
                                 double lat = object.getDouble("latitude");
                                 double lon = object.getDouble("longitude");
                                 listAll.add(new LatLng(lat, lon));
-                                Log.d(TAG, "Latitude: " + lat + ", Longitude: " + lon);
                             }
                         } catch (JSONException j) {
                             j.printStackTrace();
@@ -566,7 +565,7 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
                                 double lon = object.getDouble("longitude");
                                 String title = object.getString("title");
                                 String description = object.getString("description");
-                                Marker marker = googleMap.addMarker(new MarkerOptions().position(new LatLng(lat, lon)).title("Match Tag"));
+                                Marker marker = googleMap.addMarker(new MarkerOptions().position(new LatLng(lat, lon)).title("Match Tag").icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE)));
                                 matchLocationTags.put(marker, new LocationTag(title, description));
                             }
                         } catch (JSONException j) {
@@ -698,44 +697,26 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
     }
 
     private void getLocationSuggestions() {
-        if (locationSuggestions.size() != 0) {
-            for (int i = 0; i < locationSuggestions.size(); i++) {
-                locationSuggestions.get(i).remove();
+        if (locationSuggestions.size() > 0) {
+            for (Marker marker : locationSuggestions) {
+                marker.remove();
             }
             locationSuggestions.clear();
             return;
         }
-        String url = Data.getInstance().getUrl() + "/getSuggestions";
+        String url = Data.getInstance().getUrl() + "/getLocationSuggestions";
         JsonArrayRequest postRequest = new JsonArrayRequest(Request.Method.POST, url, null,
                 new Response.Listener<JSONArray>() {
                     @Override
                     public void onResponse(JSONArray response) {
                         for (int i = 0; i < response.length(); i++) {
                             try {
-                                JSONObject jsonObject = (JSONObject) response.get(i);
-                                Log.d("jsonObject", jsonObject.toString());
+                                JSONObject jsonObject = response.getJSONObject(i);
                                 JSONArray centroid = jsonObject.getJSONArray("centroid");
                                 double lat = centroid.getDouble(0);
                                 double lon = centroid.getDouble(1);
-                                Log.d("Lat", "" + lat);
-                                Log.d("Lon", "" + lon);
-
-                                JSONArray elements = jsonObject.getJSONArray("elements");
-                                for (int j = 0; j < elements.length(); j++) {
-                                    JSONArray element = (JSONArray) elements.get(j);
-                                    double lat_point = centroid.getDouble(0);
-                                    double lon_point = centroid.getDouble(1);
-                                }
-
-                                Marker m = googleMap.addMarker(new MarkerOptions().position(new LatLng(lat, lon)).title("Popular Location").snippet("This area has been walked passed " + elements.length() + " times in the past week.").icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN)));
-                                locationSuggestions.add(m);
-                                //Log.d("jsonObject", jsonObject.toString());
-                                //JSONArray centroid = (JSONArray) jsonObject.get("Centroid");
-                                //double lat = (Double)centroid.get(0);
-                                //double lon = (Double)centroid.get(1);
-
-                                //Log.d("Lat", "" + lat);
-                                //Log.d("Lon", "" + lon);
+                                Marker marker = googleMap.addMarker(new MarkerOptions().position(new LatLng(lat, lon)).title("Popular Location").icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE)));
+                                locationSuggestions.add(marker);
                             } catch (JSONException e) {
                                 e.printStackTrace();
                             }
@@ -745,7 +726,7 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
                 new Response.ErrorListener() {
                     @Override
                     public void onErrorResponse(VolleyError error) {
-                        Toast.makeText(getApplicationContext(), "Getting location suggestions has failed.", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(getApplicationContext(), "Location suggestions data retrieval failed.", Toast.LENGTH_SHORT).show();
                         Log.d(TAG, error.toString());
                     }
                 }

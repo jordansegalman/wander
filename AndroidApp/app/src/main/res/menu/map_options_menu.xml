@@ -14,7 +14,7 @@
         android:title="Tag Location"
         app:showAsAction="never" />
     <item
-        android:id="@+id/location_suggestion"
+        android:id="@+id/location_suggestions"
         android:title="Location Suggestions"
         app:showAsAction="never" />
 </menu>

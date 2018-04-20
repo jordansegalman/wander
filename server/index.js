@@ -82,8 +82,8 @@ const NO_MATCHES_NOTIFY_CRON = '*/5 * * * *';		// Every 5 minutes (DEVELOPMENT)
 const WARN_THRESHOLD = 1;				// Warn after 1 offense (DEVELOPMENT)
 //const BAN_THRESHOLD = 5;				// Ban after 5 offenses
 const BAN_THRESHOLD = 2;				// Ban after 2 offenses (DEVELOPMENT)
-//const POPULAR_LOCATION_CRON = '0 0 * * * *';		// Every day at 0:00
-const POPULAR_LOCATION_CRON = '0 * * * * *';		// Every minute (DEVELOPMENT)
+//const POPULAR_LOCATIONS_CRON = '0 0 * * * *';		// Every day at 0:00
+const POPULAR_LOCATIONS_CRON = '0 * * * * *';		// Every minute (DEVELOPMENT)
 const NEARBY_USERS_RADIUS = 5280;			// 1 mile
 const POPULATION_MULTIPLIER_LOW_CUTOFF = 10;		// 10 users
 const POPULATION_MULTIPLIER_HIGH_CUTOFF = 500;		// 500 users
@@ -132,6 +132,7 @@ var dbConnection = mysql.createConnection({
 // Setup server
 var httpServer;
 var matchGraph;
+var popularLocations;
 startServer();
 
 // Starts the server
@@ -140,6 +141,8 @@ function startServer() {
 		// Read existing match graph
 		matchGraph = graphlib.json.read(JSON.parse(fs.readFileSync('matchGraph.json')));
 		console.log('Match graph read.');
+		// Update popular locations
+		updatePopularLocations();
 		// Delete all Firebase registration tokens
 		var sql = "TRUNCATE TABLE ??";
 		var post = [db_firebase];
@@ -172,6 +175,8 @@ function startServer() {
 			}
 			writeMatchGraph();
 			console.log('Match graph created.');
+			// Update popular locations
+			updatePopularLocations();
 			// Delete all Firebase registration tokens
 			var sql = "TRUNCATE TABLE ??";
 			var post = [db_firebase];
@@ -304,8 +309,8 @@ function setupSchedules() {
 	schedule.scheduleJob(NO_MATCHES_NOTIFY_CRON, function() {
 		notifyNoMatches();
 	});
-	schedule.scheduleJob(POPULAR_LOCATION_CRON, function() {
-		calculateDensity();
+	schedule.scheduleJob(POPULAR_LOCATIONS_CRON, function() {
+		updatePopularLocations();
 	});
 }
 
@@ -1358,14 +1363,14 @@ app.post('/getStatistics', function(request, response){
 	getStatistics(lat, lon, request, response);
 });
 
-// Called when a POST request is made to /getSuggestions
-app.post('/getSuggestions', function(request, response){
+// Called when a POST request is made to /getLocationSuggestions
+app.post('/getLocationSuggestions', function(request, response){
 	// If the object request.body is null, respond with status 500 'Internal Server Error'
 	if (!request.body) return response.sendStatus(500);
 
-	// POST request should not have any parameters
+	// POST request must have 0 parameters
 	if (Object.keys(request.body).length != 0) {
-		return response.status(400).send("Invalid POST request\n");
+		return response.status(400).send("Invalid POST request");
 	}
 
 	// If session not authenticated
@@ -1373,7 +1378,7 @@ app.post('/getSuggestions', function(request, response){
 		return response.status(400).send("User not logged in.\n");
 	}
 
-	getSuggestions(request, response);
+	getLocationSuggestions(request, response);
 });
 
 // Called when a POST request is made to /notifyInterestsChange
@@ -3285,30 +3290,25 @@ function getStatistics(lat, lon, request, response) {
 	});
 }
 
-// Gets suggestions for users to meet more people
-function getSuggestions(request, response) {
-	var json = JSON.parse(fs.readFileSync('popularCluster.json', 'utf8'));
-	return response.status(200).send(json);
+// Gets suggested locations with heavy user activity
+function getLocationSuggestions(request, response) {
+	return response.status(200).send(JSON.stringify(popularLocations));
 }
 
-// Writes clusters of popular locations to a file
-function calculateDensity() {
+// Updates popular locations and writes them to a file
+function updatePopularLocations() {
 	var sql = "SELECT ??,?? FROM ??";
 	var post = [latitude, longitude, db_locations];
-	dbConnection.query(sql, post, function(err, result){
-		var dataset = [];
-		for (var i = 0; i < result.length; i++) {
-			var lat = result[i].latitude;
-			var lon = result[i].longitude;
-			var set = [lat, lon];
-			dataset.push(set);
+	dbConnection.query(sql, post, function(err, result) {
+		if (result.length > 0) {
+			var coordinates = [];
+			for (var i = 0; i < result.length; i++) {
+				coordinates.push([result[i].latitude, result[i].longitude]);
+			}
+			var bias = 3;
+			popularLocations = geocluster(coordinates, bias);
+			console.log('Popular locations updated.');
 		}
-		var bias = 3;
-		var data = geocluster(dataset, bias);
-		fs.writeFile('popularCluster.json', JSON.stringify(data), function(err){
-			if (err) throw err;
-			console.log("Popular clusters written to file.");
-		});
 	});
 }
 
