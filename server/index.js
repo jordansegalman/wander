@@ -106,7 +106,9 @@ sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 
 // Setup express
 var app = express();
-app.use(bodyParser.json());
+app.use(bodyParser.json({
+	limit: '50mb'
+}));
 app.use(bodyParser.urlencoded({
 	extended: true
 }));
@@ -287,9 +289,9 @@ function setupSocketIO() {
 											.then((response) => {
 												console.log('Successfully sent message notification.');
 											})
-										.catch((error) => {
-											console.log(error);
-										});
+											.catch((error) => {
+												console.log(error);
+											});
 									}
 								}
 							});
@@ -2605,9 +2607,9 @@ function findCrossedPaths(lat, lon, currentTime, request) {
 													.then((response) => {
 														console.log('Successfully sent crossed paths notification.');
 													})
-												.catch((error) => {
-													console.log(error);
-												});
+													.catch((error) => {
+														console.log(error);
+													});
 											}
 										}
 									});
@@ -2634,9 +2636,9 @@ function findCrossedPaths(lat, lon, currentTime, request) {
 													.then((response) => {
 														console.log('Successfully sent crossed paths notification.');
 													})
-												.catch((error) => {
-													console.log(error);
-												});
+													.catch((error) => {
+														console.log(error);
+													});
 											}
 										}
 									});
@@ -2709,9 +2711,9 @@ function notifyMatches() {
 								.then((response) => {
 									console.log('Successfully sent new matches notification.');
 								})
-							.catch((error) => {
-								console.log(error);
-							});
+								.catch((error) => {
+									console.log(error);
+								});
 						}
 					}
 				});
@@ -2758,9 +2760,9 @@ function notifyNoMatches() {
 							.then((response) => {
 								console.log('Successfully sent location suggestions notification.');
 							})
-						.catch((error) => {
-							console.log(error);
-						});
+							.catch((error) => {
+								console.log(error);
+							});
 					}
 				}
 			});
@@ -2819,9 +2821,9 @@ function notifyMatchNoSharedInterests(firstUid, secondUid) {
 					.then((response) => {
 						console.log('Successfully sent new match notification.');
 					})
-				.catch((error) => {
-					console.log(error);
-				});
+					.catch((error) => {
+						console.log(error);
+					});
 			}
 		}
 	});
@@ -2852,9 +2854,9 @@ function notifyMatchSharedInterests(firstUid, secondUid) {
 					.then((response) => {
 						console.log('Successfully sent new match with shared interests notification.');
 					})
-				.catch((error) => {
-					console.log(error);
-				});
+					.catch((error) => {
+						console.log(error);
+					});
 			}
 		}
 	});
@@ -2888,9 +2890,9 @@ function approveUser(u, request, response) {
 					.then((response) => {
 						console.log('Successfully sent match approval notification.');
 					})
-				.catch((error) => {
-					console.log(error);
-				});
+					.catch((error) => {
+						console.log(error);
+					});
 			}
 		}
 	});
@@ -3016,9 +3018,9 @@ function reportUser(u, r, request, response) {
 									.then((response) => {
 										console.log('Successfully sent offense warning notification.');
 									})
-								.catch((error) => {
-									console.log(error);
-								});
+									.catch((error) => {
+										console.log(error);
+									});
 							}
 						}
 					});
@@ -3224,19 +3226,23 @@ function getTagData(request, response) {
 
 // Gets tags of matched user
 function getMatchTagData(u, request, response) {
-	var sql = "SELECT * FROM ?? WHERE ??=?";
-	var post = [db_tags, uid, u]; 
-	dbConnection.query(sql, post, function(err, result) {
-		if (err) throw err;
-		var object = {};
-		var key = "Tags";
-		object[key] = [];
-		for (var i = 0; i < result.length; i++) {
-			var data = {latitude: result[i].latitude, longitude: result[i].longitude, title: result[i].title, description: result[i].description};
-			object[key].push(data);
-		}
-		return response.status(200).send(JSON.stringify(object));
-	});
+	if (matchGraph.hasEdge(request.session.uid, u, "approved")) {
+		var sql = "SELECT * FROM ?? WHERE ??=?";
+		var post = [db_tags, uid, u]; 
+		dbConnection.query(sql, post, function(err, result) {
+			if (err) throw err;
+			var object = {};
+			var key = "Tags";
+			object[key] = [];
+			for (var i = 0; i < result.length; i++) {
+				var data = {latitude: result[i].latitude, longitude: result[i].longitude, title: result[i].title, description: result[i].description};
+				object[key].push(data);
+			}
+			return response.status(200).send(JSON.stringify(object));
+		});
+	} else {
+		return response.status(400).send("Not approved.");
+	}
 }
 
 // Deletes a location tag
@@ -3305,7 +3311,7 @@ function updatePopularLocations() {
 			for (var i = 0; i < result.length; i++) {
 				coordinates.push([result[i].latitude, result[i].longitude]);
 			}
-			var bias = 3;
+			var bias = 0.01;
 			popularLocations = geocluster(coordinates, bias);
 			console.log('Popular locations updated.');
 		}
@@ -3371,9 +3377,9 @@ function notifyInterestsChange(request, response) {
 										.then((response) => {
 											console.log('Successfully sent shared interests notification.');
 										})
-									.catch((error) => {
-										console.log(error);
-									});
+										.catch((error) => {
+											console.log(error);
+										});
 								}
 							}
 						});
@@ -3401,9 +3407,9 @@ function notifyInterestsChange(request, response) {
 										.then((response) => {
 											console.log('Successfully sent shared interests notification.');
 										})
-									.catch((error) => {
-										console.log(error);
-									});
+										.catch((error) => {
+											console.log(error);
+										});
 								}
 							}
 						});
