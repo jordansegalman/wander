@@ -5,154 +5,160 @@
     android:layout_height="match_parent"
     tools:context="me.vvander.wander.SettingsActivity">
 
-    <LinearLayout
+    <ScrollView
         android:layout_width="match_parent"
-        android:layout_height="fill_parent"
-        android:orientation="vertical"
-        android:padding="20dp">
-
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:paddingBottom="15dp"
-            android:text="Settings"
-            android:textAlignment="center"
-            android:textColor="#000000"
-            android:textSize="30sp" />
+        android:layout_height="match_parent">
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="10dp"
-            android:orientation="horizontal">
+            android:orientation="vertical"
+            android:padding="20dp">
 
             <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:paddingBottom="15dp"
+                android:text="Settings"
+                android:textAlignment="center"
+                android:textColor="#000000"
+                android:textSize="30sp" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="10dp"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="0"
+                    android:text="Notifications" />
+
+                <Space
+                    android:layout_width="10dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1" />
+
+                <Switch
+                    android:id="@+id/notifcations"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="0"
+                    android:onClick="notificationToggle" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="10dp"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="0"
+                    android:text="Location Tracking" />
+
+                <Space
+                    android:layout_width="10dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1" />
+
+                <Switch
+                    android:id="@+id/tracking"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="0"
+                    android:onClick="locationToggle" />
+            </LinearLayout>
+
+            <Button
+                android:id="@+id/setSchedule"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:onClick="setSchedule"
+                android:text="Schedule Location Tracking" />
+
+            <Button
+                android:id="@+id/changeTheme"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:onClick="changeTheme"
+                android:text="Change Theme" />
+
+            <TextView
+                android:id="@+id/crossRadiusText"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_weight="0"
-                android:text="Notifications" />
+                android:text="Cross Radius: " />
+
+            <SeekBar
+                android:id="@+id/crossRadiusSeekBar"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:max="5290"
+                android:min="10"
+                android:progress="150" />
+
+            <TextView
+                android:id="@+id/matchLimitText"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Daily Match Limit:" />
+
+            <SeekBar
+                android:id="@+id/matchLimitSeekBar"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:max="25"
+                android:min="0" />
+
+            <Button
+                android:id="@+id/changeEmail"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:onClick="changeEmail"
+                android:text="Change Email" />
+
+            <Button
+                android:id="@+id/changeUsername"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:onClick="changeUsername"
+                android:text="Change Username" />
+
+            <Button
+                android:id="@+id/changePassword"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:onClick="changePassword"
+                android:text="Change Password" />
 
             <Space
-                android:layout_width="10dp"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_weight="1" />
 
-            <Switch
-                android:id="@+id/notifcations"
-                android:layout_width="wrap_content"
+            <Button
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_weight="0"
-                android:onClick="notificationToggle" />
+                android:backgroundTint="?android:attr/colorAccent"
+                android:onClick="logout"
+                android:text="Log Out" />
+
+            <Button
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_weight="0"
+                android:backgroundTint="#DB3236"
+                android:onClick="delete"
+                android:text="Delete Account" />
+
         </LinearLayout>
+    </ScrollView>
 
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="10dp"
-            android:orientation="horizontal">
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_weight="0"
-                android:text="Location Tracking" />
-
-            <Space
-                android:layout_width="10dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1" />
-
-            <Switch
-                android:id="@+id/tracking"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_weight="0"
-                android:onClick="locationToggle" />
-        </LinearLayout>
-
-        <Button
-            android:id="@+id/setSchedule"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:onClick="setSchedule"
-            android:text="Schedule Location Tracking" />
-
-        <Button
-            android:id="@+id/changeTheme"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:onClick="changeTheme"
-            android:text="Change Theme" />
-
-        <TextView
-            android:id="@+id/crossRadiusText"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_weight="0"
-            android:text="Cross Radius: " />
-
-        <SeekBar
-            android:id="@+id/crossRadiusSeekBar"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:max="5290"
-            android:min="10"
-            android:progress="150" />
-
-        <TextView
-            android:id="@+id/matchLimitText"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Daily Match Limit:" />
-
-        <SeekBar
-            android:id="@+id/matchLimitSeekBar"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:max="25"
-            android:min="0" />
-
-        <Button
-            android:id="@+id/changeEmail"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:onClick="changeEmail"
-            android:text="Change Email" />
-
-        <Button
-            android:id="@+id/changeUsername"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:onClick="changeUsername"
-            android:text="Change Username" />
-
-        <Button
-            android:id="@+id/changePassword"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:onClick="changePassword"
-            android:text="Change Password" />
-
-        <Space
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_weight="1" />
-
-        <Button
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_weight="0"
-            android:backgroundTint="?android:attr/colorAccent"
-            android:onClick="logout"
-            android:text="Log Out" />
-
-        <Button
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_weight="0"
-            android:backgroundTint="#DB3236"
-            android:onClick="delete"
-            android:text="Delete Account" />
-
-    </LinearLayout>
 </android.support.constraint.ConstraintLayout>
