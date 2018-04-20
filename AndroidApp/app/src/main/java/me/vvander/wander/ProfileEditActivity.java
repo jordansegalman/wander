@@ -188,6 +188,7 @@ public class ProfileEditActivity extends AppCompatActivity {
             }
             interests = interests.substring(0, interests.length() - 2);
         }
+        final String finalInterests = interests;
 
         if (TextUtils.isEmpty(name)) {
             Toast.makeText(getApplicationContext(), "Name required.", Toast.LENGTH_SHORT).show();
@@ -216,7 +217,9 @@ public class ProfileEditActivity extends AppCompatActivity {
                             String res = response.getString("response");
                             if (res.equalsIgnoreCase("pass")) {
                                 Toast.makeText(getApplicationContext(), "Profile updated!", Toast.LENGTH_SHORT).show();
-                                notifyInterestsChange();
+                                if (!finalInterests.equals(originalInterests)) {
+                                    notifyInterestsChange();
+                                }
                             }
                         } catch (JSONException j) {
                             j.printStackTrace();
