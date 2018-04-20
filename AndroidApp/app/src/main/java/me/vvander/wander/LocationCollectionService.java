@@ -3,7 +3,6 @@ package me.vvander.wander;
 import android.Manifest;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
-import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
@@ -87,14 +86,11 @@ public class LocationCollectionService extends Service {
                 NotificationChannel notificationChannel = new NotificationChannel(channel_id, channel_name, importance);
                 notificationManager.createNotificationChannel(notificationChannel);
             }
-            Intent intent = new Intent(getApplicationContext(), HomeActivity.class);
-            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-            PendingIntent pendingIntent = PendingIntent.getActivity(getApplicationContext(), 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
             NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(getApplicationContext(), channel_id)
                     .setContentTitle("Tracking Location")
                     .setSmallIcon(R.drawable.location_notification_icon)
                     .setOngoing(true)
-                    .setContentIntent(pendingIntent);
+                    .setPriority(NotificationCompat.PRIORITY_LOW);
             startForeground(FOREGROUND_NOTIFICATION_ID, notificationBuilder.build());
         }
     }

@@ -30,7 +30,7 @@ public class LocationScheduleAlarmReceiver extends BroadcastReceiver {
         int hour = calendar.get(Calendar.HOUR_OF_DAY);
         int minute = calendar.get(Calendar.MINUTE);
         ArrayList<LocationSchedule> locationSchedules = Data.getInstance().getLocationSchedules();
-        if (!locationSchedules.isEmpty()) {
+        if (locationSchedules != null && !locationSchedules.isEmpty()) {
             for (LocationSchedule locationSchedule : locationSchedules) {
                 if (locationSchedule.getDays()[day]) {
                     if (hour > locationSchedule.getStartHour()) {

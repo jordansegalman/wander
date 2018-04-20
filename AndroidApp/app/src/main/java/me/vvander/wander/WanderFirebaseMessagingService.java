@@ -59,6 +59,7 @@ public class WanderFirebaseMessagingService extends FirebaseMessagingService {
                                     .setContentText(remoteMessage.getData().get("body"))
                                     .setSmallIcon(R.drawable.match_notification_icon)
                                     .setAutoCancel(true)
+                                    .setPriority(NotificationCompat.PRIORITY_HIGH)
                                     .setContentIntent(pendingIntent);
                             notificationManager.notify(1, notificationBuilder.build());
                         }
@@ -107,6 +108,7 @@ public class WanderFirebaseMessagingService extends FirebaseMessagingService {
                                 .setContentText(remoteMessage.getData().get("body"))
                                 .setSmallIcon(R.drawable.message_notification_icon)
                                 .setAutoCancel(true)
+                                .setPriority(NotificationCompat.PRIORITY_HIGH)
                                 .setContentIntent(pendingIntent);
                         notificationManager.notify(1, notificationBuilder.build());
                     }
@@ -130,7 +132,8 @@ public class WanderFirebaseMessagingService extends FirebaseMessagingService {
                                 .setContentTitle(remoteMessage.getData().get("title"))
                                 .setContentText(remoteMessage.getData().get("body"))
                                 .setSmallIcon(R.drawable.suggestion_notification_icon)
-                                .setAutoCancel(true);
+                                .setAutoCancel(true)
+                                .setPriority(NotificationCompat.PRIORITY_HIGH);
                         notificationManager.notify(1, notificationBuilder.build());
                     }
                     break;
@@ -153,7 +156,8 @@ public class WanderFirebaseMessagingService extends FirebaseMessagingService {
                                 .setContentTitle(remoteMessage.getData().get("title"))
                                 .setContentText(remoteMessage.getData().get("body"))
                                 .setSmallIcon(R.drawable.offense_notification_icon)
-                                .setAutoCancel(true);
+                                .setAutoCancel(true)
+                                .setPriority(NotificationCompat.PRIORITY_HIGH);
                         notificationManager.notify(1, notificationBuilder.build());
                     }
                     break;
@@ -212,6 +216,7 @@ public class WanderFirebaseMessagingService extends FirebaseMessagingService {
                                         .setContentText(body)
                                         .setSmallIcon(icon)
                                         .setAutoCancel(true)
+                                        .setPriority(NotificationCompat.PRIORITY_HIGH)
                                         .setContentIntent(pendingIntent);
                                 notificationManager.notify(1, notificationBuilder.build());
                             }

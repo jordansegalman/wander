@@ -24,6 +24,7 @@ import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.Volley;
+import com.google.android.gms.location.ActivityRecognitionClient;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -149,8 +150,10 @@ public class SettingsActivity extends AppCompatActivity {
                                 stopService(new Intent(getApplicationContext(), LocationCollectionService.class));
                                 resetManualLocationSwitch();
                                 resetScheduleLocationSwitch();
+                                resetActivityRecognitionLocationSwitch();
                                 resetNotificationSwitch();
                                 cancelLocationScheduleAlarm();
+                                cancelActivityRecognition();
                                 resetTheme();
                                 cancelNotifications();
                                 Data.getInstance().logout();
@@ -209,6 +212,10 @@ public class SettingsActivity extends AppCompatActivity {
         Data.getInstance().setScheduleLocationSwitch(true);
     }
 
+    private void resetActivityRecognitionLocationSwitch() {
+        Data.getInstance().setActivityRecognitionLocationSwitch(false);
+    }
+
     private void resetNotificationSwitch() {
         SharedPreferences sharedPreferences = getSharedPreferences(SP_NOTIFICATIONS, Context.MODE_PRIVATE);
         sharedPreferences.edit().clear().apply();
@@ -223,6 +230,14 @@ public class SettingsActivity extends AppCompatActivity {
         if (alarmManager != null) {
             alarmManager.cancel(pendingIntent);
         }
+    }
+
+    private void cancelActivityRecognition() {
+        Intent intent = new Intent(getApplicationContext(), ActivityRecognitionIntentService.class);
+        PendingIntent pendingIntent = PendingIntent.getService(getApplicationContext(), 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+        pendingIntent.cancel();
+        ActivityRecognitionClient activityRecognitionClient = new ActivityRecognitionClient(getApplicationContext());
+        activityRecognitionClient.removeActivityUpdates(pendingIntent);
     }
 
     private void resetTheme() {
