@@ -128,7 +128,8 @@ var dbConnection = mysql.createConnection({
 	host: db_host,
 	user: db_username,
 	password: db_password,
-	database: db_name
+	database: db_name,
+	charset: 'utf8mb4_unicode_520_ci'
 });
 
 // Setup server
