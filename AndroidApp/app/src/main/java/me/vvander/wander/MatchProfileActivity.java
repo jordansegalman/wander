@@ -131,7 +131,7 @@ public class MatchProfileActivity extends AppCompatActivity {
                                 if (TextUtils.isEmpty(reason)) {
                                     Toast.makeText(getApplicationContext(), "Reason cannot be empty.", Toast.LENGTH_SHORT).show();
                                 } else if (reason.length() > MAX_REASON_LENGTH) {
-                                    Toast.makeText(getApplicationContext(), "Reason cannot be greater than 1024 characters.", Toast.LENGTH_SHORT).show();
+                                    Toast.makeText(getApplicationContext(), "Reason has a maximum length of 1024 characters.", Toast.LENGTH_SHORT).show();
                                 } else {
                                     report(reason);
                                 }
@@ -358,6 +358,22 @@ public class MatchProfileActivity extends AppCompatActivity {
                 new Response.ErrorListener() {
                     @Override
                     public void onErrorResponse(VolleyError error) {
+                        if (error.networkResponse.data != null) {
+                            try {
+                                String res = new JSONObject(new String(error.networkResponse.data)).getString("response");
+                                switch (res) {
+                                    case "Invalid reason":
+                                        Toast.makeText(getApplicationContext(), "Reason has a maximum length of 1024 characters.", Toast.LENGTH_LONG).show();
+                                        break;
+                                    default:
+                                        Toast.makeText(getApplicationContext(), "Report failed!", Toast.LENGTH_SHORT).show();
+                                        break;
+                                }
+                            } catch (JSONException e) {
+                                Toast.makeText(getApplicationContext(), "Report failed!", Toast.LENGTH_SHORT).show();
+                                e.printStackTrace();
+                            }
+                        }
                         Log.d(TAG, error.toString());
                     }
                 }

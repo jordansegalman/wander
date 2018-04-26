@@ -165,6 +165,8 @@ public class LocationScheduleEditActivity extends AppCompatActivity {
     public void done(View view) {
         if (nameEdit.getText().toString().isEmpty()) {
             Toast.makeText(getApplicationContext(), "Enter a schedule name.", Toast.LENGTH_SHORT).show();
+        } else if (nameEdit.getText().toString().length() > 255) {
+            Toast.makeText(getApplicationContext(), "Schedule names have a maximum length of 255 characters.", Toast.LENGTH_SHORT).show();
         } else if (startHourText.getText().toString().isEmpty() || startMinuteText.getText().toString().isEmpty()) {
             Toast.makeText(getApplicationContext(), "Choose a start time.", Toast.LENGTH_SHORT).show();
         } else if (endHourText.getText().toString().isEmpty() || endMinuteText.getText().toString().isEmpty()) {

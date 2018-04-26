@@ -7,7 +7,6 @@ import android.util.Log;
 import android.widget.Toast;
 
 import com.android.volley.DefaultRetryPolicy;
-import com.android.volley.NetworkResponse;
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.Response;
@@ -106,10 +105,6 @@ public class GoogleLoginActivity extends AppCompatActivity {
                                 intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
                                 startActivity(intent);
                                 finish();
-                            } else {
-                                Toast.makeText(getApplicationContext(), "Google login failed!", Toast.LENGTH_SHORT).show();
-                                Intent intent = new Intent(GoogleLoginActivity.this, LoginActivity.class);
-                                startActivity(intent);
                             }
                         } catch (JSONException j) {
                             j.printStackTrace();
@@ -119,12 +114,28 @@ public class GoogleLoginActivity extends AppCompatActivity {
                 new Response.ErrorListener() {
                     @Override
                     public void onErrorResponse(VolleyError error) {
-                        NetworkResponse networkResponse = error.networkResponse;
-                        if (networkResponse != null) {
-                            Toast.makeText(getApplicationContext(), new String(networkResponse.data), Toast.LENGTH_LONG).show();
+                        if (error.networkResponse.data != null) {
+                            try {
+                                String res = new JSONObject(new String(error.networkResponse.data)).getString("response");
+                                switch (res) {
+                                    case "Invalid email":
+                                        Toast.makeText(getApplicationContext(), "Invalid email!", Toast.LENGTH_LONG).show();
+                                        break;
+                                    case "Email taken":
+                                        Toast.makeText(getApplicationContext(), "Email taken!", Toast.LENGTH_LONG).show();
+                                        break;
+                                    case "Account banned":
+                                        Toast.makeText(getApplicationContext(), "Account banned!", Toast.LENGTH_LONG).show();
+                                        break;
+                                    default:
+                                        Toast.makeText(getApplicationContext(), "Google login failed!", Toast.LENGTH_SHORT).show();
+                                        break;
+                                }
+                            } catch (JSONException e) {
+                                Toast.makeText(getApplicationContext(), "Google login failed!", Toast.LENGTH_SHORT).show();
+                                e.printStackTrace();
+                            }
                         }
-                        Log.d(TAG, error.toString());
-                        //Toast.makeText(getApplicationContext(), "Google login failed!", Toast.LENGTH_SHORT).show();
                         Intent intent = new Intent(GoogleLoginActivity.this, LoginActivity.class);
                         startActivity(intent);
                     }

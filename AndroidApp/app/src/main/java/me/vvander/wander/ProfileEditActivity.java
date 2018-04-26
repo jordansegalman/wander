@@ -17,7 +17,6 @@ import android.widget.Spinner;
 import android.widget.Toast;
 
 import com.android.volley.DefaultRetryPolicy;
-import com.android.volley.NetworkResponse;
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.Response;
@@ -39,10 +38,10 @@ public class ProfileEditActivity extends AppCompatActivity {
     private ImageView pictureImageView;
     private EditText nameEditText;
     private EditText aboutEditText;
-    private String originalPicture;
     private String originalName;
     private String originalAbout;
     private String originalInterests;
+    private boolean pictureChanged;
     private String firstInterest;
     private String secondInterest;
     private String thirdInterest;
@@ -108,12 +107,12 @@ public class ProfileEditActivity extends AppCompatActivity {
             }
         });
 
-        originalPicture = getIntent().getStringExtra("picture");
         originalName = getIntent().getStringExtra("name");
         originalAbout = getIntent().getStringExtra("about");
         originalInterests = getIntent().getStringExtra("interests");
+        pictureChanged = false;
 
-        pictureImageView.setImageBitmap(Utilities.decodeImage(originalPicture));
+        pictureImageView.setImageBitmap(Utilities.decodeImage(getIntent().getStringExtra("picture")));
         nameEditText.setText(originalName);
         aboutEditText.setText(originalAbout);
         if (originalInterests.equals("No Interests")) {
@@ -162,6 +161,7 @@ public class ProfileEditActivity extends AppCompatActivity {
             try {
                 Bitmap bitmap = MediaStore.Images.Media.getBitmap(getContentResolver(), data.getData());
                 pictureImageView.setImageBitmap(bitmap);
+                pictureChanged = true;
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -196,7 +196,7 @@ public class ProfileEditActivity extends AppCompatActivity {
         } else if (TextUtils.isEmpty(about)) {
             Toast.makeText(getApplicationContext(), "About required.", Toast.LENGTH_SHORT).show();
             return;
-        } else if (encodedImage.equals(originalPicture) && name.equals(originalName) && about.equals(originalAbout) && interests.equals(originalInterests)) {
+        } else if (!pictureChanged && name.equals(originalName) && about.equals(originalAbout) && interests.equals(originalInterests)) {
             startActivity(new Intent(ProfileEditActivity.this, ProfileActivity.class));
             finish();
             return;
@@ -232,9 +232,30 @@ public class ProfileEditActivity extends AppCompatActivity {
                 new Response.ErrorListener() {
                     @Override
                     public void onErrorResponse(VolleyError error) {
-                        NetworkResponse networkResponse = error.networkResponse;
-                        if (networkResponse != null) {
-                            Toast.makeText(getApplicationContext(), new String(networkResponse.data), Toast.LENGTH_LONG).show();
+                        if (error.networkResponse.data != null) {
+                            try {
+                                String res = new JSONObject(new String(error.networkResponse.data)).getString("response");
+                                switch (res) {
+                                    case "Invalid name":
+                                        Toast.makeText(getApplicationContext(), "Name must only contain ASCII characters and have a maximum length of 32 characters.", Toast.LENGTH_LONG).show();
+                                        break;
+                                    case "Invalid about":
+                                        Toast.makeText(getApplicationContext(), "About has a maximum length of 255 characters.", Toast.LENGTH_LONG).show();
+                                        break;
+                                    case "Invalid interests":
+                                        Toast.makeText(getApplicationContext(), "Invalid interests!", Toast.LENGTH_LONG).show();
+                                        break;
+                                    case "Invalid picture":
+                                        Toast.makeText(getApplicationContext(), "Invalid picture!", Toast.LENGTH_LONG).show();
+                                        break;
+                                    default:
+                                        Toast.makeText(getApplicationContext(), "Profile update failed!", Toast.LENGTH_SHORT).show();
+                                        break;
+                                }
+                            } catch (JSONException e) {
+                                Toast.makeText(getApplicationContext(), "Profile update failed!", Toast.LENGTH_SHORT).show();
+                                e.printStackTrace();
+                            }
                         }
                         Log.d(TAG, error.toString());
                     }

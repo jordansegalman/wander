@@ -464,6 +464,25 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
                 new Response.ErrorListener() {
                     @Override
                     public void onErrorResponse(VolleyError error) {
+                        if (error.networkResponse.data != null) {
+                            try {
+                                String res = new JSONObject(new String(error.networkResponse.data)).getString("response");
+                                switch (res) {
+                                    case "Invalid tag title":
+                                        Toast.makeText(getApplicationContext(), "Tag title has a maximum length of 255 characters.", Toast.LENGTH_LONG).show();
+                                        break;
+                                    case "Invalid tag description":
+                                        Toast.makeText(getApplicationContext(), "Tag description has a maximum length of 512 characters.", Toast.LENGTH_LONG).show();
+                                        break;
+                                    default:
+                                        Toast.makeText(getApplicationContext(), "Location tagging failed!", Toast.LENGTH_SHORT).show();
+                                        break;
+                                }
+                            } catch (JSONException e) {
+                                Toast.makeText(getApplicationContext(), "Location tagging failed!", Toast.LENGTH_SHORT).show();
+                                e.printStackTrace();
+                            }
+                        }
                         Log.d(TAG, error.toString());
                     }
                 }
@@ -591,10 +610,14 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
         String url = Data.getInstance().getUrl() + "/deleteTagData";
         Map<String, String> params = new HashMap<>();
 
+        LocationTag locationTag = locationTags.get(marker);
+
         JSONObject tag = new JSONObject();
         try {
             tag.put("latitude", marker.getPosition().latitude);
             tag.put("longitude", marker.getPosition().longitude);
+            tag.put("title", locationTag.getTitle());
+            tag.put("description", locationTag.getDescription());
         } catch (JSONException e) {
             e.printStackTrace();
         }
@@ -609,7 +632,7 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
                             if (res.equalsIgnoreCase("pass")) {
                                 marker.remove();
                                 locationTags.remove(marker);
-                                Toast.makeText(getApplicationContext(), "Tag removed.", Toast.LENGTH_SHORT).show();
+                                Toast.makeText(getApplicationContext(), "Tag deleted.", Toast.LENGTH_SHORT).show();
                             }
                         } catch (JSONException j) {
                             j.printStackTrace();
@@ -619,6 +642,7 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
                 new Response.ErrorListener() {
                     @Override
                     public void onErrorResponse(VolleyError error) {
+                        Toast.makeText(getApplicationContext(), "Tag deletion failed!", Toast.LENGTH_SHORT).show();
                         Log.d(TAG, error.toString());
                     }
                 }
@@ -677,7 +701,11 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
                     doneButton.setVisibility(View.GONE);
                     String title = tagTitleEditText.getText().toString();
                     String description = tagDescriptionEditText.getText().toString();
-                    if (!TextUtils.isEmpty(title) && !TextUtils.isEmpty(description) && (!title.equals(locationTag.getTitle()) || !description.equals(locationTag.getDescription()))) {
+                    if (TextUtils.isEmpty(title)) {
+                        Toast.makeText(getApplicationContext(), "Enter a tag title.", Toast.LENGTH_SHORT).show();
+                    } else if (TextUtils.isEmpty(description)) {
+                        Toast.makeText(getApplicationContext(), "Enter a tag description.", Toast.LENGTH_SHORT).show();
+                    } else if (!title.equals(locationTag.getTitle()) || !description.equals(locationTag.getDescription())) {
                         locationTag.setTitle(tagTitleEditText.getText().toString());
                         locationTag.setDescription(tagDescriptionEditText.getText().toString());
                         locationTags.put(marker, locationTag);

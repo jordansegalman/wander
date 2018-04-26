@@ -27,6 +27,8 @@
             android:background="@android:color/transparent"
             android:hint="Location Tag Title"
             android:inputType="text|textCapWords|textAutoCorrect|textAutoComplete"
+            android:maxLength="255"
+            android:textColorHint="#000000"
             android:textSize="20sp"
             android:textStyle="bold" />
 
@@ -41,7 +43,9 @@
             android:layout_toEndOf="@+id/tag_image"
             android:background="@android:color/transparent"
             android:hint="Enter a description for the tag."
-            android:inputType="text|textCapSentences|textAutoCorrect|textAutoComplete|textMultiLine" />
+            android:inputType="text|textCapSentences|textAutoCorrect|textAutoComplete|textMultiLine"
+            android:maxLength="512"
+            android:textColorHint="#000000" />
 
     </RelativeLayout>
 

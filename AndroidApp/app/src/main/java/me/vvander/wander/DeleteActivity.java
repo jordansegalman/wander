@@ -8,6 +8,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
 import android.widget.EditText;
@@ -16,7 +17,6 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.android.volley.DefaultRetryPolicy;
-import com.android.volley.NetworkResponse;
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.Response;
@@ -65,12 +65,14 @@ public class DeleteActivity extends AppCompatActivity {
     }
 
     public void delete(View view) {
+        String password = passwordEditText.getText().toString();
+
         if (Data.getInstance().getLoggedIn() && !Data.getInstance().getLoggedInGoogle() && !Data.getInstance().getLoggedInFacebook()) {
-            if (passwordEditText.getText().toString().length() == 0) {
-                Toast.makeText(getApplicationContext(), "Please enter your password.", Toast.LENGTH_SHORT).show();
-                return;
+            if (TextUtils.isEmpty(password)) {
+                Toast.makeText(getApplicationContext(), "Enter your password.", Toast.LENGTH_SHORT).show();
+            } else {
+                attemptDelete(password);
             }
-            attemptDelete(passwordEditText.getText().toString());
         } else if (!Data.getInstance().getLoggedIn() && (Data.getInstance().getLoggedInGoogle() || Data.getInstance().getLoggedInFacebook())) {
             attemptDelete(null);
         }
@@ -106,8 +108,6 @@ public class DeleteActivity extends AppCompatActivity {
                                     intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
                                     startActivity(intent);
                                     finish();
-                                } else {
-                                    Toast.makeText(getApplicationContext(), "Account deletion failed!", Toast.LENGTH_SHORT).show();
                                 }
                             } catch (JSONException j) {
                                 j.printStackTrace();
@@ -117,10 +117,21 @@ public class DeleteActivity extends AppCompatActivity {
                     new Response.ErrorListener() {
                         @Override
                         public void onErrorResponse(VolleyError error) {
-                            //Toast.makeText(getApplicationContext(), "Account deletion failed!", Toast.LENGTH_SHORT).show();
-                            NetworkResponse networkResponse = error.networkResponse;
-                            if (networkResponse != null) {
-                                Toast.makeText(getApplicationContext(), new String(networkResponse.data), Toast.LENGTH_LONG).show();
+                            if (error.networkResponse.data != null) {
+                                try {
+                                    String res = new JSONObject(new String(error.networkResponse.data)).getString("response");
+                                    switch (res) {
+                                        case "Invalid password":
+                                            Toast.makeText(getApplicationContext(), "Invalid password!", Toast.LENGTH_LONG).show();
+                                            break;
+                                        default:
+                                            Toast.makeText(getApplicationContext(), "Account deletion failed!", Toast.LENGTH_SHORT).show();
+                                            break;
+                                    }
+                                } catch (JSONException e) {
+                                    Toast.makeText(getApplicationContext(), "Account deletion failed!", Toast.LENGTH_SHORT).show();
+                                    e.printStackTrace();
+                                }
                             }
                             Log.d(TAG, error.toString());
                         }
@@ -157,8 +168,6 @@ public class DeleteActivity extends AppCompatActivity {
                                     intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
                                     startActivity(intent);
                                     finish();
-                                } else {
-                                    Toast.makeText(getApplicationContext(), "Account deletion failed!", Toast.LENGTH_SHORT).show();
                                 }
                             } catch (JSONException j) {
                                 j.printStackTrace();
@@ -204,8 +213,6 @@ public class DeleteActivity extends AppCompatActivity {
                                     intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
                                     startActivity(intent);
                                     finish();
-                                } else {
-                                    Toast.makeText(getApplicationContext(), "Account deletion failed!", Toast.LENGTH_SHORT).show();
                                 }
                             } catch (JSONException j) {
                                 j.printStackTrace();

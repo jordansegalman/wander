@@ -3,13 +3,13 @@ package me.vvander.wander;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.Toast;
 
 import com.android.volley.DefaultRetryPolicy;
-import com.android.volley.NetworkResponse;
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.Response;
@@ -42,9 +42,15 @@ public class ForgotPasswordActivity extends AppCompatActivity {
     }
 
     public void done(View view) {
-        String email = emailEdit.getText().toString();
         String username = usernameEdit.getText().toString();
-        sendPOSTRequest(username, email);
+        String email = emailEdit.getText().toString();
+        if (TextUtils.isEmpty(username)) {
+            Toast.makeText(getApplicationContext(), "Enter a username.", Toast.LENGTH_SHORT).show();
+        } else if (TextUtils.isEmpty(email)) {
+            Toast.makeText(getApplicationContext(), "Enter an email.", Toast.LENGTH_SHORT).show();
+        } else {
+            sendPOSTRequest(username, email);
+        }
     }
 
     private void sendPOSTRequest(String username, String email) {
@@ -65,8 +71,6 @@ public class ForgotPasswordActivity extends AppCompatActivity {
                                 Intent intent = new Intent(ForgotPasswordActivity.this, LoginActivity.class);
                                 startActivity(intent);
                                 finish();
-                            } else {
-                                Toast.makeText(getApplicationContext(), "Password reset failed!", Toast.LENGTH_SHORT).show();
                             }
                         } catch (JSONException j) {
                             j.printStackTrace();
@@ -76,10 +80,27 @@ public class ForgotPasswordActivity extends AppCompatActivity {
                 new Response.ErrorListener() {
                     @Override
                     public void onErrorResponse(VolleyError error) {
-                        //Toast.makeText(getApplicationContext(), "Password reset failed!", Toast.LENGTH_SHORT).show();
-                        NetworkResponse networkResponse = error.networkResponse;
-                        if (networkResponse != null) {
-                            Toast.makeText(getApplicationContext(), new String(networkResponse.data), Toast.LENGTH_LONG).show();
+                        if (error.networkResponse.data != null) {
+                            try {
+                                String res = new JSONObject(new String(error.networkResponse.data)).getString("response");
+                                switch (res) {
+                                    case "Invalid email":
+                                        Toast.makeText(getApplicationContext(), "Invalid email.", Toast.LENGTH_LONG).show();
+                                        break;
+                                    case "Invalid username":
+                                        Toast.makeText(getApplicationContext(), "Invalid username.", Toast.LENGTH_LONG).show();
+                                        break;
+                                    case "No account found":
+                                        Toast.makeText(getApplicationContext(), "No account found.", Toast.LENGTH_LONG).show();
+                                        break;
+                                    default:
+                                        Toast.makeText(getApplicationContext(), "Password reset failed!", Toast.LENGTH_SHORT).show();
+                                        break;
+                                }
+                            } catch (JSONException e) {
+                                Toast.makeText(getApplicationContext(), "Password reset failed!", Toast.LENGTH_SHORT).show();
+                                e.printStackTrace();
+                            }
                         }
                         Log.d(TAG, error.toString());
                     }

@@ -35,6 +35,7 @@
             android:backgroundTint="#000000"
             android:hint="New Username"
             android:inputType="textNoSuggestions"
+            android:maxLength="24"
             android:maxLines="1"
             android:textColor="#000000" />
 
@@ -52,6 +53,7 @@
             android:backgroundTint="#000000"
             android:hint="Password"
             android:inputType="textPassword"
+            android:maxLength="64"
             android:maxLines="1"
             android:textColor="#000000" />
 

@@ -3,14 +3,13 @@ package me.vvander.wander;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
+import android.text.TextUtils;
 import android.util.Log;
-import android.util.Patterns;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.Toast;
 
 import com.android.volley.DefaultRetryPolicy;
-import com.android.volley.NetworkResponse;
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.Response;
@@ -55,15 +54,19 @@ public class RegistrationActivity extends AppCompatActivity {
         String password = passwordText.getText().toString();
         String confirmPassword = confirmPasswordText.getText().toString();
 
-        if (!password.equals(confirmPassword)) {
+        if (TextUtils.isEmpty(email)) {
+            Toast.makeText(getApplicationContext(), "Enter an email.", Toast.LENGTH_SHORT).show();
+        } else if (TextUtils.isEmpty(username)) {
+            Toast.makeText(getApplicationContext(), "Enter a username.", Toast.LENGTH_SHORT).show();
+        } else if (TextUtils.isEmpty(password)) {
+            Toast.makeText(getApplicationContext(), "Enter a password.", Toast.LENGTH_SHORT).show();
+        } else if (TextUtils.isEmpty(confirmPassword)) {
+            Toast.makeText(getApplicationContext(), "Confirm your password.", Toast.LENGTH_SHORT).show();
+        } else if (!password.equals(confirmPassword)) {
             Toast.makeText(getApplicationContext(), "Passwords do not match.", Toast.LENGTH_SHORT).show();
         } else {
             sendPOSTRequest(email, username, password);
         }
-    }
-
-    private boolean isValidEmail(CharSequence email) {
-        return Patterns.EMAIL_ADDRESS.matcher(email).matches();
     }
 
     private void sendPOSTRequest(String email, String username, String password) {
@@ -82,21 +85,42 @@ public class RegistrationActivity extends AppCompatActivity {
                                 Toast.makeText(getApplicationContext(), "Account successfully created!", Toast.LENGTH_SHORT).show();
                                 Intent intent = new Intent(RegistrationActivity.this, LoginActivity.class);
                                 startActivity(intent);
-                            } else {
-                                Toast.makeText(getApplicationContext(), "Registration failed!", Toast.LENGTH_SHORT).show();
                             }
                         } catch (JSONException j) {
                             j.printStackTrace();
                         }
-
                     }
                 },
                 new Response.ErrorListener() {
                     @Override
                     public void onErrorResponse(VolleyError error) {
-                        NetworkResponse networkResponse = error.networkResponse;
-                        if (networkResponse != null) {
-                            Toast.makeText(getApplicationContext(), new String(networkResponse.data), Toast.LENGTH_LONG).show();
+                        if (error.networkResponse.data != null) {
+                            try {
+                                String res = new JSONObject(new String(error.networkResponse.data)).getString("response");
+                                switch (res) {
+                                    case "Invalid email":
+                                        Toast.makeText(getApplicationContext(), "Email must be valid and have a minimum length of 3 characters and a maximum length of 255 characters.", Toast.LENGTH_LONG).show();
+                                        break;
+                                    case "Invalid username":
+                                        Toast.makeText(getApplicationContext(), "Username must be alphanumeric and have a minimum length of 4 characters and a maximum length of 24 characters.", Toast.LENGTH_LONG).show();
+                                        break;
+                                    case "Invalid password":
+                                        Toast.makeText(getApplicationContext(), "Password must only contain ASCII characters and must have a minimum length of 8 characters and a maximum length of 64 characters.", Toast.LENGTH_LONG).show();
+                                        break;
+                                    case "Email taken":
+                                        Toast.makeText(getApplicationContext(), "Email taken!", Toast.LENGTH_LONG).show();
+                                        break;
+                                    case "Username taken":
+                                        Toast.makeText(getApplicationContext(), "Username taken!", Toast.LENGTH_LONG).show();
+                                        break;
+                                    default:
+                                        Toast.makeText(getApplicationContext(), "Registration failed!", Toast.LENGTH_SHORT).show();
+                                        break;
+                                }
+                            } catch (JSONException e) {
+                                Toast.makeText(getApplicationContext(), "Registration failed!", Toast.LENGTH_SHORT).show();
+                                e.printStackTrace();
+                            }
                         }
                         Log.d(TAG, error.toString());
                     }

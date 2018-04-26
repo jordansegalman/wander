@@ -36,6 +36,7 @@
             android:backgroundTint="#000000"
             android:hint="New Email"
             android:inputType="textEmailAddress"
+            android:maxLength="255"
             android:maxLines="1"
             android:textColor="#000000" />
 
@@ -53,6 +54,7 @@
             android:backgroundTint="#000000"
             android:hint="Password"
             android:inputType="textPassword"
+            android:maxLength="64"
             android:maxLines="1"
             android:textColor="#000000" />
 

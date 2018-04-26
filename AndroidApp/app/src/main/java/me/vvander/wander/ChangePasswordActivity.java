@@ -3,13 +3,13 @@ package me.vvander.wander;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.Toast;
 
 import com.android.volley.DefaultRetryPolicy;
-import com.android.volley.NetworkResponse;
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.Response;
@@ -48,7 +48,13 @@ public class ChangePasswordActivity extends AppCompatActivity {
         String newPassword = newPasswordEdit.getText().toString();
         String confirmPassword = confirmPasswordEdit.getText().toString();
 
-        if (!newPassword.equals(confirmPassword)) {
+        if (TextUtils.isEmpty(oldPassword)) {
+            Toast.makeText(getApplicationContext(), "Enter your password.", Toast.LENGTH_SHORT).show();
+        } else if (TextUtils.isEmpty(newPassword)) {
+            Toast.makeText(getApplicationContext(), "Enter a new password.", Toast.LENGTH_SHORT).show();
+        } else if (TextUtils.isEmpty(confirmPassword)) {
+            Toast.makeText(getApplicationContext(), "Confirm your new password.", Toast.LENGTH_SHORT).show();
+        } else if (!newPassword.equals(confirmPassword)) {
             Toast.makeText(getApplicationContext(), "Passwords do not match.", Toast.LENGTH_SHORT).show();
         } else {
             sendPOSTRequest(newPassword, oldPassword);
@@ -73,8 +79,6 @@ public class ChangePasswordActivity extends AppCompatActivity {
                                 Intent intent = new Intent(ChangePasswordActivity.this, SettingsActivity.class);
                                 startActivity(intent);
                                 finish();
-                            } else {
-                                Toast.makeText(getApplicationContext(), "Password change failed!", Toast.LENGTH_SHORT).show();
                             }
                         } catch (JSONException j) {
                             j.printStackTrace();
@@ -84,10 +88,24 @@ public class ChangePasswordActivity extends AppCompatActivity {
                 new Response.ErrorListener() {
                     @Override
                     public void onErrorResponse(VolleyError error) {
-                        //Toast.makeText(getApplicationContext(), "Password change failed!", Toast.LENGTH_SHORT).show();
-                        NetworkResponse networkResponse = error.networkResponse;
-                        if (networkResponse != null) {
-                            Toast.makeText(getApplicationContext(), new String(networkResponse.data), Toast.LENGTH_LONG).show();
+                        if (error.networkResponse.data != null) {
+                            try {
+                                String res = new JSONObject(new String(error.networkResponse.data)).getString("response");
+                                switch (res) {
+                                    case "Invalid password":
+                                        Toast.makeText(getApplicationContext(), "Invalid password!", Toast.LENGTH_LONG).show();
+                                        break;
+                                    case "Invalid new password":
+                                        Toast.makeText(getApplicationContext(), "New password must only contain ASCII characters and must have a minimum length of 8 characters and a maximum length of 64 characters.", Toast.LENGTH_LONG).show();
+                                        break;
+                                    default:
+                                        Toast.makeText(getApplicationContext(), "Password change failed!", Toast.LENGTH_SHORT).show();
+                                        break;
+                                }
+                            } catch (JSONException e) {
+                                Toast.makeText(getApplicationContext(), "Password change failed!", Toast.LENGTH_SHORT).show();
+                                e.printStackTrace();
+                            }
                         }
                         Log.d(TAG, error.toString());
                     }

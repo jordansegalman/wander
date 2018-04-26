@@ -9,13 +9,13 @@ import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.Toast;
 
 import com.android.volley.DefaultRetryPolicy;
-import com.android.volley.NetworkResponse;
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.Response;
@@ -93,11 +93,13 @@ public class LoginActivity extends AppCompatActivity {
         EditText passwordText = findViewById(R.id.password);
         String username = usernameText.getText().toString();
         String password = passwordText.getText().toString();
-        if (username.length() == 0 || password.length() == 0) {
-            Toast.makeText(getApplicationContext(), "Please enter a username and password.", Toast.LENGTH_SHORT).show();
-            return;
+        if (TextUtils.isEmpty(username)) {
+            Toast.makeText(getApplicationContext(), "Enter a username.", Toast.LENGTH_SHORT).show();
+        } else if (TextUtils.isEmpty(password)) {
+            Toast.makeText(getApplicationContext(), "Enter a password.", Toast.LENGTH_SHORT).show();
+        } else {
+            attemptLogin(username, password);
         }
-        attemptLogin(username, password);
     }
 
     private void checkSession() {
@@ -164,8 +166,6 @@ public class LoginActivity extends AppCompatActivity {
         Map<String, String> params = new HashMap<>();
         params.put("username", username);
         params.put("password", password);
-        //FOLLOWING LINE IS FOR TESTING
-        //startActivity(new Intent(Login.this, Home.class));
 
         String url = Data.getInstance().getUrl() + "/login";
         JsonObjectRequest postRequest = new JsonObjectRequest(Request.Method.POST, url, new JSONObject(params),
@@ -185,8 +185,6 @@ public class LoginActivity extends AppCompatActivity {
                                 intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
                                 startActivity(intent);
                                 finish();
-                            } else {
-                                Toast.makeText(getApplicationContext(), "Login failed!", Toast.LENGTH_SHORT).show();
                             }
                         } catch (JSONException j) {
                             j.printStackTrace();
@@ -196,9 +194,24 @@ public class LoginActivity extends AppCompatActivity {
                 new Response.ErrorListener() {
                     @Override
                     public void onErrorResponse(VolleyError error) {
-                        NetworkResponse networkResponse = error.networkResponse;
-                        if (networkResponse != null) {
-                            Toast.makeText(getApplicationContext(), new String(networkResponse.data), Toast.LENGTH_LONG).show();
+                        if (error.networkResponse.data != null) {
+                            try {
+                                String res = new JSONObject(new String(error.networkResponse.data)).getString("response");
+                                switch (res) {
+                                    case "Invalid username or password":
+                                        Toast.makeText(getApplicationContext(), "Invalid username or password!", Toast.LENGTH_LONG).show();
+                                        break;
+                                    case "Account banned":
+                                        Toast.makeText(getApplicationContext(), "Account banned!", Toast.LENGTH_LONG).show();
+                                        break;
+                                    default:
+                                        Toast.makeText(getApplicationContext(), "Login failed!", Toast.LENGTH_SHORT).show();
+                                        break;
+                                }
+                            } catch (JSONException e) {
+                                Toast.makeText(getApplicationContext(), "Login failed!", Toast.LENGTH_SHORT).show();
+                                e.printStackTrace();
+                            }
                         }
                         Log.d(TAG, error.toString());
                     }
@@ -237,10 +250,6 @@ public class LoginActivity extends AppCompatActivity {
                     new Response.ErrorListener() {
                         @Override
                         public void onErrorResponse(VolleyError error) {
-                            NetworkResponse networkResponse = error.networkResponse;
-                            if (networkResponse != null) {
-                                Toast.makeText(getApplicationContext(), new String(networkResponse.data), Toast.LENGTH_LONG).show();
-                            }
                             Log.d(TAG, error.toString());
                         }
                     }
