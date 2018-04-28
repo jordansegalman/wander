@@ -10,7 +10,7 @@ import java.net.CookiePolicy;
 import java.util.ArrayList;
 
 class Data {
-    private static final String url = "https://vvander.me";
+    private static final String url = "***REMOVED***";
     private static final Data data = new Data();
     private String uid;
     private boolean loggedIn = false;

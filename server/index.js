@@ -15,9 +15,10 @@ var geocluster = require('geocluster');
 require('dotenv').config();
 
 // Constants used for http server
-const port = 3000;
+const url = process.env.URL;
+const port = process.env.PORT;
 
-// Constants used for verifying JSON subsmission by users
+// Constants used for JSON
 const uid = "uid";
 const username = "username";
 const password = "password";
@@ -55,7 +56,7 @@ const matchLimit = "matchLimit";
 const db_host = process.env.DB_HOST;
 const db_username = process.env.DB_USERNAME;
 const db_password = process.env.DB_PASSWORD;
-const db_name = "wander";
+const db_name = process.env.DB_NAME;
 const db_accounts = "accounts";
 const db_profiles = "profiles";
 const db_locations = "locations";
@@ -68,22 +69,15 @@ const db_offenses = "offenses";
 const saltRounds = 10;
 
 // Constants used for matching
-//const MATCH_THRESHOLD = 10;				// 10 crossed paths
-const MATCH_THRESHOLD = 1;				// 1 crossed path (DEVELOPMENT)
+const MATCH_THRESHOLD = 10;				// 10 crossed paths
 const UNMATCHED_MATCH_THRESHOLD = 3 * MATCH_THRESHOLD;
 const CROSS_TIME = 30000;				// 30 seconds
-//const CROSS_COOLDOWN = 1800000;			// 30 minutes
-const CROSS_COOLDOWN = 1000;				// 1 second (DEVELOPMENT)
-//const MATCHES_NOTIFY_CRON = '0 20 * * * *';		// Every day at 20:00
-const MATCHES_NOTIFY_CRON = '0 * * * * *';		// Every minute (DEVELOPMENT)
-//const NO_MATCHES_NOTIFY_CRON = '0 20 * * * *';	// Every day at 20:00
-const NO_MATCHES_NOTIFY_CRON = '*/5 * * * *';		// Every 5 minutes (DEVELOPMENT)
-//const WARN_THRESHOLD = 3;				// Warn after 3 offenses
-const WARN_THRESHOLD = 1;				// Warn after 1 offense (DEVELOPMENT)
-//const BAN_THRESHOLD = 5;				// Ban after 5 offenses
-const BAN_THRESHOLD = 2;				// Ban after 2 offenses (DEVELOPMENT)
-//const POPULAR_LOCATIONS_CRON = '0 0 * * * *';		// Every day at 0:00
-const POPULAR_LOCATIONS_CRON = '0 * * * * *';		// Every minute (DEVELOPMENT)
+const CROSS_COOLDOWN = 1800000;				// 30 minutes
+const MATCHES_NOTIFY_CRON = '0 20 * * * *';		// Every day at 20:00
+const NO_MATCHES_NOTIFY_CRON = '0 20 * * * *';		// Every day at 20:00
+const WARN_THRESHOLD = 3;				// Warn after 3 offenses
+const BAN_THRESHOLD = 5;				// Ban after 5 offenses
+const POPULAR_LOCATIONS_CRON = '0 0 * * * *';		// Every day at 0:00
 const NEARBY_USERS_RADIUS = 5280;			// 1 mile
 const POPULATION_MULTIPLIER_LOW_CUTOFF = 10;		// 10 users
 const POPULATION_MULTIPLIER_HIGH_CUTOFF = 500;		// 500 users
@@ -103,6 +97,7 @@ admin.initializeApp({
 // Setup SendGrid for transactional email
 const sgMail = require('@sendgrid/mail');
 sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+const supportEmail = process.env.SUPPORT_EMAIL;
 
 // Setup express
 var app = express();
@@ -116,11 +111,11 @@ app.use(bodyParser.urlencoded({
 // Setup session
 app.set('trust proxy', 1);
 app.use(session({
-	name: 'wander-cookie',
-	secret: crypto.randomBytes(16).toString('hex'),
+	name: process.env.COOKIE_NAME,
+	secret: process.env.COOKIE_SECRET,
 	resave: false,
 	saveUninitialized: false,
-	cookie: { domain: '.vvander.me', httpOnly: true, secure: true, maxAge: 31536000000 }
+	cookie: { domain: process.env.COOKIE_DOMAIN, httpOnly: true, secure: true, maxAge: 31536000000 }
 }));
 
 // Create connection to MySQL database
@@ -290,9 +285,9 @@ function setupSocketIO() {
 											.then((response) => {
 												console.log('Successfully sent message notification.');
 											})
-										.catch((error) => {
-											console.log(error);
-										});
+											.catch((error) => {
+												console.log(error);
+											});
 									}
 								}
 							});
@@ -1559,10 +1554,10 @@ function register(u, p, e, response) {
 										// Send registration confirm email
 										const msg = {
 											to: e,
-											from: 'support@vvander.me',
+											from: supportEmail,
 											subject: 'Welcome to Wander!',
-											text: 'Hey ' + u + '! You have registered for a Wander account. Click the following link to confirm your email: https://vvander.me/confirmEmail?email=' + e,
-											html: '<strong>Hey ' + u + '! You have registered for a Wander account. Click the following link to confirm your email: https://vvander.me/confirmEmail?email=' + e + '</strong>',
+											text: 'Hey ' + u + '! You have registered for a Wander account. Click the following link to confirm your email: ' + url + '/confirmEmail?email=' + e,
+											html: '<strong>Hey ' + u + '! You have registered for a Wander account. Click the following link to confirm your email: ' + url + '/confirmEmail?email=' + e + '</strong>',
 										};
 										sgMail.send(msg);
 										matchGraph.setNode(userID);
@@ -1659,10 +1654,10 @@ function googleLogin(id, e, request, response) {
 									// Send registration confirm email
 									const msg = {
 										to: e,
-										from: 'support@vvander.me',
+										from: supportEmail,
 										subject: 'Welcome to Wander!',
-										text: 'You have registered for a Wander account with your Google account. Click the following link to confirm your email: https://vvander.me/confirmEmail?email=' + e,
-										html: '<strong>You have registered for a Wander account with your Google account. Click the following link to confirm your email: https://vvander.me/confirmEmail?email=' + e + '</strong>',
+										text: 'You have registered for a Wander account with your Google account. Click the following link to confirm your email: ' + url + '/confirmEmail?email=' + e,
+										html: '<strong>You have registered for a Wander account with your Google account. Click the following link to confirm your email: ' + url + '/confirmEmail?email=' + e + '</strong>',
 									};
 									sgMail.send(msg);
 									matchGraph.setNode(userID);
@@ -1752,10 +1747,10 @@ function facebookLogin(id, e, request, response) {
 									// Send registration confirm email
 									const msg = {
 										to: e,
-										from: 'support@vvander.me',
+										from: supportEmail,
 										subject: 'Welcome to Wander!',
-										text: 'You have registered for a Wander account with your Facebook account. Click the following link to confirm your email: https://vvander.me/confirmEmail?email=' + e,
-										html: '<strong>You have registered for a Wander account with your Facebook account. Click the following link to confirm your email: https://vvander.me/confirmEmail?email=' + e + '</strong>',
+										text: 'You have registered for a Wander account with your Facebook account. Click the following link to confirm your email: ' + url + '/confirmEmail?email=' + e,
+										html: '<strong>You have registered for a Wander account with your Facebook account. Click the following link to confirm your email: ' + url + '/confirmEmail?email=' + e + '</strong>',
 									};
 									sgMail.send(msg);
 									matchGraph.setNode(userID);
@@ -1865,7 +1860,7 @@ function deleteAccount(p, request, response) {
 									// Send account deletion notification email
 									const msg = {
 										to: request.session.email,
-										from: 'support@vvander.me',
+										from: supportEmail,
 										subject: 'Wander Account Deleted',
 										text: 'Hey ' + request.session.username + '! You have successfully deleted your Wander account. We are sorry to see you go.',
 										html: '<strong>Hey ' + request.session.username + '! You have successfully deleted your Wander account. We are sorry to see you go.</strong>',
@@ -1930,7 +1925,7 @@ function googleDeleteAccount(request, response) {
 							// Send account deletion notification email
 							const msg = {
 								to: request.session.email,
-								from: 'support@vvander.me',
+								from: supportEmail,
 								subject: 'Wander Account Deleted',
 								text: 'You have successfully deleted your Wander account which was created with your Google account. We are sorry to see you go.',
 								html: '<strong>You have successfully deleted your Wander account which was created with your Google account. We are sorry to see you go.</strong>',
@@ -1993,7 +1988,7 @@ function facebookDeleteAccount(request, response) {
 							// Send account deletion notification email
 							const msg = {
 								to: request.session.email,
-								from: 'support@vvander.me',
+								from: supportEmail,
 								subject: 'Wander Account Deleted',
 								text: 'You have successfully deleted your Wander account which was created with your Facebook account. We are sorry to see you go.',
 								html: '<strong>You have successfully deleted your Wander account which was created with your Facebook account. We are sorry to see you go.</strong>',
@@ -2051,7 +2046,7 @@ function changeUsername(p, n, request, response) {
 									// Send username change notification email
 									const msg = {
 										to: request.session.email,
-										from: 'support@vvander.me',
+										from: supportEmail,
 										subject: 'Wander Username Changed',
 										text: 'You have changed your Wander account username from ' + request.session.username + ' to ' + n + '.',
 										html: '<strong>You have changed your Wander account username from ' + request.session.username + ' to ' + n + '.</strong>',
@@ -2100,7 +2095,7 @@ function changePassword(p, n, request, response) {
 								// Send password change notification email
 								const msg = {
 									to: request.session.email,
-									from: 'support@vvander.me',
+									from: supportEmail,
 									subject: 'Wander Password Changed',
 									text: 'You have changed your Wander account password.',
 									html: '<strong>You have changed your Wander account password.</strong>',
@@ -2165,7 +2160,7 @@ function changeEmail(p, n, request, response) {
 												// Send email change notification email to old email
 												const oldmsg = {
 													to: request.session.email,
-													from: 'support@vvander.me',
+													from: supportEmail,
 													subject: 'Wander Email Changed',
 													text: 'You have changed your Wander account email to ' + n + '.',
 													html: '<strong>You have changed your Wander account email to ' + n + '.</strong>',
@@ -2175,10 +2170,10 @@ function changeEmail(p, n, request, response) {
 												// Send email confirm email to new email
 												const newmsg = {
 													to: request.session.email,
-													from: 'support@vvander.me',
+													from: supportEmail,
 													subject: 'Confirm Your Email',
-													text: 'Hey ' + request.session.username + '! You have changed your Wander account email. Click the following link to confirm your email: https://vvander.me/confirmEmail?email=' + request.session.email,
-													html: '<strong>Hey ' + request.session.username + '! You have changed your Wander account email. Click the following link to confirm your email: https://vvander.me/confirmEmail?email=' + request.session.email + '</strong>',
+													text: 'Hey ' + request.session.username + '! You have changed your Wander account email. Click the following link to confirm your email: ' + url + '/confirmEmail?email=' + request.session.email,
+													html: '<strong>Hey ' + request.session.username + '! You have changed your Wander account email. Click the following link to confirm your email: ' + url + '/confirmEmail?email=' + request.session.email + '</strong>',
 												};
 												sgMail.send(newmsg);
 												console.log("Account email changed.");
@@ -2304,10 +2299,10 @@ function forgotPassword(u, e, response) {
 								// Send password reset request email
 								const msg = {
 									to: e,
-									from: 'support@vvander.me',
+									from: supportEmail,
 									subject: 'Wander Password Reset',
-									text: 'Hey ' + u + '! You have requested a password reset for your Wander account. Click the following link to reset your password: https://vvander.me/resetPassword?token=' + token,
-									html: '<strong>Hey ' + u + '! You have requested a password reset for your Wander account. Click the following link to reset your password: https://vvander.me/resetPassword?token=' + token + '</strong>',
+									text: 'Hey ' + u + '! You have requested a password reset for your Wander account. Click the following link to reset your password: ' + url + '/resetPassword?token=' + token,
+									html: '<strong>Hey ' + u + '! You have requested a password reset for your Wander account. Click the following link to reset your password: ' + url + '/resetPassword?token=' + token + '</strong>',
 								};
 								sgMail.send(msg);
 								console.log("Password reset email sent.");
@@ -2364,7 +2359,7 @@ function resetPassword(token, newPassword, confirmPassword, response) {
 											// Send password reset notification email
 											const msg = {
 												to: e,
-												from: 'support@vvander.me',
+												from: supportEmail,
 												subject: 'Wander Password Reset Successful',
 												text: 'Your Wander account password has been reset.',
 												html: '<strong>Your Wander account password has been reset.</strong>',
@@ -2687,9 +2682,9 @@ function findCrossedPaths(lat, lon, currentTime, request) {
 													.then((response) => {
 														console.log('Successfully sent crossed paths notification.');
 													})
-												.catch((error) => {
-													console.log(error);
-												});
+													.catch((error) => {
+														console.log(error);
+													});
 											}
 										}
 									});
@@ -2716,9 +2711,9 @@ function findCrossedPaths(lat, lon, currentTime, request) {
 													.then((response) => {
 														console.log('Successfully sent crossed paths notification.');
 													})
-												.catch((error) => {
-													console.log(error);
-												});
+													.catch((error) => {
+														console.log(error);
+													});
 											}
 										}
 									});
@@ -2791,9 +2786,9 @@ function notifyMatches() {
 								.then((response) => {
 									console.log('Successfully sent new matches notification.');
 								})
-							.catch((error) => {
-								console.log(error);
-							});
+								.catch((error) => {
+									console.log(error);
+								});
 						}
 					}
 				});
@@ -2840,9 +2835,9 @@ function notifyNoMatches() {
 							.then((response) => {
 								console.log('Successfully sent location suggestions notification.');
 							})
-						.catch((error) => {
-							console.log(error);
-						});
+							.catch((error) => {
+								console.log(error);
+							});
 					}
 				}
 			});
@@ -2901,9 +2896,9 @@ function notifyMatchNoSharedInterests(firstUid, secondUid) {
 					.then((response) => {
 						console.log('Successfully sent new match notification.');
 					})
-				.catch((error) => {
-					console.log(error);
-				});
+					.catch((error) => {
+						console.log(error);
+					});
 			}
 		}
 	});
@@ -2934,9 +2929,9 @@ function notifyMatchSharedInterests(firstUid, secondUid) {
 					.then((response) => {
 						console.log('Successfully sent new match with shared interests notification.');
 					})
-				.catch((error) => {
-					console.log(error);
-				});
+					.catch((error) => {
+						console.log(error);
+					});
 			}
 		}
 	});
@@ -2970,9 +2965,9 @@ function approveUser(u, request, response) {
 					.then((response) => {
 						console.log('Successfully sent match approval notification.');
 					})
-				.catch((error) => {
-					console.log(error);
-				});
+					.catch((error) => {
+						console.log(error);
+					});
 			}
 		}
 	});
@@ -3098,9 +3093,9 @@ function reportUser(u, r, request, response) {
 									.then((response) => {
 										console.log('Successfully sent offense warning notification.');
 									})
-								.catch((error) => {
-									console.log(error);
-								});
+									.catch((error) => {
+										console.log(error);
+									});
 							}
 						}
 					});
@@ -3118,8 +3113,8 @@ function reportUser(u, r, request, response) {
 				}
 				// Send report notification email
 				const msg = {
-					to: process.env.SUPPORT_EMAIL,
-					from: 'support@vvander.me',
+					to: supportEmail,
+					from: supportEmail,
 					subject: 'Offense Report',
 					text: 'USER ID: ' + u + ' REASON: ' + r,
 					html: '<strong>USER ID: ' + u + ' REASON: ' + r + '</strong>'
@@ -3477,9 +3472,9 @@ function notifyInterestsChange(request, response) {
 										.then((response) => {
 											console.log('Successfully sent shared interests notification.');
 										})
-									.catch((error) => {
-										console.log(error);
-									});
+										.catch((error) => {
+											console.log(error);
+										});
 								}
 							}
 						});
@@ -3507,9 +3502,9 @@ function notifyInterestsChange(request, response) {
 										.then((response) => {
 											console.log('Successfully sent shared interests notification.');
 										})
-									.catch((error) => {
-										console.log(error);
-									});
+										.catch((error) => {
+											console.log(error);
+										});
 								}
 							}
 						});

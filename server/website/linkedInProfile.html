@@ -30,7 +30,7 @@
 
 			var locat = user.location;
 			var xhr = new XMLHttpRequest();
-			xhr.open('POST', "https://vvander.me/updateLinkedIn", true);
+			xhr.open('POST', "/updateLinkedIn", true);
 			xhr.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
 			xhr.send(JSON.stringify({email: user.emailAddress, name: user.firstName, about: user.headline}));
 			xhr.onloadend = function () {
