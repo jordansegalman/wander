@@ -67,8 +67,8 @@ node index.js
 
 ## Screenshots
 
-![Map](screenshots/map.png) ![Menu](screenshots/menu.png)
+![Map/Matches](screenshots/map_matches.png)
 
-![Matches](screenshots/matches.png) ![Profile](screenshots/profile.png)
+![Profile/Chat](screenshots/profile_chat.png)
 
-![Login](screenshots/login.png) ![Settings](screenshots/settings.png)
+![Login/Menu](screenshots/login_menu.png)
